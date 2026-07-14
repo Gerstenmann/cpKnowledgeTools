@@ -1,0 +1,17 @@
+[project]
+name = "knowledge-importer"
+version = "0.1.0"
+description = "Knowledge Import Pipeline for Archibald"
+requires-python = ">=3.14"
+
+dependencies = [
+    "beautifulsoup4",
+    "markdownify",
+    "pyyaml"
+]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88

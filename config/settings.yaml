@@ -1,0 +1,15 @@
+project:
+  name: KnowledgeImporter
+
+paths:
+  email_import_root: /Users/cp/Documents/converter/_Knowledge/Email-imports
+  default_reports_dir_name: reports
+  default_markdown_dir_name: codingclub_markdown
+
+mbox:
+  sample_size: 25
+  preserve_all_jsonl_records: true
+
+classification:
+  rules_file: classification_rules.yaml
+  overrides_file: classification_overrides.yaml

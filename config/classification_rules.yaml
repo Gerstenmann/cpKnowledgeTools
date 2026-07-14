@@ -1,0 +1,112 @@
+calendar:
+  decision: discard
+  relevance_score: 0.05
+  reason: Automatische Terminannahme, Terminabsage oder Kalenderbestätigung.
+  subject_patterns:
+    - "^accepted:"
+    - "^declined:"
+    - "^tentative:"
+    - "^angenommen:"
+    - "^abgelehnt:"
+    - "^vorläufig:"
+    - "terminbestätigung"
+    - "meeting accepted"
+    - "meeting declined"
+
+system_notification:
+  decision: discard
+  relevance_score: 0.05
+  reason: Automatische System- oder Zustellnachricht ohne erkennbaren Wissenswert.
+  subject_patterns:
+    - "delivery status notification"
+    - "undeliverable"
+    - "unzustellbar"
+    - "mail delivery failed"
+    - "zustellfehler"
+    - "automatic reply"
+    - "automatische antwort"
+    - "out of office"
+    - "abwesenheitsnotiz"
+  sender_patterns:
+    - "no-reply"
+    - "noreply"
+    - "do-not-reply"
+    - "donotreply"
+    - "mailer-daemon"
+    - "postmaster"
+    - "notifications@"
+    - "notification@"
+    - "system@"
+    - "calendar@"
+
+security_notification:
+  decision: discard
+  relevance_score: 0.05
+  reason: Automatische Sicherheits- oder Passwortnachricht.
+  subject_patterns:
+    - "password reset"
+    - "passwort zurücksetzen"
+    - "verification code"
+    - "bestätigungscode"
+    - "security alert"
+    - "sicherheitswarnung"
+
+newsletter:
+  decision: discard
+  relevance_score: 0.10
+  reason: Newsletter oder Serienmail ohne direkten Projektvorgang.
+  subject_patterns:
+    - "newsletter"
+    - "weekly digest"
+    - "monthly digest"
+  body_patterns:
+    - "unsubscribe"
+    - "abmelden"
+    - "mailing list"
+
+transactional:
+  decision: archive_only
+  relevance_score: 0.45
+  reason: Transaktions-, Rechnungs-, Buchungs- oder Anmeldeinformation.
+  subject_patterns:
+    - "invoice"
+    - "rechnung"
+    - "payment"
+    - "zahlung"
+    - "booking confirmation"
+    - "buchungsbestätigung"
+    - "registration confirmation"
+    - "anmeldebestätigung"
+    - "cancellation"
+    - "stornierung"
+
+project_communication:
+  decision: analyze
+  relevance_score: 0.85
+  reason: Projektbezogene Kommunikation mit möglicher Entscheidungs-, Erfahrungs- oder Verlaufsrelevanz.
+  subject_patterns:
+    - "vertrag"
+    - "contract"
+    - "vereinbarung"
+    - "agreement"
+    - "vergütung"
+    - "honorar"
+    - "beschwerde"
+    - "complaint"
+    - "gruppengröße"
+    - "group size"
+    - "eltern"
+    - "parents"
+    - "curriculum"
+    - "kooperation"
+    - "minecraft"
+    - "coding club"
+    - "juniorcodingclub"
+    - "camp"
+  body_patterns:
+    - "wir haben vereinbart"
+    - "wie besprochen"
+    - "die gruppengröße"
+    - "die vergütung"
+    - "eltern informieren"
+    - "vertraglich"

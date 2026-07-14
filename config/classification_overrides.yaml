@@ -1,0 +1,14 @@
+by_message_id: {}
+
+by_subject:
+  "Änderung der Gruppengröße":
+    classification: project_communication
+    relevance_score: 0.95
+    processing_decision: analyze
+    processing_reason: "Manuell als relevante Projektentscheidung bestätigt."
+
+  "Weekly automated report":
+    classification: system_notification
+    relevance_score: 0.05
+    processing_decision: discard
+    processing_reason: "Manuell als automatische Systemmeldung bestätigt."
