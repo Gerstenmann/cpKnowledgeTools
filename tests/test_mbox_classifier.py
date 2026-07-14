@@ -1,12 +1,12 @@
-from knowledge_importer.common.config import (
+from cp_knowledge.common.config import (
     load_classification_rules,
     load_project_config,
 )
-from knowledge_importer.mbox.classifier import (
+from cp_knowledge.importers.mbox.classifier import (
     apply_classification,
     classify_email,
 )
-from knowledge_importer.mbox.models import Email
+from cp_knowledge.importers.mbox.models import Email
 
 
 def get_rules():

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from knowledge_importer.mbox.reader import read_mbox
+from cp_knowledge.importers.mbox.reader import read_mbox
 
 
 def test_read_mbox_first_email() -> None:

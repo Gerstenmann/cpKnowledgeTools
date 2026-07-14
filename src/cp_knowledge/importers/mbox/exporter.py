@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Iterable
 
-from knowledge_importer.mbox.models import Email
+from cp_knowledge.importers.mbox.models import Email
 
 
 def safe_filename(text: str, max_length: int = 80) -> str:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable
 
-from knowledge_importer.mbox.models import Email
+from cp_knowledge.importers.mbox.models import Email
 
 
 VALID_PROCESSING_DECISIONS = {

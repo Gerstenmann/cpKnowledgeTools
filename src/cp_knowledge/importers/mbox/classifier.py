@@ -4,8 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
-from knowledge_importer.common.config import ClassificationRule
-from knowledge_importer.mbox.models import Email
+from cp_knowledge.common.config import ClassificationRule
+from cp_knowledge.importers.mbox.models import Email
 
 
 @dataclass(frozen=True, slots=True)

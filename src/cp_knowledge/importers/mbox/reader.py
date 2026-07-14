@@ -6,9 +6,9 @@ from email.utils import getaddresses, parsedate_to_datetime
 from pathlib import Path
 from typing import Iterator
 
-from knowledge_importer.common.utils import decode
-from knowledge_importer.mbox.cleaner import extract_body
-from knowledge_importer.mbox.models import Email
+from cp_knowledge.common.utils import decode
+from cp_knowledge.importers.mbox.cleaner import extract_body
+from cp_knowledge.importers.mbox.models import Email
 
 
 def parse_date(raw_date: str | None) -> tuple[str, str]:

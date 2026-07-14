@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "knowledge-importer"
+name = "cp-knowledge-system"
 version = "0.1.0"
-description = "Knowledge Import Pipeline for Archibald"
+description = "CP Knowledge System and import pipeline for Archibald"
 requires-python = ">=3.14"
 dependencies = [
     "beautifulsoup4",
@@ -18,7 +18,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["knowledge_importer*"]
+include = ["cp_knowledge*"]
 namespaces = true
 
 [tool.black]

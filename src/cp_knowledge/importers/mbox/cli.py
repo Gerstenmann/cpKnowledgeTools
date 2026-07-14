@@ -3,19 +3,19 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from knowledge_importer.common.config import (
+from cp_knowledge.common.config import (
     load_classification_rules,
     load_project_config,
 )
-from knowledge_importer.mbox.classifier import apply_classification
-from knowledge_importer.mbox.exporter import (
+from cp_knowledge.importers.mbox.classifier import apply_classification
+from cp_knowledge.importers.mbox.exporter import (
     write_jsonl,
     write_markdown_files,
 )
-from knowledge_importer.mbox.filter import partition_emails
-from knowledge_importer.mbox.reader import read_mbox
-from knowledge_importer.mbox.reporter import write_reports
-from knowledge_importer.mbox.overrides import (
+from cp_knowledge.importers.mbox.filter import partition_emails
+from cp_knowledge.importers.mbox.reader import read_mbox
+from cp_knowledge.importers.mbox.reporter import write_reports
+from cp_knowledge.importers.mbox.overrides import (
     apply_override,
     load_overrides,
 )

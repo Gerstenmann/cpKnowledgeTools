@@ -1,0 +1,1 @@
+"""Core package of the CP Knowledge System."""

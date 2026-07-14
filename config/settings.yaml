@@ -1,5 +1,5 @@
 project:
-  name: KnowledgeImporter
+  name: cpKnowledgeSystem
 
 paths:
   email_import_root: /Users/cp/Documents/converter/_Knowledge/Email-imports

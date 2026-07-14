@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 
-from knowledge_importer.mbox.models import Email
+from cp_knowledge.importers.mbox.models import Email
 
 
 def load_overrides(path: Path) -> dict[str, Any]:

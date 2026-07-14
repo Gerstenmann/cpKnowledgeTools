@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable
 
-from knowledge_importer.mbox.models import Email
+from cp_knowledge.importers.mbox.models import Email
 
 
 def _safe_text(value: str) -> str:

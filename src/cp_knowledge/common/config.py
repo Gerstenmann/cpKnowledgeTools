@@ -113,7 +113,7 @@ def load_project_config(
                 settings,
                 "project",
                 "name",
-                default="KnowledgeImporter",
+                default="cpKnowledgeSystem",
             )
         ),
         email_import_root=email_import_root,
