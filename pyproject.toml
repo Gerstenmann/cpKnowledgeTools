@@ -5,16 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cp-knowledge-tools"
 version = "0.1.0"
-description = "CP Knowledge System and import pipeline for Archibald"
+description = "Local Python tooling for the cpKnowledgeSystem and cp-wiki vault"
 requires-python = ">=3.14"
 dependencies = [
     "beautifulsoup4",
     "markdownify",
+    "mcp>=1.28,<2",
     "PyYAML>=6.0,<7.0",
 ]
 
 [project.scripts]
 cp-template = "cp_knowledge_tools.template_generator.cli:main"
+cp-wiki-mcp = "cp_knowledge_tools.mcp.server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
