@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-from cp_knowledge.importers.mbox.exporter import export_emails
-from cp_knowledge.importers.mbox.models import Email
+from cp_knowledge_tools.importers.mbox.exporter import export_emails
+from cp_knowledge_tools.importers.mbox.models import Email
 
 
 def test_export_emails(tmp_path: Path) -> None:

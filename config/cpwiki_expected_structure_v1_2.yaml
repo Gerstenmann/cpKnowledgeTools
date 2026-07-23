@@ -1,0 +1,197 @@
+specification:
+  id: CPWIKI-VAULT-SPEC
+  version: "1.2"
+  title: Obsidian cp-wiki Vault Specification
+  status: normative-draft
+
+allowed_top_level:
+  - 00 Home.md
+  - 00 Inbox
+  - Organizations
+  - Products
+  - Projects
+  - Systems
+  - Processes
+  - Infrastructure
+  - Knowledge
+  - Sources
+  - Development
+  - Templates
+  - Generated
+  - Archive
+
+required_paths:
+  - path: 00 Home.md
+    type: file
+    rationale: Central vault entry point.
+  - path: 00 Inbox
+    type: dir
+  - path: Organizations
+    type: dir
+  - path: Products
+    type: dir
+  - path: Projects
+    type: dir
+  - path: Systems
+    type: dir
+  - path: Processes
+    type: dir
+  - path: Infrastructure
+    type: dir
+  - path: Knowledge
+    type: dir
+  - path: Sources
+    type: dir
+  - path: Development
+    type: dir
+  - path: Templates
+    type: dir
+  - path: Generated
+    type: dir
+  - path: Archive
+    type: dir
+
+  - path: Organizations/Educody GmbH
+    type: dir
+  - path: Organizations/Digitaltutor e.V.
+    type: dir
+  - path: Products/JuniorCodingClub
+    type: dir
+  - path: Systems/cpKnowledgeSystem
+    type: dir
+  - path: Development/cpKnowledgeSystem
+    type: dir
+  - path: Development/cpKnowledgeSystem/Specifications
+    type: dir
+  - path: Development/cpKnowledgeSystem/Analysis/Scope Discovery
+    type: dir
+  - path: Sources/Source Registry
+    type: dir
+  - path: Generated/Entity Registry
+    type: dir
+
+recommended_paths:
+  - path: 00 Inbox/General
+    type: dir
+  - path: 00 Inbox/Organizations
+    type: dir
+  - path: 00 Inbox/Products
+    type: dir
+  - path: 00 Inbox/Systems
+    type: dir
+  - path: 00 Inbox/Sources
+    type: dir
+
+  - path: Products/JuniorCodingClub/00 JuniorCodingClub.md
+    type: file
+  - path: Products/JuniorCodingClub/Product Management
+    type: dir
+  - path: Products/JuniorCodingClub/Service Portfolio
+    type: dir
+  - path: Products/JuniorCodingClub/Programs
+    type: dir
+  - path: Products/JuniorCodingClub/Operations
+    type: dir
+  - path: Products/JuniorCodingClub/Education
+    type: dir
+  - path: Products/JuniorCodingClub/Customers and CRM
+    type: dir
+  - path: Products/JuniorCodingClub/Marketing and Communication
+    type: dir
+  - path: Products/JuniorCodingClub/Finance and Fundraising
+    type: dir
+  - path: Products/JuniorCodingClub/Systems and Integrations
+    type: dir
+  - path: Products/JuniorCodingClub/Development.md
+    type: file
+  - path: Products/JuniorCodingClub/Source Registry.md
+    type: file
+
+  - path: Systems/cpKnowledgeSystem/00 cpKnowledgeSystem.md
+    type: file
+  - path: Systems/cpKnowledgeSystem/Current State.md
+    type: file
+  - path: Systems/cpKnowledgeSystem/Components
+    type: dir
+  - path: Systems/cpKnowledgeSystem/Operations
+    type: dir
+  - path: Systems/cpKnowledgeSystem/Runbooks
+    type: dir
+  - path: Systems/cpKnowledgeSystem/Development.md
+    type: file
+
+  - path: Development/cpKnowledgeSystem/ADR
+    type: dir
+  - path: Development/cpKnowledgeSystem/Schemas
+    type: dir
+  - path: Development/cpKnowledgeSystem/Interfaces
+    type: dir
+  - path: Development/cpKnowledgeSystem/Contracts
+    type: dir
+  - path: Development/cpKnowledgeSystem/Validation
+    type: dir
+  - path: Development/cpKnowledgeSystem/Tests
+    type: dir
+  - path: Development/cpKnowledgeSystem/Change Proposals
+    type: dir
+  - path: Development/cpKnowledgeSystem/Releases
+    type: dir
+  - path: Development/cpKnowledgeSystem/Migrations
+    type: dir
+  - path: Development/cpKnowledgeSystem/Archive
+    type: dir
+
+  - path: Sources/Source Registry/Source Roots
+    type: dir
+  - path: Sources/Source Registry/Record Collections
+    type: dir
+  - path: Sources/Source Registry/Asset Collections
+    type: dir
+  - path: Sources/Source Registry/Software Repositories
+    type: dir
+
+  - path: Templates/Organizations
+    type: dir
+  - path: Templates/Products
+    type: dir
+  - path: Templates/Projects
+    type: dir
+  - path: Templates/Systems
+    type: dir
+  - path: Templates/Processes
+    type: dir
+  - path: Templates/Knowledge
+    type: dir
+  - path: Templates/Sources
+    type: dir
+  - path: Templates/Development
+    type: dir
+
+  - path: Generated/Taxonomy
+    type: dir
+  - path: Generated/Ontology
+    type: dir
+  - path: Generated/Metadata
+    type: dir
+  - path: Generated/Validation
+    type: dir
+  - path: Generated/Manifests
+    type: dir
+  - path: Generated/Reports
+    type: dir
+  - path: Generated/Exports
+    type: dir
+
+deprecated_paths:
+  - path: Services
+    type: dir
+    rationale: Top-level Services was superseded by Systems, Products, Organizations and Processes.
+  - path: Projects/JuniorCodingClub
+    type: dir
+    rationale: JuniorCodingClub is a Product / Operating Venture, not a project.
+  - path: Projects/Haplico
+    type: dir
+    rationale: Haplico is a Product candidate; project subcontexts may exist separately.
+  - path: Projects/Klemnetics
+    type: dir
+    rationale: Klemnetics is a Product candidate; project subcontexts may exist separately.

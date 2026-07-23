@@ -1,4 +1,4 @@
-from cp_knowledge.common.config import load_project_config
+from cp_knowledge_tools.common.config import load_project_config
 
 
 def test_load_project_config() -> None:

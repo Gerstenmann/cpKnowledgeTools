@@ -1,0 +1,1246 @@
+context_id: products
+title: Product Templates
+version: '1.0'
+description: Vorlagen für langlebige Products und Operating Ventures einschließlich Product Management, Service Portfolio, Programs, Operations, Education, CRM, Kommunikation, Finance, Systems, Processes, Development und Sources.
+output_root: Templates/Products
+directories:
+- path: Product Management
+  purpose: Kanonischer Product-Management-Kontext für Vision, Nutzen, Geschäftsmodell, Stakeholder und Portfolio.
+  example: Strategische Steuerung des Products JuniorCodingClub.
+- path: Service Portfolio
+  purpose: Wiederkehrende Leistungen des Products als Service Offerings.
+  example: Coding Clubs, Holiday Camps und Teacher Training.
+- path: Programs
+  purpose: Längerfristige Programme innerhalb oder im Umfeld des Products.
+  example: Robogirls als mehrjähriges Förderprogramm.
+- path: Operations
+  purpose: Übergreifender Run-Kontext konkreter Product-Durchführungen.
+  example: Aktive Kurse, Camps und Partneraktivitäten.
+- path: Operations/Courses
+  purpose: Konkrete Kursdurchführungen.
+  example: Ein zehnwöchiger Python-Grundkurs.
+- path: Operations/Coding Clubs
+  purpose: Konkrete wiederkehrende Coding-Club-Aktivitäten.
+  example: Wöchentlicher Coding Club an der FIS.
+- path: Operations/Camps
+  purpose: Konkrete Feriencamp- oder Intensivformat-Aktivitäten.
+  example: FIS REAL Minecraft Camp im Juli 2026.
+- path: Operations/Schools and Partners
+  purpose: Operative Kontexte mit Schulen und Delivery-Partnern.
+  example: Laufende Kooperation mit einer internationalen Schule.
+- path: Operations/Operations Notes
+  purpose: Nichtkanonische operative Arbeitsnotizen.
+  example: Vorläufige Planung eines zusätzlichen Club-Termins.
+- path: Education
+  purpose: Product-spezifischer pädagogischer Kontext.
+  example: JuniorCodingClub-spezifische Bildungslogik.
+- path: Education/Curriculum
+  purpose: Product-spezifische Curricula und Kompetenzmodelle.
+  example: Coding Curriculum für Altersgruppe 9 bis 12.
+- path: Education/Course Concepts
+  purpose: Konzeption einzelner Kursformate.
+  example: Minecraft Education Coding Fundamentals.
+- path: Education/Learning Paths
+  purpose: Progressive Lernpfade über mehrere Formate hinweg.
+  example: Von Scratch zu Python und Robotik.
+- path: Education/Teaching Materials
+  purpose: Product-spezifische Lehr- und Lernmaterialien.
+  example: Challenge Cards für einen Robotik-Workshop.
+- path: Customers and CRM
+  purpose: Kanonischer Product-Kontext für Zielgruppen-, Kunden- und CRM-Anforderungen.
+  example: Schulen, Eltern und Teilnehmende als unterschiedliche CRM-Kontexte.
+- path: Marketing and Communication
+  purpose: Product-spezifische Markt-, Brand- und Kommunikationsinhalte.
+  example: Monatlicher Lernplan oder Website-Produktbeschreibung.
+- path: Finance and Fundraising
+  purpose: Product-spezifischer Finanzierungs- und Fundraising-Kontext ohne Belegablage.
+  example: Fördermodell eines Bildungsprogramms.
+- path: Systems and Integrations
+  purpose: Systems, Schnittstellen und Integrationen, die das Product nutzt.
+  example: CRM, Minecraft Education und cpKnowledgeSystem.
+- path: Archive
+  purpose: Nicht mehr aktive, aber aufzubewahrende Product-Inhalte.
+  example: Abgelöstes Kurskonzept oder eingestelltes Offering.
+documents:
+- path: 00 Product Template.md
+  purpose: Kanonische Hauptdatei eines langlebigen Products oder Operating Ventures.
+  example: JuniorCodingClub als aktives Product mit Zielgruppen, Offerings, Programs, Systems und Development-Kontext.
+  frontmatter:
+    document_type: entity_document
+    entity_id: PRODUCT-TBD
+    entity_type: product
+    title: Product Name
+    status: candidate
+    owner: ORG-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    entity_roles:
+    - product
+    brand_roles: []
+    canonical_vault_path: Products/Product Name
+    target_groups: []
+    operating_organizations: []
+    supporting_organizations: []
+    service_offerings: []
+    programs: []
+    related_systems: []
+    related_processes: []
+    development_context: Development/Product Name
+    source_registry: Source Registry Template.md
+  sections:
+  - heading: Product Overview
+    level: 1
+    instruction: Kanonische Product-Identität, Rolle und Lifecycle-Status zusammenfassen.
+    example: JuniorCodingClub ist ein langlebiges Bildungs-Product und Operating Venture.
+    starter: []
+  - heading: Purpose
+    level: 2
+    instruction: Dauerhaften Product-Zweck und Problemraum beschreiben.
+    example: Kinder erhalten systematischen Zugang zu Coding, Robotik und digitalem Gestalten.
+    starter: []
+  - heading: Target Groups
+    level: 2
+    instruction: Primäre Nutzer, Käufer, Partner und Begünstigte unterscheiden.
+    example: Kinder, Eltern, Schulen und Förderpartner.
+    starter: []
+  - heading: Value Proposition
+    level: 2
+    instruction: Kernnutzen und Differenzierung prägnant darstellen.
+    example: Praxisnahe, altersgerechte Coding-Angebote mit langfristigen Lernpfaden.
+    starter: []
+  - heading: Product Ownership
+    level: 2
+    instruction: Product Owner sowie betreibende und unterstützende Organizations benennen.
+    example: Educody GmbH betreibt; Digitaltutor e.V. unterstützt Förderprogramme.
+    starter: []
+  - heading: Service Offerings
+    level: 2
+    instruction: Wiederkehrende Leistungen über stabile Offering-IDs referenzieren.
+    example: Coding Clubs, Holiday Camps und Teacher Training.
+    starter: []
+  - heading: Programs
+    level: 2
+    instruction: Längerfristige Product-Programs referenzieren.
+    example: Robogirls und Robots for Nature.
+    starter: []
+  - heading: Operating Model
+    level: 2
+    instruction: Wie das Product aktuell betrieben und gesteuert wird beschreiben.
+    example: Kurse und Clubs werden in Kooperation mit Schulen durchgeführt.
+    starter: []
+  - heading: Systems and Processes
+    level: 2
+    instruction: Relevante Systems, Integrationen und kanonische Processes verlinken.
+    example: CRM, Minecraft Education, Course Management und Partnership Management.
+    starter: []
+  - heading: Development
+    level: 2
+    instruction: Kanonischen Development-Kontext referenzieren, ohne Sollinhalte zu duplizieren.
+    example: Development/JuniorCodingClub.
+    starter: []
+  - heading: Sources and Provenance
+    level: 2
+    instruction: Source Registry und maßgebliche Evidenz verlinken.
+    example: Confluence-Export, Website, MBOX und Vertragsreferenzen.
+    starter: []
+  - heading: Sensitivity and Access
+    level: 2
+    instruction: Product-spezifische Schutz- und Retrieval-Regeln dokumentieren.
+    example: Teilnehmerrecords sind restricted und memory-ineligible.
+    starter: []
+- path: Product Management/Product Vision Template.md
+  purpose: Kanonische langfristige Product Vision.
+  example: JuniorCodingClub macht hochwertige digitale Bildung für Kinder dauerhaft zugänglich.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-VISION-TBD
+    title: Product Vision
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Product Vision
+    level: 1
+    instruction: Langfristigen angestrebten Zustand in einem klaren Zukunftsbild formulieren.
+    example: Jedes interessierte Kind kann unabhängig vom Schulstandort Coding und Robotik lernen.
+    starter: []
+  - heading: Strategic Intent
+    level: 2
+    instruction: Strategische Stoßrichtung und Prioritäten ableiten.
+    example: Skalierbare Partnerangebote und hochwertige Lernpfade.
+    starter: []
+  - heading: Boundaries
+    level: 2
+    instruction: Explizit benennen, was nicht Teil der Vision ist.
+    example: Keine allgemeine Nachhilfeplattform für sämtliche Schulfächer.
+    starter: []
+  - heading: Success Indicators
+    level: 2
+    instruction: Wenige langfristige Erfolgsindikatoren definieren.
+    example: Wiederkehrende Partner, Lernfortschritt und tragfähiger Betrieb.
+    starter: []
+- path: Product Management/Value Proposition Template.md
+  purpose: Strukturierte Value Proposition für Zielgruppen und Stakeholder.
+  example: Schulen erhalten ein verlässliches Coding-Angebot ohne eigene Speziallehrkräfte aufbauen zu müssen.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-VALUE-TBD
+    title: Value Proposition
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Value Proposition
+    level: 1
+    instruction: Kernnutzen des Products zusammenfassen.
+    example: Hochwertige Coding- und Robotics-Angebote für Kinder und Schulen.
+    starter: []
+  - heading: Target Group Needs
+    level: 2
+    instruction: Probleme, Bedürfnisse und Jobs-to-be-done je Zielgruppe beschreiben.
+    example: Schulen benötigen qualifiziertes Personal und erprobte Curricula.
+    starter: []
+  - heading: Benefits
+    level: 2
+    instruction: Funktionale, emotionale und institutionelle Vorteile benennen.
+    example: Planungssicherheit, Lernmotivation und sichtbare Projektergebnisse.
+    starter: []
+  - heading: Differentiation
+    level: 2
+    instruction: Relevante Abgrenzung zu Alternativen darstellen.
+    example: Verbindung aus Pädagogik, Softwareentwicklung und Physical Computing.
+    starter: []
+  - heading: Evidence
+    level: 2
+    instruction: Belege, Erfahrungen und Source-Referenzen angeben.
+    example: Mehrjährige Schulkooperationen und abgeschlossene Kursreihen.
+    starter: []
+- path: Product Management/Business Model Template.md
+  purpose: Aktuell gültiges Product-Business- und Operating-Model.
+  example: Erlöse aus Schulkooperationen, Camps und ergänzender Förderung.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-BUSINESS-MODEL-TBD
+    title: Business Model
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: confidential
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Business Model
+    level: 1
+    instruction: Wertschöpfungs- und Betriebslogik zusammenfassen.
+    example: Direkte Schulverträge werden mit geförderten Programmen kombiniert.
+    starter: []
+  - heading: Customer Segments
+    level: 2
+    instruction: Zahlende Kunden, Nutzer und Begünstigte unterscheiden.
+    example: Schulen zahlen; Kinder nutzen; Eltern beeinflussen die Nachfrage.
+    starter: []
+  - heading: Revenue and Funding
+    level: 2
+    instruction: Erlös- und Förderlogik ohne Belegdaten beschreiben.
+    example: Kursvergütung, Campgebühren und projektbezogene Förderung.
+    starter: []
+  - heading: Cost Structure
+    level: 2
+    instruction: Wesentliche Kostenblöcke benennen.
+    example: Lehrpersonal, Vorbereitung, Hardware, Software und Administration.
+    starter: []
+  - heading: Key Resources and Partners
+    level: 2
+    instruction: Kritische Ressourcen und Partnerschaften aufführen.
+    example: Didaktisches Know-how, Lehrkräfte, Schulen und Plattformzugänge.
+    starter: []
+  - heading: Risks and Assumptions
+    level: 2
+    instruction: Tragende Annahmen und wesentliche Risiken dokumentieren.
+    example: Auslastung, Personalverfügbarkeit und Partnerbindung.
+    starter: []
+- path: Product Management/Stakeholders Template.md
+  purpose: Kanonischer Stakeholder-Katalog des Products.
+  example: Kinder, Eltern, Schulen, Product Owner, Förderer und Lehrkräfte.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-STAKEHOLDERS-TBD
+    title: Stakeholders
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Stakeholders
+    level: 1
+    instruction: Stakeholder mit Rolle, Interesse und Einfluss katalogisieren.
+    example: Schulkoordination als Auftraggeber und operativer Partner.
+    starter:
+    - '| Stakeholder ID | Stakeholder | Role | Interest | Influence |'
+    - '|---|---|---|---|---|'
+  - heading: Engagement Model
+    level: 2
+    instruction: Kommunikations- und Beteiligungsmodell je Stakeholdergruppe beschreiben.
+    example: Monatlicher Lernplan für Schulen; terminspezifische Elternkommunikation.
+    starter: []
+  - heading: Conflicts and Trade-offs
+    level: 2
+    instruction: Bekannte Zielkonflikte und Priorisierungsregeln dokumentieren.
+    example: Individuelle Wünsche versus standardisierbares Curriculum.
+    starter: []
+- path: Product Management/Product Portfolio Template.md
+  purpose: Katalog von Product-Linien, Subproducts oder Angebotsfamilien.
+  example: Coding Clubs, Camps, Digital AG und Teacher Training als strukturierte Portfolioelemente.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-PORTFOLIO-TBD
+    title: Product Portfolio
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Product Portfolio
+    level: 1
+    instruction: Portfolioelemente, Rolle und Lifecycle katalogisieren.
+    example: Holiday Camps als saisonales Offering im Product-Portfolio.
+    starter:
+    - '| ID | Portfolio Element | Type | Status | Owner |'
+    - '|---|---|---|---|---|'
+  - heading: Portfolio Architecture
+    level: 2
+    instruction: Zusammenhang und Abgrenzung der Elemente erklären.
+    example: Clubs sind wiederkehrend; Camps sind intensive Ferienformate.
+    starter: []
+  - heading: Lifecycle Decisions
+    level: 2
+    instruction: Start, Pause, Ausbau oder Retirement dokumentieren.
+    example: Minecraft-only Club wird nicht fortgeführt; Game Design und Robotics werden ausgebaut.
+    starter: []
+- path: Service Portfolio/Service Offering Template.md
+  purpose: Kanonische Vorlage für eine wiederkehrende Leistung des Products.
+  example: Holiday Camp als wiederkehrendes Angebot für Kinder und Schulen.
+  frontmatter:
+    document_type: entity_document
+    entity_id: OFFERING-TBD
+    entity_type: service_offering
+    title: Service Offering
+    status: idea
+    owner: PRODUCT-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_product: PRODUCT-TBD
+    target_groups: []
+    expected_outcomes: []
+    delivery_model: TBD
+    related_processes: []
+    related_systems: []
+    active_programs: []
+    operational_activities: []
+  sections:
+  - heading: Service Offering
+    level: 1
+    instruction: Offering-Identität und verantwortliches Product beschreiben.
+    example: Holiday Camps sind intensive mehrtägige Bildungsangebote.
+    starter: []
+  - heading: Target Group
+    level: 2
+    instruction: Zielgruppe und Zugangsvoraussetzungen definieren.
+    example: Kinder im Alter von 9 bis 12 Jahren mit oder ohne Vorerfahrung.
+    starter: []
+  - heading: Expected Outcome
+    level: 2
+    instruction: Erwartetes Ergebnis für Teilnehmende und Auftraggeber benennen.
+    example: Eigenes digitales Projekt und grundlegende Coding-Kompetenzen.
+    starter: []
+  - heading: Delivery Model
+    level: 2
+    instruction: Format, Dauer, Ressourcen und Standardablauf beschreiben.
+    example: Fünftägiges Präsenzcamp mit täglichen dreistündigen Sessions.
+    starter: []
+  - heading: Processes and Systems
+    level: 2
+    instruction: Kanonische Processes und genutzte Systems referenzieren.
+    example: Course Management, Participant Communication und Minecraft Education.
+    starter: []
+  - heading: Programs and Activities
+    level: 2
+    instruction: Zugehörige Programs und konkrete Operational Activities verlinken.
+    example: FIS REAL Minecraft Camp July 2026.
+    starter: []
+  - heading: Quality Criteria
+    level: 2
+    instruction: Qualitäts- und Abnahmekriterien definieren.
+    example: Klare Lernziele, sichtbare Projekte und strukturierte Evaluation.
+    starter: []
+- path: Programs/Program Template.md
+  purpose: Product-spezifische Program-Vorlage.
+  example: Robots for Nature als längerfristiges Program mit Workshops und Partnerschaften.
+  frontmatter:
+    document_type: entity_document
+    entity_id: PROGRAM-TBD
+    entity_type: program
+    title: Program Name
+    status: idea
+    owner: PRODUCT-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_product: PRODUCT-TBD
+    related_organizations: []
+    service_offerings: []
+    operational_activities: []
+    related_domains: []
+  sections:
+  - heading: Program Overview
+    level: 1
+    instruction: Program-Identität, Product-Zuordnung und langfristigen Rahmen beschreiben.
+    example: Robots for Nature verbindet Robotik mit Umweltbildung.
+    starter: []
+  - heading: Purpose and Outcomes
+    level: 2
+    instruction: Wirkungsziel und erwartete Outcomes definieren.
+    example: Kinder entwickeln technische Lösungen für Umweltfragen.
+    starter: []
+  - heading: Target Groups
+    level: 2
+    instruction: Begünstigte und Partnerzielgruppen benennen.
+    example: Kinder, Schulen und Umweltbildungsinitiativen.
+    starter: []
+  - heading: Offerings and Activities
+    level: 2
+    instruction: Service Offerings und konkrete Aktivitäten referenzieren.
+    example: Workshops und Projektwochen.
+    starter: []
+  - heading: Partners and Funding
+    level: 2
+    instruction: Beteiligte Organizations und Förderlogik dokumentieren.
+    example: Umweltstiftung finanziert ausgewählte Workshops.
+    starter: []
+  - heading: Evaluation
+    level: 2
+    instruction: Wirkungs- und Qualitätsmessung festlegen.
+    example: Projektqualität, Teilnehmendenfeedback und Partnerfortsetzung.
+    starter: []
+- path: Operations/Operational Activity Template.md
+  purpose: Generische Vorlage für eine konkrete Product-Durchführung.
+  example: Ein konkreter Workshop, Kurs, Camp oder Club-Termin.
+  frontmatter:
+    document_type: entity_document
+    entity_id: ACTIVITY-TBD
+    entity_type: operational_activity
+    title: Operational Activity
+    status: planned
+    owner: PRODUCT-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_product: PRODUCT-TBD
+    activity_type: other
+    period: TBD
+    related_organizations: []
+    related_systems: []
+    service_offering: OFFERING-TBD
+    source_references: []
+  sections:
+  - heading: Activity Overview
+    level: 1
+    instruction: Aktivität, Zeitraum, Ort und verantwortlichen Product-Kontext beschreiben.
+    example: Ein dreistündiger Robotik-Workshop am 10. Oktober 2026.
+    starter: []
+  - heading: Purpose and Outcome
+    level: 2
+    instruction: Konkretes operatives Ergebnis definieren.
+    example: Teilnehmende bauen und programmieren einen Sensorroboter.
+    starter: []
+  - heading: Participants and Partners
+    level: 2
+    instruction: Zielgruppe und Partner ohne personenbezogene Detaildaten beschreiben.
+    example: Eine Schulklasse und die lokale Koordination.
+    starter: []
+  - heading: Plan and Resources
+    level: 2
+    instruction: Ablauf, Material, Personal und genutzte Systems dokumentieren.
+    example: Calliope mini, Laptops, zwei Lehrkräfte und vorbereitete Challenges.
+    starter: []
+  - heading: Records and Privacy
+    level: 2
+    instruction: Restricted Records nur referenzieren.
+    example: Teilnehmerdaten verbleiben im externen Kursverwaltungssystem.
+    starter: []
+  - heading: Evaluation and Follow-up
+    level: 2
+    instruction: Ergebnis, Abweichungen und Nachbereitung erfassen.
+    example: Workshop abgeschlossen; Fortsetzung als AG wird geprüft.
+    starter: []
+- path: Operations/Courses/Course Activity Template.md
+  purpose: Spezialisierte Aktivitätsvorlage für einen zeitlich begrenzten Kurs.
+  example: Zehnwöchiger Python-Kurs für Jahrgang 7.
+  frontmatter:
+    document_type: entity_document
+    entity_id: ACTIVITY-COURSE-TBD
+    entity_type: operational_activity
+    title: Course Activity
+    status: planned
+    owner: PRODUCT-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_product: PRODUCT-TBD
+    activity_type: course
+    period: TBD
+    related_organizations: []
+    related_systems: []
+    service_offering: OFFERING-COURSE-TBD
+    source_references: []
+  sections:
+  - heading: Course Overview
+    level: 1
+    instruction: Kursformat, Zeitraum, Zielgruppe und Partner beschreiben.
+    example: Python Basics, zehn Termine, Jahrgang 7.
+    starter: []
+  - heading: Learning Objectives
+    level: 2
+    instruction: Konkrete Kompetenzen und erwartete Lernergebnisse definieren.
+    example: Variablen, Bedingungen, Schleifen und ein Abschlussprojekt.
+    starter: []
+  - heading: Schedule
+    level: 2
+    instruction: Termine und Lernprogression darstellen.
+    example: Termine 1 bis 3 Grundlagen; Termine 4 bis 8 Projektarbeit.
+    starter: []
+  - heading: Delivery and Resources
+    level: 2
+    instruction: Lehrkräfte, Räume, Geräte und Software dokumentieren.
+    example: Eine Lehrkraft, Computerraum und browserbasierte Python-IDE.
+    starter: []
+  - heading: Evaluation
+    level: 2
+    instruction: Lernfortschritt und Kursqualität auswerten.
+    example: Abschlussprojekt und kurze Selbsteinschätzung.
+    starter: []
+- path: Operations/Coding Clubs/Coding Club Activity Template.md
+  purpose: Spezialisierte Aktivitätsvorlage für einen wiederkehrenden Coding Club.
+  example: Wöchentlicher Club an einer Partnerschule über ein Schulhalbjahr.
+  frontmatter:
+    document_type: entity_document
+    entity_id: ACTIVITY-CLUB-TBD
+    entity_type: operational_activity
+    title: Coding Club Activity
+    status: planned
+    owner: PRODUCT-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_product: PRODUCT-TBD
+    activity_type: coding_club
+    period: TBD
+    related_organizations: []
+    related_systems: []
+    service_offering: OFFERING-CODING-CLUB-TBD
+    source_references: []
+  sections:
+  - heading: Coding Club Overview
+    level: 1
+    instruction: Schule, Rhythmus, Laufzeit und Zielgruppe beschreiben.
+    example: Dienstags, wöchentlich, Jahrgang 4 bis 6.
+    starter: []
+  - heading: Learning Plan
+    level: 2
+    instruction: Monatliche oder term-basierte Lernplanung dokumentieren.
+    example: September Game Design; Oktober Robotics.
+    starter: []
+  - heading: Operating Agreement
+    level: 2
+    instruction: Gruppengröße, Raum, Personal und Kommunikation festhalten.
+    example: Maximal 14 Teilnehmende, ein Raum und eine Lehrkraft.
+    starter: []
+  - heading: Partner Communication
+    level: 2
+    instruction: Regelkommunikation mit der Schule definieren.
+    example: Monatlicher Lernplan zu Monatsbeginn.
+    starter: []
+  - heading: Review
+    level: 2
+    instruction: Auslastung, Lernfortschritt und Fortführung bewerten.
+    example: Warteliste vorhanden; zweiter Termin wird geprüft.
+    starter: []
+- path: Operations/Camps/Camp Activity Template.md
+  purpose: Spezialisierte Aktivitätsvorlage für ein konkretes Camp.
+  example: FIS REAL Minecraft Camp im Juli 2026.
+  frontmatter:
+    document_type: entity_document
+    entity_id: ACTIVITY-CAMP-TBD
+    entity_type: operational_activity
+    title: Camp Activity
+    status: planned
+    owner: PRODUCT-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_product: PRODUCT-TBD
+    activity_type: camp
+    period: TBD
+    related_organizations: []
+    related_systems: []
+    service_offering: OFFERING-HOLIDAY-CAMP-TBD
+    source_references: []
+  sections:
+  - heading: Camp Overview
+    level: 1
+    instruction: Zeitraum, Ort, Thema, Zielgruppe und Partner beschreiben.
+    example: Fünf Tage Minecraft Education für Kinder von 9 bis 11 Jahren.
+    starter: []
+  - heading: Learning Framework
+    level: 2
+    instruction: Lernziele, Themen und flexible didaktische Struktur festhalten.
+    example: Coding Fundamentals, Redstone, Commands und eigenes Projekt.
+    starter: []
+  - heading: Daily Structure
+    level: 2
+    instruction: Rituale, Zeitblöcke und Tagesanker dokumentieren.
+    example: Check-in, Challenge, Projektzeit, Pause und Abschlussrunde.
+    starter: []
+  - heading: Resources and Staffing
+    level: 2
+    instruction: Räume, Geräte, Personal und Material aufführen.
+    example: Raum S.314, iPads, Flipchart und zwei Lehrkräfte.
+    starter: []
+  - heading: Communication
+    level: 2
+    instruction: Eltern- und Partnerkommunikation referenzieren.
+    example: Vorlaufmail, Tagesupdates und Abschlussnachricht.
+    starter: []
+  - heading: Evaluation and Portfolio
+    level: 2
+    instruction: Abschluss, Portfolios und Lessons Learned dokumentieren.
+    example: Fotobasierte Portfolios und kurze Projektpräsentation.
+    starter: []
+- path: Operations/Schools and Partners/Partner Operation Template.md
+  purpose: Product-spezifischer operativer Kontext mit einer Schule oder Delivery-Organization.
+  example: Laufende Club- und Camp-Kooperation mit einer Schule.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-PARTNER-OPS-TBD
+    title: Partner Operation
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: confidential
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Partner Operation
+    level: 1
+    instruction: Partner, Product-Bezug und operativen Scope beschreiben.
+    example: Kooperation mit ORG-FIS für Clubs und Feriencamps.
+    starter: []
+  - heading: Active Offerings and Activities
+    level: 2
+    instruction: Aktive Offerings und konkrete Activities katalogisieren.
+    example: Coding Club Tuesday und Holiday Camp July 2026.
+    starter: []
+  - heading: Responsibilities and Interfaces
+    level: 2
+    instruction: Operative Zuständigkeiten und Ansprechpartnerrollen beschreiben.
+    example: Schule organisiert Räume; Product stellt Curriculum und Lehrkräfte.
+    starter: []
+  - heading: Communication Model
+    level: 2
+    instruction: Frequenz, Kanäle und Formate festlegen.
+    example: Monatlicher Lernplan und terminspezifische Abstimmung.
+    starter: []
+  - heading: Issues and Reviews
+    level: 2
+    instruction: Offene Punkte, Konflikte und Review-Termine dokumentieren.
+    example: Gruppengröße und Werberegeln vor Verlängerung klären.
+    starter: []
+- path: Operations/Operations Notes/Operations Note Template.md
+  purpose: Nichtkanonische operative Arbeitsnotiz.
+  example: Vorläufige Abstimmung zu Raum, Material oder Termin.
+  frontmatter:
+    document_type: human_note
+    title: Operations Note
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: false
+    agent_access:
+    - owner
+    contains_personal_data: false
+    retention_class: working_note
+  sections:
+  - heading: Operations Note
+    level: 1
+    instruction: Operativen Arbeitsstand knapp erfassen.
+    example: Der Raum ist bestätigt; Flipchart muss noch organisiert werden.
+    starter: []
+  - heading: Open Items
+    level: 2
+    instruction: Offene Aufgaben mit Verantwortlichkeit dokumentieren.
+    example: T-Shirts und Zugangsausweise klären.
+    starter:
+    - '- Item:'
+    - '  Owner:'
+    - '  Due:'
+  - heading: Canonical Follow-up
+    level: 2
+    instruction: Bestimmen, welche Information in ein kanonisches Activity- oder Partner-Dokument überführt wird.
+    example: Bestätigte Raumdaten in Camp Activity übernehmen.
+    starter: []
+- path: Education/Curriculum/Curriculum Template.md
+  purpose: Product-spezifisches Curriculum mit Kompetenz- und Inhaltsstruktur.
+  example: JuniorCodingClub Curriculum für Coding, Game Design und Robotics.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-CURRICULUM-TBD
+    title: Curriculum
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Curriculum
+    level: 1
+    instruction: Geltungsbereich, Altersstufen und pädagogische Logik beschreiben.
+    example: Curriculum für 9 bis 14 Jahre mit progressiven Lernstufen.
+    starter: []
+  - heading: Competency Areas
+    level: 2
+    instruction: Kompetenzbereiche und erwartete Entwicklung definieren.
+    example: Algorithmic Thinking, Programming, Robotics und Digital Design.
+    starter: []
+  - heading: Progression
+    level: 2
+    instruction: Lernprogression über Stufen oder Zeiträume darstellen.
+    example: Block Coding zu textbasiertem Python und Physical Computing.
+    starter: []
+  - heading: Content Map
+    level: 2
+    instruction: Module, Topics und zugehörige Course Concepts katalogisieren.
+    example: Game Design, Internet Safety, Robotics und 3D Design.
+    starter: []
+  - heading: Assessment and Evidence
+    level: 2
+    instruction: Lernnachweise und Beobachtungskriterien definieren.
+    example: Projektartefakte, Präsentationen und Reflexion.
+    starter: []
+  - heading: Related Knowledge
+    level: 2
+    instruction: Generalisierbares Wissen im Knowledge-Bereich verlinken.
+    example: Project-Based Learning und Scaffolding.
+    starter: []
+- path: Education/Course Concepts/Course Concept Template.md
+  purpose: Didaktisches Konzept eines wiederverwendbaren Product-Kursformats.
+  example: Minecraft Education Coding Fundamentals als fünftägiges Camp-Konzept.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-COURSE-CONCEPT-TBD
+    title: Course Concept
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Course Concept
+    level: 1
+    instruction: Format, Zielgruppe und Wiederverwendbarkeit beschreiben.
+    example: Fünftägiges Minecraft-Camp für 9 bis 11 Jahre.
+    starter: []
+  - heading: Learning Objectives
+    level: 2
+    instruction: Kompetenzen und überprüfbare Ergebnisse definieren.
+    example: Ereignisse, Schleifen, Koordinaten und eigenes Projekt.
+    starter: []
+  - heading: Learning Sequence
+    level: 2
+    instruction: Didaktische Abfolge und Scaffolding beschreiben.
+    example: Geführte Challenges führen schrittweise zur offenen Projektphase.
+    starter: []
+  - heading: Activities and Materials
+    level: 2
+    instruction: Übungen, Challenges und Teaching Materials referenzieren.
+    example: Agent Missions, Redstone Challenge und Build Brief.
+    starter: []
+  - heading: Adaptation Rules
+    level: 2
+    instruction: Anpassungen nach Vorkenntnis, Sprache oder Gruppengröße definieren.
+    example: Fortgeschrittene erhalten Erweiterungsmissionen.
+    starter: []
+  - heading: Quality Criteria
+    level: 2
+    instruction: Anforderungen an Durchführung und Ergebnis festlegen.
+    example: Jedes Kind erstellt ein funktionierendes eigenes Projekt.
+    starter: []
+- path: Education/Learning Paths/Learning Path Template.md
+  purpose: Mehrstufiger Product-Lernpfad über mehrere Angebote hinweg.
+  example: Von Scratch und Game Design zu Python, Robotics und eigenen Projekten.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-LEARNING-PATH-TBD
+    title: Learning Path
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Learning Path
+    level: 1
+    instruction: Zielgruppe, Einstieg und angestrebtes Kompetenzniveau beschreiben.
+    example: Mehrjähriger Pfad für Kinder von 9 bis 14 Jahren.
+    starter: []
+  - heading: Stages
+    level: 2
+    instruction: Stufen mit Voraussetzungen, Inhalten und Ergebnissen definieren.
+    example: Stage 1 Block Coding; Stage 2 Python; Stage 3 Robotics.
+    starter: []
+  - heading: Transitions
+    level: 2
+    instruction: Übergangskriterien und alternative Pfade beschreiben.
+    example: Eigenständige Schleifen und Variablen ermöglichen den Python-Einstieg.
+    starter: []
+  - heading: Offerings
+    level: 2
+    instruction: Passende Service Offerings und Course Concepts je Stufe referenzieren.
+    example: Coding Club Basics, Python Course und Robotics Lab.
+    starter: []
+  - heading: Evidence of Progress
+    level: 2
+    instruction: Nachweise und Portfolios über den Pfad hinweg definieren.
+    example: Projektportfolio und Kompetenzbeobachtungen.
+    starter: []
+- path: Education/Teaching Materials/Teaching Material Template.md
+  purpose: Metadaten- und Authoring-Vorlage für Product-spezifisches Lehrmaterial.
+  example: Challenge Card für einen Calliope-mini-Sensorroboter.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-MATERIAL-TBD
+    title: Teaching Material
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Teaching Material
+    level: 1
+    instruction: Materialtyp, Zielgruppe und Einsatzkontext beschreiben.
+    example: Challenge Card für einen 60-minütigen Robotik-Block.
+    starter: []
+  - heading: Learning Objective
+    level: 2
+    instruction: Kompetenzziel des Materials benennen.
+    example: Sensorwerte auslesen und in einer Bedingung verwenden.
+    starter: []
+  - heading: Instructions
+    level: 2
+    instruction: Klare, altersgerechte Arbeitsanweisung bereitstellen.
+    example: Baue den Sensor an und programmiere eine Warnanzeige.
+    starter: []
+  - heading: Resources
+    level: 2
+    instruction: Benötigte Hardware, Software und Vorwissen aufführen.
+    example: Calliope mini, Lichtsensor und MakeCode.
+    starter: []
+  - heading: Differentiation
+    level: 2
+    instruction: Hilfen und Erweiterungen für unterschiedliche Niveaus anbieten.
+    example: Starter-Code sowie Zusatzaufgabe mit Datenlogging.
+    starter: []
+  - heading: Source and License
+    level: 2
+    instruction: Urheber, Quelle und Nutzungsrechte dokumentieren.
+    example: Eigenentwicklung; interne Nutzung und Partnerfreigabe.
+    starter: []
+- path: Customers and CRM/CRM Context Template.md
+  purpose: Kanonischer Product-Kontext für Customer Types, CRM-Anforderungen und Datenabgrenzung.
+  example: Schulen als Organisationskunden, Eltern als Kontakte und Teilnehmende als restricted Records.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-CRM-CONTEXT-TBD
+    title: Customers and CRM Context
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: confidential
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Customer and CRM Context
+    level: 1
+    instruction: Customer Types, Nutzerrollen und CRM-Zweck beschreiben.
+    example: Schulen sind B2B-Kunden; Eltern sind Kommunikationskontakte.
+    starter: []
+  - heading: Entity and Record Model
+    level: 2
+    instruction: Kanonische Entity-IDs von operativen Records unterscheiden.
+    example: ORG-FIS als Entity; Teilnehmeranmeldung als restricted Record.
+    starter: []
+  - heading: Lifecycle
+    level: 2
+    instruction: Lead-, Partner-, Buchungs- oder Teilnahme-Lifecycle definieren.
+    example: Lead zu Partner Organization zu aktiver Activity.
+    starter: []
+  - heading: Data Boundaries
+    level: 2
+    instruction: Personenbezogene und regulierte Daten klar abgrenzen.
+    example: Geburtsdaten und Gesundheitsinformationen nicht im Standard-Vault.
+    starter: []
+  - heading: System Requirements
+    level: 2
+    instruction: Product-spezifische Anforderungen an CRM und Integrationen festhalten.
+    example: Verknüpfung von Organization, Offering, Activity und Communication.
+    starter: []
+- path: Marketing and Communication/Communication Asset Template.md
+  purpose: Vorlage für kanonische Product-Kommunikation oder ein wiederverwendbares Kommunikationsasset.
+  example: Monatlicher Lernplan für eine Partnerschule.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-COMMUNICATION-TBD
+    title: Communication Asset
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Communication Asset
+    level: 1
+    instruction: Zweck, Zielgruppe, Kanal und Status beschreiben.
+    example: Monatlicher Lernplan für Schulkoordination und Eltern.
+    starter: []
+  - heading: Message
+    level: 2
+    instruction: Kernaussage und Informationsumfang definieren.
+    example: Im September stehen Game Design und erste Programmierprinzipien im Fokus.
+    starter: []
+  - heading: Audience and Channel
+    level: 2
+    instruction: Empfängergruppe und Ausspielweg benennen.
+    example: E-Mail an Schulkoordination; Weiterleitung im Elternnewsletter.
+    starter: []
+  - heading: Brand and Compliance
+    level: 2
+    instruction: Brand-, Vertrags- und Freigaberegeln dokumentieren.
+    example: Keine werbliche Zusatzkommunikation ohne Partnerfreigabe.
+    starter: []
+  - heading: Source and Reuse
+    level: 2
+    instruction: Herkunft, Varianten und Wiederverwendung beschreiben.
+    example: Aus dem monatlichen Curriculum abgeleitet.
+    starter: []
+- path: Finance and Fundraising/Finance and Fundraising Note Template.md
+  purpose: Kanonischer Product-Kontext für Finanzierungslogik und Fundraising ohne operative Belege.
+  example: Förderung eines Robotics-Programs durch Digitaltutor e.V. und eine Stiftung.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-FINANCE-TBD
+    title: Finance and Fundraising Context
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: confidential
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Finance and Fundraising Context
+    level: 1
+    instruction: Finanzierungsmodell und Scope beschreiben.
+    example: Product-Erlöse werden durch projektbezogene Förderung ergänzt.
+    starter: []
+  - heading: Revenue and Funding Sources
+    level: 2
+    instruction: Quellen auf Kategorieebene dokumentieren.
+    example: Schulverträge, Campgebühren und Fördermittel.
+    starter: []
+  - heading: Cost Drivers
+    level: 2
+    instruction: Wesentliche Product-Kostentreiber benennen.
+    example: Lehrpersonal, Vorbereitung, Hardware und Plattformlizenzen.
+    starter: []
+  - heading: Funding Relationships
+    level: 2
+    instruction: Fördernde Organizations und Programs referenzieren.
+    example: Digitaltutor e.V. unterstützt PROGRAM-ROBOGIRLS.
+    starter: []
+  - heading: Record Boundaries
+    level: 2
+    instruction: Belege, Bankdaten und Steuerrecords nur extern referenzieren.
+    example: Rechnungen und Bankbelege liegen in restricted Record Collections.
+    starter: []
+- path: Systems and Integrations/System Integration Template.md
+  purpose: Product-spezifische Beschreibung einer genutzten Systemintegration.
+  example: CRM-Integration zur Verknüpfung von Schulen, Offerings und Activities.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-INTEGRATION-TBD
+    title: System Integration
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: System Integration
+    level: 1
+    instruction: Beteiligte Systems und Product-Zweck der Integration beschreiben.
+    example: CRM verbindet Partner Organizations mit Coding Clubs und Camps.
+    starter: []
+  - heading: Business Capability
+    level: 2
+    instruction: Unterstützte Product-Fähigkeit benennen.
+    example: Partner- und Customer Management.
+    starter: []
+  - heading: Data and Interfaces
+    level: 2
+    instruction: Relevante Datenobjekte und Schnittstellen auf fachlicher Ebene beschreiben.
+    example: Organization ID, Offering ID, Activity ID und Communication Status.
+    starter: []
+  - heading: Current State
+    level: 2
+    instruction: Nur den aktuell implementierten Zustand dokumentieren.
+    example: Manueller Import aus Tabellen; keine produktive API.
+    starter: []
+  - heading: Dependencies and Risks
+    level: 2
+    instruction: Technische und organisatorische Abhängigkeiten benennen.
+    example: Einheitliche Entity IDs und Datenschutzfreigabe erforderlich.
+    starter: []
+  - heading: Development Reference
+    level: 2
+    instruction: Geplante Änderungen ausschließlich im Development-Kontext verlinken.
+    example: Development/CRM/Specifications.
+    starter: []
+- path: Process Catalogue Template.md
+  purpose: Verweiskatalog der für das Product geltenden kanonischen Processes.
+  example: Course Management, Partnership Management und Customer Management.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-PROCESS-CATALOGUE-TBD
+    title: Process Catalogue
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Process Catalogue
+    level: 1
+    instruction: Processes mit Rolle des Products und kanonischem Link katalogisieren.
+    example: Course Planning ist ein zentraler Process für aktive Offerings.
+    starter:
+    - '| Process ID | Process | Product Role | Status | Canonical Document |'
+    - '|---|---|---|---|---|'
+  - heading: Operational Dependencies
+    level: 2
+    instruction: Abhängigkeiten zwischen Processes und Product-Operations erläutern.
+    example: Eine Activity kann erst nach Partner- und Ressourcenfreigabe bestätigt werden.
+    starter: []
+  - heading: Gaps and Changes
+    level: 2
+    instruction: Änderungsbedarfe in Development oder Change Proposals verlinken.
+    example: CRM-gestützter Enrollment Process ist geplant.
+    starter: []
+- path: Development Template.md
+  purpose: Portal zum kanonischen Development-Kontext des Products; keine Kopie von Spezifikationen.
+  example: Verweis von Products/JuniorCodingClub auf Development/JuniorCodingClub.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-DEVELOPMENT-PORTAL-TBD
+    title: Development
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Development
+    level: 1
+    instruction: Kanonischen Development-Pfad und Scope nennen.
+    example: Development/JuniorCodingClub enthält Product Requirements, Architecture und Releases.
+    starter: []
+  - heading: Active Change Proposals
+    level: 2
+    instruction: Aktive Change Proposals nur verlinken.
+    example: CP-JCC-CRM-001 Customer and Partner Model.
+    starter: []
+  - heading: Current Release
+    level: 2
+    instruction: Freigegebenen Product- oder System-Release referenzieren.
+    example: Release 2026.07.
+    starter: []
+  - heading: Run Update Rule
+    level: 2
+    instruction: Festhalten, dass Product-Run-Dokumente erst nach Release aktualisiert werden.
+    example: CRM-Integration wird erst nach Release als Current State beschrieben.
+    starter: []
+- path: Source Registry Template.md
+  purpose: Katalog der maßgeblichen Product-Sources und Provenienz.
+  example: MBOX, Confluence-Export, Website, Vertragsreferenzen und externe Asset Library.
+  frontmatter:
+    document_type: run_document
+    document_id: PRODUCT-SOURCE-REGISTRY-TBD
+    title: Source Registry
+    status: draft
+    primary_entity: PRODUCT-TBD
+    owner: ORG-TBD
+    sensitivity: confidential
+    memory_eligible: false
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Source Registry
+    level: 1
+    instruction: Sources und Source Roots mit Identität, Typ, Status und Sensitivity katalogisieren.
+    example: SRCROOT-JCC-CONFLUENCE als historischer Export.
+    starter:
+    - '| Source ID | Type | Display Name | Location | Sensitivity | Status |'
+    - '|---|---|---|---|---|---|'
+  - heading: Canonical Evidence
+    level: 2
+    instruction: Quellen zu kanonischen Product-Aussagen zuordnen.
+    example: Kooperationsverträge belegen aktive Partnerbeziehungen.
+    starter: []
+  - heading: Asset and Repository References
+    level: 2
+    instruction: Große Assets und Software Repositories extern referenzieren.
+    example: Logoarchive in Asset Library; Quellcode in GitHub Repository.
+    starter: []
+  - heading: Processing Notes
+    level: 2
+    instruction: Ingestion- und Review-Status festhalten.
+    example: Confluence inventarisiert; ausgewählte Inhalte kuratiert.
+    starter: []

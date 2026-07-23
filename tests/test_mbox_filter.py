@@ -1,5 +1,5 @@
-from cp_knowledge.importers.mbox.filter import partition_emails
-from cp_knowledge.importers.mbox.models import Email
+from cp_knowledge_tools.importers.mbox.filter import partition_emails
+from cp_knowledge_tools.importers.mbox.models import Email
 
 
 def make_email(

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from cp_knowledge.importers.mbox.cli import run_import
+from cp_knowledge_tools.importers.mbox.cli import run_import
 
 
 def test_run_import(tmp_path: Path) -> None:

@@ -1,0 +1,511 @@
+context_id: organizations
+title: Organization Templates
+version: '1.0'
+description: Vorlagen für kanonische Organization-Kontexte, ihre Governance, Beziehungen, Programs, Operations, Processes und Sources.
+output_root: Templates/Organizations
+directories:
+- path: Governance
+  purpose: Kanonischer Bereich für Leitungsstruktur, Entscheidungsrechte und verbindliche Governance-Regeln.
+  example: Vorstand, Geschäftsführung, Satzungsorgane oder Freigaberegeln einer Organization.
+- path: Roles and Responsibilities
+  purpose: Beschreibt stabile Rollen, Zuständigkeiten und Verantwortungsgrenzen.
+  example: Rolle Geschäftsführung mit Verantwortung für Strategie, Personal und Finanzen.
+- path: Relationships
+  purpose: Dokumentiert institutionelle Beziehungen zu Partnern, Kunden, Förderern und verbundenen Entitäten.
+  example: Kooperationsbeziehung zwischen Digitaltutor e.V. und einer Schule.
+- path: Programs
+  purpose: Enthält längerfristige thematische Programme der Organization.
+  example: Robogirls als mehrjähriges Bildungsprogramm.
+- path: Operations
+  purpose: Enthält konkrete operative Aktivitäten und wiederkehrende Durchführungskontexte.
+  example: Lehrerfortbildung an einer Partnerschule im September 2026.
+- path: Notes
+  purpose: Nichtkanonische Arbeitsnotizen mit begrenzter Memory-Eignung.
+  example: Vorläufige Gesprächsnotiz zu einer möglichen Kooperation.
+- path: Archive
+  purpose: Nicht mehr aktive, aber aufzubewahrende Organization-Inhalte.
+  example: Abgelöste Governance-Regel oder beendete Partnerschaft.
+documents:
+- path: 00 Organization Template.md
+  purpose: Kanonische Hauptdatei einer Organization und primärer Einstiegspunkt für das Entity Registry.
+  example: Educody GmbH als aktive Organization mit Produkten, Rollen, Systemen und Beziehungen.
+  frontmatter:
+    document_type: entity_document
+    entity_id: ORG-TBD
+    entity_type: organization
+    title: Organization Name
+    status: candidate
+    owner: ORG-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    organization_type: other
+    entity_roles: []
+    canonical_vault_path: Organizations/Organization Name
+    related_products: []
+    related_programs: []
+    related_systems: []
+    related_processes: []
+    source_registry: Source Registry Template.md
+  sections:
+  - heading: Organization Overview
+    level: 1
+    instruction: Kanonischen Namen, Organization-Typ, Status und institutionelle Identität zusammenfassen.
+    example: Educody GmbH ist die betreibende Gesellschaft für digitale Bildungsangebote.
+    starter: []
+  - heading: Purpose
+    level: 2
+    instruction: Existenzgrund, Auftrag und langfristigen Zweck der Organization beschreiben.
+    example: Entwicklung und Betrieb digitaler Bildungsangebote für Kinder und Schulen.
+    starter: []
+  - heading: Governance
+    level: 2
+    instruction: Leitungsorgane, Entscheidungsrechte, Freigaben und Eskalationswege referenzieren.
+    example: Die Geschäftsführung genehmigt strategische Product- und Budgetentscheidungen.
+    starter: []
+  - heading: Roles and Responsibilities
+    level: 2
+    instruction: Zentrale Rollen und ihre Verantwortungsbereiche verlinken.
+    example: Geschäftsführung, Programmleitung und kaufmännische Verantwortung.
+    starter: []
+  - heading: Relationships
+    level: 2
+    instruction: Wesentliche Beziehungen zu Organizations, Products, Programs und Partnern darstellen.
+    example: Betreibt JuniorCodingClub und kooperiert mit Digitaltutor e.V.
+    starter: []
+  - heading: Products and Programs
+    level: 2
+    instruction: Eigene oder unterstützte Products und Programs referenzieren.
+    example: JuniorCodingClub und Robogirls.
+    starter: []
+  - heading: Systems and Processes
+    level: 2
+    instruction: Relevante Systems und kanonische Processes verlinken.
+    example: CRM, cpKnowledgeSystem und Partnership Management.
+    starter: []
+  - heading: Sources and Provenance
+    level: 2
+    instruction: Kanonische Quellen, externe Source Roots und Provenienz angeben.
+    example: Handelsregisterauszug, Satzung, Website und historische Confluence-Inhalte.
+    starter: []
+  - heading: Sensitivity and Access
+    level: 2
+    instruction: Abweichende Schutz-, Retrieval- oder Agentenzugriffsregeln dokumentieren.
+    example: Verträge sind confidential; Personalrecords bleiben external und restricted.
+    starter: []
+- path: Governance/Governance Overview Template.md
+  purpose: Kanonische Übersicht der Governance-Struktur einer Organization.
+  example: Entscheidungsstruktur einer GmbH mit Geschäftsführung und Gesellschafterbeschlüssen.
+  frontmatter:
+    document_type: run_document
+    document_id: ORG-GOV-TBD
+    title: Governance Overview
+    status: draft
+    primary_entity: ORG-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Governance Overview
+    level: 1
+    instruction: Geltungsbereich und Zweck der Governance beschreiben.
+    example: Regelt strategische, operative und finanzielle Entscheidungen.
+    starter: []
+  - heading: Governing Bodies
+    level: 2
+    instruction: Formelle und informelle Leitungsorgane aufführen.
+    example: Geschäftsführung und Gesellschafterversammlung.
+    starter:
+    - '- Body:'
+    - '- Mandate:'
+  - heading: Decision Rights
+    level: 2
+    instruction: Entscheidungsarten eindeutig Rollen oder Gremien zuordnen.
+    example: Budgetfreigaben über 10.000 EUR benötigen Gesellschafterzustimmung.
+    starter: []
+  - heading: Approval and Escalation
+    level: 2
+    instruction: Freigabe- und Eskalationspfade dokumentieren.
+    example: Strategische Product-Änderungen werden durch die Geschäftsführung freigegeben.
+    starter: []
+  - heading: Governance Records
+    level: 2
+    instruction: Kanonische Beschlüsse und externe Record Collections referenzieren.
+    example: Beschlussprotokolle liegen in einer restricted Record Collection.
+    starter: []
+- path: Roles and Responsibilities/Role and Responsibility Template.md
+  purpose: Vorlage für eine stabile Organization-Rolle mit klarer Verantwortungsgrenze.
+  example: Rolle Program Lead mit Verantwortung für Planung, Partner und operative Qualität.
+  frontmatter:
+    document_type: run_document
+    document_id: ORG-ROLE-TBD
+    title: Role and Responsibility
+    status: draft
+    primary_entity: ORG-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Role
+    level: 1
+    instruction: Rollenbezeichnung, Zweck und organisatorischen Kontext definieren.
+    example: Program Lead JuniorCodingClub.
+    starter: []
+  - heading: Responsibilities
+    level: 2
+    instruction: Ergebnisverantwortung und wiederkehrende Aufgaben benennen.
+    example: Programmplanung, Partnerkommunikation und Qualitätskontrolle.
+    starter:
+    - '- Responsibility:'
+  - heading: Decision Rights
+    level: 2
+    instruction: Entscheidungen benennen, die die Rolle eigenständig treffen darf.
+    example: Freigabe regulärer Kurspläne innerhalb des genehmigten Budgets.
+    starter: []
+  - heading: Interfaces
+    level: 2
+    instruction: Zusammenarbeit mit anderen Rollen, Systems und Processes beschreiben.
+    example: Abstimmung mit Product Owner, Finance und CRM.
+    starter: []
+  - heading: Exclusions
+    level: 2
+    instruction: Nicht zur Rolle gehörende Verantwortlichkeiten ausdrücklich abgrenzen.
+    example: Keine Freigabe von Arbeitsverträgen oder Steuererklärungen.
+    starter: []
+- path: Relationships/Relationship Record Template.md
+  purpose: Vorlage für eine institutionelle Beziehung zwischen der Organization und einer anderen Entität.
+  example: Kooperation mit einer Schule für wöchentliche Coding Clubs.
+  frontmatter:
+    document_type: run_document
+    document_id: ORG-REL-TBD
+    title: Organization Relationship
+    status: draft
+    primary_entity: ORG-TBD
+    owner: ORG-TBD
+    sensitivity: confidential
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Relationship
+    level: 1
+    instruction: Beteiligte Entitäten, Beziehungstyp und kanonische IDs nennen.
+    example: ORG-TBD cooperates_with ORG-PARTNER.
+    starter: []
+  - heading: Purpose and Scope
+    level: 2
+    instruction: Zweck, Leistungsumfang und Grenzen der Beziehung beschreiben.
+    example: Durchführung eines wöchentlichen Coding Clubs für Jahrgang 5.
+    starter: []
+  - heading: Responsibilities
+    level: 2
+    instruction: Verantwortung beider Seiten nachvollziehbar zuordnen.
+    example: Die Schule stellt Raum und Teilnehmerverwaltung; die Organization stellt Lehrkräfte.
+    starter: []
+  - heading: Operating Model
+    level: 2
+    instruction: Kommunikation, Termine, Übergaben und operative Steuerung dokumentieren.
+    example: Monatlicher Lernplan und terminspezifische Abstimmung.
+    starter: []
+  - heading: Commercial and Legal References
+    level: 2
+    instruction: Verträge und finanzielle Records nur referenzieren, nicht duplizieren.
+    example: Kooperationsvertrag in externer restricted Record Collection.
+    starter: []
+  - heading: Status and Review
+    level: 2
+    instruction: Aktuellen Beziehungsstatus und nächsten Review-Zeitpunkt festhalten.
+    example: Active; Review vor Schuljahresende.
+    starter: []
+- path: Programs/Program Template.md
+  purpose: Kanonische Vorlage für ein längerfristiges Program der Organization.
+  example: Robogirls als Programm zur Förderung von Mädchen in Robotik und Coding.
+  frontmatter:
+    document_type: entity_document
+    entity_id: PROGRAM-TBD
+    entity_type: program
+    title: Program Name
+    status: idea
+    owner: ORG-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_organization: ORG-TBD
+    related_products: []
+    service_offerings: []
+    operational_activities: []
+    related_domains: []
+  sections:
+  - heading: Program Overview
+    level: 1
+    instruction: Program-Identität, Träger und langfristigen Rahmen beschreiben.
+    example: Robogirls ist ein mehrjähriges Bildungsprogramm von Digitaltutor e.V.
+    starter: []
+  - heading: Purpose and Outcomes
+    level: 2
+    instruction: Wirkungsziel und erwartete Ergebnisse definieren.
+    example: Mehr Mädchen erhalten einen niedrigschwelligen Zugang zu Robotik.
+    starter: []
+  - heading: Target Groups
+    level: 2
+    instruction: Primäre und sekundäre Zielgruppen benennen.
+    example: Mädchen im Alter von 10 bis 14 Jahren sowie Partnerschulen.
+    starter: []
+  - heading: Service Offerings
+    level: 2
+    instruction: Leistungen referenzieren, durch die das Program umgesetzt wird.
+    example: Workshops, Feriencamps und Schul-AGs.
+    starter: []
+  - heading: Operational Activities
+    level: 2
+    instruction: Konkrete Durchführungen nur verlinken.
+    example: Robogirls Workshop Frankfurt 2026.
+    starter: []
+  - heading: Partners and Funding
+    level: 2
+    instruction: Partner, Förderer und Finanzierungslogik dokumentieren.
+    example: Förderstiftung und kommunale Partnerschule.
+    starter: []
+  - heading: Knowledge Domains
+    level: 2
+    instruction: Generalisierbare fachliche Domains verknüpfen.
+    example: Education sowie Robotics and Physical Computing.
+    starter: []
+  - heading: Evaluation
+    level: 2
+    instruction: Erfolgskriterien und Review-Verfahren festlegen.
+    example: Teilnahme, Abschlussquote und qualitative Rückmeldungen.
+    starter: []
+- path: Operations/Operational Activity Template.md
+  purpose: Vorlage für eine konkrete Durchführung im Organization-Kontext.
+  example: Einzelne Lehrerfortbildung einer Organization bei einer Partnerschule.
+  frontmatter:
+    document_type: entity_document
+    entity_id: ACTIVITY-TBD
+    entity_type: operational_activity
+    title: Operational Activity
+    status: planned
+    owner: ORG-TBD
+    aliases: []
+    related_entities: []
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: canonical
+    responsible_organization: ORG-TBD
+    activity_type: other
+    period: TBD
+    related_organizations: []
+    service_offering: OFFERING-TBD
+    source_references: []
+  sections:
+  - heading: Activity Overview
+    level: 1
+    instruction: Art, Zeitraum, Ort und verantwortliche Entität beschreiben.
+    example: Lehrerfortbildung am 15. September 2026 in Frankfurt.
+    starter: []
+  - heading: Purpose and Expected Result
+    level: 2
+    instruction: Konkretes Ergebnis der Durchführung definieren.
+    example: Lehrkräfte können einen Einstiegskurs mit Minecraft Education durchführen.
+    starter: []
+  - heading: Delivery Context
+    level: 2
+    instruction: Ort, Format, Partner und organisatorische Rahmenbedingungen nennen.
+    example: Präsenzworkshop mit 16 Lehrkräften in einer Partnerschule.
+    starter: []
+  - heading: Related Offering and Program
+    level: 2
+    instruction: Zugehöriges Service Offering und Program referenzieren.
+    example: OFFERING-TEACHER-TRAINING innerhalb PROGRAM-DIGITAL-EDUCATION.
+    starter: []
+  - heading: Operational Plan
+    level: 2
+    instruction: Ablauf, Ressourcen und Verantwortlichkeiten dokumentieren.
+    example: Vorbereitung, dreistündiger Workshop, Materialübergabe und Evaluation.
+    starter: []
+  - heading: Records and Privacy
+    level: 2
+    instruction: Personenbezogene Records extern halten und nur referenzieren.
+    example: Teilnehmerliste in restricted Record Collection; im Vault nur Aggregatdaten.
+    starter: []
+  - heading: Evaluation
+    level: 2
+    instruction: Ergebnisse, Abweichungen und Lessons Learned festhalten.
+    example: 14 Teilnehmende; Folgetermin angefragt.
+    starter: []
+- path: Products Template.md
+  purpose: Katalog der von der Organization betriebenen, unterstützten oder finanzierten Products.
+  example: Educody GmbH betreibt JuniorCodingClub; Digitaltutor e.V. unterstützt ausgewählte Programme.
+  frontmatter:
+    document_type: run_document
+    document_id: ORG-PRODUCTS-TBD
+    title: Products
+    status: draft
+    primary_entity: ORG-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Products
+    level: 1
+    instruction: Products mit stabilen IDs und präziser Beziehungsrolle aufführen.
+    example: PRODUCT-JCC operated_by ORG-EDUCODY.
+    starter:
+    - '| Product ID | Product | Relationship | Status |'
+    - '|---|---|---|---|'
+  - heading: Portfolio Logic
+    level: 2
+    instruction: Strategische Zusammenhänge und Abgrenzungen im Portfolio erklären.
+    example: JuniorCodingClub ist ein Operating Venture; Haplico ein separates Product.
+    starter: []
+  - heading: Ownership and Support
+    level: 2
+    instruction: Betrieb, Finanzierung und Unterstützung voneinander unterscheiden.
+    example: Educody betreibt; Digitaltutor unterstützt einzelne Bildungsprogramme.
+    starter: []
+- path: Process Catalogue Template.md
+  purpose: Verweiskatalog auf kanonische Processes, die für die Organization gelten.
+  example: Partnership Management, Finance und Governance mit Links auf zentrale Prozessdokumente.
+  frontmatter:
+    document_type: run_document
+    document_id: ORG-PROCESS-CATALOGUE-TBD
+    title: Process Catalogue
+    status: draft
+    primary_entity: ORG-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: true
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Process Catalogue
+    level: 1
+    instruction: Processes nur katalogisieren und auf die kanonische Beschreibung verlinken.
+    example: Partnership Management unter Processes/Partnership Management.
+    starter:
+    - '| Process ID | Process | Role | Status | Canonical Document |'
+    - '|---|---|---|---|---|'
+  - heading: Process Ownership
+    level: 2
+    instruction: Owner und Mitwirkung der Organization angeben.
+    example: ORG-TBD ist Process Owner für Governance Approval.
+    starter: []
+  - heading: Gaps and Changes
+    level: 2
+    instruction: Fehlende oder zu ändernde Processes als Change-Verweis erfassen.
+    example: Neuer Förderantragsprozess benötigt ein Change Proposal.
+    starter: []
+- path: Source Registry Template.md
+  purpose: Katalog der maßgeblichen Sources und externen Source Roots der Organization.
+  example: Website, Verträge, MBOX-Archiv und Legacy File Repository mit Provenienz.
+  frontmatter:
+    document_type: run_document
+    document_id: ORG-SOURCE-REGISTRY-TBD
+    title: Source Registry
+    status: draft
+    primary_entity: ORG-TBD
+    owner: ORG-TBD
+    sensitivity: confidential
+    memory_eligible: false
+    agent_access:
+    - owner
+    - knowledge_architect
+    contains_personal_data: false
+    retention_class: operational
+  sections:
+  - heading: Source Registry
+    level: 1
+    instruction: Sources mit ID, Typ, Speicherort, Sensitivity und Ingestion-Status erfassen.
+    example: SRCROOT-DIGITALTUTOR-LEGACY als metadata_only Source Root.
+    starter:
+    - '| Source ID | Type | Display Name | Location | Sensitivity | Status |'
+    - '|---|---|---|---|---|---|'
+  - heading: Canonical Evidence
+    level: 2
+    instruction: Quellen benennen, die kanonische Aussagen belegen.
+    example: Satzung belegt Zweck und Governance des Vereins.
+    starter: []
+  - heading: External Record Collections
+    level: 2
+    instruction: Restricted Collections nur über IDs und Zugriffsklassen referenzieren.
+    example: Mitgliedsdatenbank als external restricted Record Collection.
+    starter: []
+  - heading: Processing Notes
+    level: 2
+    instruction: Import-, Inventar- oder Qualitätsstatus dokumentieren.
+    example: MBOX inventarisiert; Inhaltsverarbeitung noch nicht gestartet.
+    starter: []
+- path: Notes/Organization Note Template.md
+  purpose: Nichtkanonische Arbeitsnotiz mit kontrollierter Sensitivity und standardmäßig deaktivierter Memory-Eignung.
+  example: Gesprächsnotiz zu einer potenziellen Partnerschaft vor formaler Prüfung.
+  frontmatter:
+    document_type: human_note
+    title: Organization Note
+    status: draft
+    primary_entity: ORG-TBD
+    owner: ORG-TBD
+    sensitivity: internal
+    memory_eligible: false
+    agent_access:
+    - owner
+    contains_personal_data: false
+    retention_class: working_note
+  sections:
+  - heading: Note
+    level: 1
+    instruction: Beobachtung oder Arbeitsstand sachlich erfassen.
+    example: Die Schule prüft einen Coding Club ab dem nächsten Schuljahr.
+    starter: []
+  - heading: Open Questions
+    level: 2
+    instruction: Ungeklärte Punkte und benötigte Bestätigungen erfassen.
+    example: Budget, Gruppengröße und Vertragsmodell sind offen.
+    starter:
+    - '- Question:'
+  - heading: Next Action
+    level: 2
+    instruction: Nächsten konkreten Bearbeitungsschritt festhalten.
+    example: Termin mit der Koordination vereinbaren.
+    starter: []
+  - heading: Canonicalization Decision
+    level: 2
+    instruction: Festlegen, ob und wohin die Information später kanonisch überführt wird.
+    example: Nach Bestätigung als Relationship Record anlegen.
+    starter: []

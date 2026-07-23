@@ -16,6 +16,7 @@ venv/
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyc
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -30,6 +31,7 @@ dist/
 # PyCharm
 .idea/workspace.xml
 .idea/shelf/
+.idea/
 
 # macOS
 .DS_Store
@@ -37,3 +39,7 @@ dist/
 # Temporary files
 *.tmp
 *.log
+
+# Generated outputs
+artifacts/
+Diffs/
