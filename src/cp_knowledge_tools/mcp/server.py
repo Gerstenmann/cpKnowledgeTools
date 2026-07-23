@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 from dataclasses import asdict
 from typing import Any
 
@@ -15,7 +16,23 @@ from .search import (
 )
 from .vault import Vault
 
-mcp = FastMCP("cp-wiki-read-only")
+DEFAULT_HTTP_HOST = "127.0.0.1"
+DEFAULT_HTTP_PORT = 8765
+DEFAULT_HTTP_PATH = "/mcp"
+
+mcp = FastMCP(
+    name="cp-wiki-read-only",
+    instructions=(
+        "Read-only access to the local cp-wiki Obsidian vault. "
+        "The server can list, read and search Markdown notes, "
+        "but cannot create, modify, move or delete files."
+    ),
+    host=DEFAULT_HTTP_HOST,
+    port=DEFAULT_HTTP_PORT,
+    streamable_http_path=DEFAULT_HTTP_PATH,
+    stateless_http=True,
+    json_response=True,
+)
 
 
 def get_vault() -> Vault:
@@ -145,10 +162,75 @@ def resolve_vault_wikilink(
     return asdict(result)
 
 
-def main() -> None:
-    """Run the MCP server over stdio."""
+def build_argument_parser() -> argparse.ArgumentParser:
+    """Build the command-line interface for MCP transport selection."""
 
-    mcp.run(transport="stdio")
+    parser = argparse.ArgumentParser(
+        prog="cp-wiki-mcp",
+        description="Run the read-only MCP server for the local cp-wiki vault.",
+    )
+
+    parser.add_argument(
+        "--transport",
+        choices=("stdio", "streamable-http"),
+        default="stdio",
+        help=(
+            "MCP transport. Use 'stdio' for local clients and "
+            "'streamable-http' for the Secure MCP Tunnel."
+        ),
+    )
+
+    parser.add_argument(
+        "--host",
+        default=DEFAULT_HTTP_HOST,
+        help=(
+            "HTTP bind address. Keep 127.0.0.1 when using "
+            "the Secure MCP Tunnel."
+        ),
+    )
+
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=DEFAULT_HTTP_PORT,
+        help="Local HTTP port for Streamable HTTP.",
+    )
+
+    parser.add_argument(
+        "--path",
+        default=DEFAULT_HTTP_PATH,
+        help="MCP Streamable HTTP endpoint path.",
+    )
+
+    return parser
+
+
+def main() -> None:
+    """Run the MCP server using the selected transport."""
+
+    parser = build_argument_parser()
+    args = parser.parse_args()
+
+    if args.transport == "streamable-http":
+        if not 1 <= args.port <= 65535:
+            parser.error("--port must be between 1 and 65535.")
+
+        if not args.path.startswith("/"):
+            parser.error("--path must start with '/'.")
+
+        mcp.settings.host = args.host
+        mcp.settings.port = args.port
+        mcp.settings.streamable_http_path = args.path
+
+        print(
+            (
+                "Starting cp-wiki MCP server at "
+                f"http://{args.host}:{args.port}{args.path}"
+            ),
+            flush=True,
+        )
+
+    mcp.run(transport=args.transport)
 
 
 if __name__ == "__main__":
