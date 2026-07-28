@@ -18,7 +18,6 @@ from cp_knowledge_tools.taxonomy.models import (
 )
 from cp_knowledge_tools.taxonomy.schema import DSM_ALLOWED_BLOCKS
 
-
 BLOCK_START_PATTERN = re.compile(r"^@([a-z][a-z0-9_]*)$")
 KEY_PATTERN = re.compile(
     r"^\s*(?:-\s+)?([a-z][a-z0-9_]*):"

@@ -2,7 +2,9 @@
 
 import re
 from email.header import decode_header, make_header
+
 from bs4 import BeautifulSoup
+
 
 def decode(value):
     if not value:

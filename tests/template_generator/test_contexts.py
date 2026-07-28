@@ -1,8 +1,10 @@
-from pathlib import Path
 
 import pytest
 
-from cp_knowledge_tools.template_generator.context_loader import available_contexts, load_context
+from cp_knowledge_tools.template_generator.context_loader import (
+    available_contexts,
+    load_context,
+)
 
 
 @pytest.mark.parametrize("context_id", ["organizations", "products"])

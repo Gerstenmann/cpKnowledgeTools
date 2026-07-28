@@ -13,12 +13,12 @@ from cp_knowledge_tools.importers.mbox.exporter import (
     write_markdown_files,
 )
 from cp_knowledge_tools.importers.mbox.filter import partition_emails
-from cp_knowledge_tools.importers.mbox.reader import read_mbox
-from cp_knowledge_tools.importers.mbox.reporter import write_reports
 from cp_knowledge_tools.importers.mbox.overrides import (
     apply_override,
     load_overrides,
 )
+from cp_knowledge_tools.importers.mbox.reader import read_mbox
+from cp_knowledge_tools.importers.mbox.reporter import write_reports
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 

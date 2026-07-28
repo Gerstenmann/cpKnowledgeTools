@@ -7,6 +7,7 @@ from dataclasses import asdict
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 from .config import MCPConfig
 from .search import (
@@ -35,6 +36,17 @@ mcp = FastMCP(
 )
 
 
+def read_only_annotations(title: str) -> ToolAnnotations:
+    """Return explicit safety annotations for a local read-only tool."""
+
+    return ToolAnnotations(
+        title=title,
+        readOnlyHint=True,
+        destructiveHint=False,
+        openWorldHint=False,
+    )
+
+
 def get_vault() -> Vault:
     """Create a vault instance from current environment configuration."""
 
@@ -42,7 +54,7 @@ def get_vault() -> Vault:
     return Vault(config.vault_root)
 
 
-@mcp.tool()
+@mcp.tool(annotations=read_only_annotations("Vault information"))
 def vault_info() -> dict[str, Any]:
     """Return basic information about the configured cp-wiki vault."""
 
@@ -56,7 +68,7 @@ def vault_info() -> dict[str, Any]:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=read_only_annotations("List vault files"))
 def list_vault_files(
     path_prefix: str = "",
     limit: int = 200,
@@ -92,7 +104,7 @@ def list_vault_files(
     return results
 
 
-@mcp.tool()
+@mcp.tool(annotations=read_only_annotations("Read vault note"))
 def read_vault_note(
     relative_path: str,
 ) -> dict[str, Any]:
@@ -104,7 +116,7 @@ def read_vault_note(
     return asdict(document)
 
 
-@mcp.tool()
+@mcp.tool(annotations=read_only_annotations("Search vault text"))
 def search_vault_text(
     query: str,
     case_sensitive: bool = False,
@@ -127,7 +139,7 @@ def search_vault_text(
     ]
 
 
-@mcp.tool()
+@mcp.tool(annotations=read_only_annotations("Search vault frontmatter"))
 def search_vault_frontmatter(
     field: str,
     expected: str,
@@ -150,7 +162,7 @@ def search_vault_frontmatter(
     ]
 
 
-@mcp.tool()
+@mcp.tool(annotations=read_only_annotations("Resolve vault wikilink"))
 def resolve_vault_wikilink(
     target: str,
 ) -> dict[str, Any]:

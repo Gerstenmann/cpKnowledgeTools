@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 EXIT_OK = 0
 EXIT_VALIDATION_ERROR = 1
 EXIT_USAGE_ERROR = 2

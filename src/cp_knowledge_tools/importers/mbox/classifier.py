@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from cp_knowledge_tools.common.config import ClassificationRule
 from cp_knowledge_tools.importers.mbox.models import Email

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 from cp_knowledge_tools.importers.mbox.models import Email
-
 
 VALID_PROCESSING_DECISIONS = {
     "analyze",

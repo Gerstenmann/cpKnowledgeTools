@@ -19,7 +19,7 @@ class MCPConfig:
     vault_root: Path
 
     @classmethod
-    def from_environment(cls) -> "MCPConfig":
+    def from_environment(cls) -> MCPConfig:
         """Load configuration from the environment."""
 
         configured_root = os.environ.get(VAULT_ROOT_ENV)

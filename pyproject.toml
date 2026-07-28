@@ -18,6 +18,12 @@ dependencies = [
 cp-template = "cp_knowledge_tools.template_generator.cli:main"
 cp-wiki-mcp = "cp_knowledge_tools.mcp.server:main"
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=9,<10",
+    "ruff>=0.16",
+]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
@@ -34,3 +40,12 @@ line-length = 88
 
 [tool.ruff]
 line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+]

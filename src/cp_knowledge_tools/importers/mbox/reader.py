@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import mailbox
+from collections.abc import Iterator
 from email.message import Message
 from email.utils import getaddresses, parsedate_to_datetime
 from pathlib import Path
-from typing import Iterator
 
 from cp_knowledge_tools.common.utils import decode
 from cp_knowledge_tools.importers.mbox.cleaner import extract_body

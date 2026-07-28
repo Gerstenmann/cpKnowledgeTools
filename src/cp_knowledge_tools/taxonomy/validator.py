@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
 
 from cp_knowledge_tools.taxonomy.models import (
     MachineBlock,
@@ -18,7 +17,6 @@ from cp_knowledge_tools.taxonomy.schema import (
     DSM_REQUIRED_BLOCKS,
     TAXONOMY_STATUS_VALUES,
 )
-
 
 IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 VERSION_PATTERN = re.compile(

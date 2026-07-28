@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from .context_loader import load_context
@@ -114,7 +114,7 @@ class TemplateGenerator:
             "generator": "cpKnowledgeSystem Template Generator",
             "context_id": context.context_id,
             "context_version": context.version,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "output_root": context.output_root.as_posix(),
             "written_files": [str(path.relative_to(context_root)) for path in written_files],
             "skipped_files": [str(path.relative_to(context_root)) for path in skipped_files],
