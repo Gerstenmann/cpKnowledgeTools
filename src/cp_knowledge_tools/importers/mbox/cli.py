@@ -22,6 +22,7 @@ from cp_knowledge_tools.importers.mbox.reporter import write_reports
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
+
 def build_parser() -> argparse.ArgumentParser:
     """Create the command-line argument parser."""
     parser = argparse.ArgumentParser(
@@ -63,7 +64,7 @@ def run_import(
     config = load_project_config()
 
     rules = load_classification_rules(config.rules_path)
-    
+
     overrides = load_overrides(config.overrides_path)
 
     classified_emails = [
@@ -79,17 +80,14 @@ def run_import(
 
     buckets = partition_emails(classified_emails)
 
-    reports_dir = (
-        markdown_dir.parent
-        / config.reports_dir_name
-    )
+    reports_dir = markdown_dir.parent / config.reports_dir_name
 
     write_reports(
         emails=classified_emails,
         reports_dir=reports_dir,
         sample_size=config.sample_size,
     )
-    
+
     # Vollständiger, revisionsfähiger Export:
     # Jede Mail bleibt mit Klassifikation und Entscheidung erhalten.
     all_jsonl_count = write_jsonl(

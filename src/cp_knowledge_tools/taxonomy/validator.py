@@ -19,9 +19,7 @@ from cp_knowledge_tools.taxonomy.schema import (
 )
 
 IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
-VERSION_PATTERN = re.compile(
-    r"^[0-9]+\.[0-9]+(?:\.[0-9]+)?$"
-)
+VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+(?:\.[0-9]+)?$")
 
 
 class DSMValidator:
@@ -51,10 +49,7 @@ class DSMValidator:
                 self._add_issue(
                     document=document,
                     code="DSM100",
-                    message=(
-                        f"Required block "
-                        f"@{block_name} is missing."
-                    ),
+                    message=(f"Required block @{block_name} is missing."),
                     line=1,
                     block=block_name,
                 )
@@ -84,11 +79,7 @@ class DSMValidator:
                 self._add_issue(
                     document=document,
                     code="DSM101",
-                    message=(
-                        f"Required field "
-                        f"{field_name!r} is missing "
-                        "or empty."
-                    ),
+                    message=(f"Required field {field_name!r} is missing or empty."),
                     line=block.line_for_key(field_name),
                     block="domain",
                 )
@@ -98,22 +89,14 @@ class DSMValidator:
                 self._add_issue(
                     document=document,
                     code="DSM102",
-                    message=(
-                        f"Unsupported field "
-                        f"{field_name!r} in @domain."
-                    ),
+                    message=(f"Unsupported field {field_name!r} in @domain."),
                     line=block.line_for_key(field_name),
                     block="domain",
                 )
 
         domain_id = data.get("id")
 
-        if (
-            domain_id is not None
-            and not IDENTIFIER_PATTERN.fullmatch(
-                str(domain_id)
-            )
-        ):
+        if domain_id is not None and not IDENTIFIER_PATTERN.fullmatch(str(domain_id)):
             self._add_issue(
                 document=document,
                 code="DSM103",
@@ -138,39 +121,25 @@ class DSMValidator:
 
         status = data.get("status")
 
-        if (
-            status is not None
-            and status not in TAXONOMY_STATUS_VALUES
-        ):
-            allowed = ", ".join(
-                sorted(TAXONOMY_STATUS_VALUES)
-            )
+        if status is not None and status not in TAXONOMY_STATUS_VALUES:
+            allowed = ", ".join(sorted(TAXONOMY_STATUS_VALUES))
 
             self._add_issue(
                 document=document,
                 code="DSM105",
-                message=(
-                    f"Invalid status {status!r}. "
-                    f"Allowed values: {allowed}."
-                ),
+                message=(f"Invalid status {status!r}. Allowed values: {allowed}."),
                 line=block.line_for_key("status"),
                 block="domain",
             )
 
         version = data.get("version")
 
-        if (
-            version is not None
-            and not VERSION_PATTERN.fullmatch(
-                str(version)
-            )
-        ):
+        if version is not None and not VERSION_PATTERN.fullmatch(str(version)):
             self._add_issue(
                 document=document,
                 code="DSM106",
                 message=(
-                    "Version must use semantic version "
-                    "syntax such as 1.0 or 1.0.1."
+                    "Version must use semantic version syntax such as 1.0 or 1.0.1."
                 ),
                 line=block.line_for_key("version"),
                 block="domain",

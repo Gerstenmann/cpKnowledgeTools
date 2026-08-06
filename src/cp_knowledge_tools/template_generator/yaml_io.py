@@ -22,7 +22,9 @@ class IndentedSafeDumper(yaml.SafeDumper):
         return super().increase_indent(flow=flow, indentless=False)
 
 
-def _construct_unique_mapping(loader: UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False) -> dict[str, Any]:
+def _construct_unique_mapping(
+    loader: UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False
+) -> dict[str, Any]:
     mapping: dict[str, Any] = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
@@ -49,9 +51,13 @@ def load_yaml_file(path: Path) -> dict[str, Any]:
         raw = path.read_text(encoding="utf-8")
         data = yaml.load(raw, Loader=UniqueKeyLoader)
     except (OSError, UnicodeError, yaml.YAMLError) as exc:
-        raise ContextValidationError(f"Kontextdatei kann nicht gelesen werden: {path}: {exc}") from exc
+        raise ContextValidationError(
+            f"Kontextdatei kann nicht gelesen werden: {path}: {exc}"
+        ) from exc
     if not isinstance(data, dict):
-        raise ContextValidationError(f"Kontextdatei muss ein YAML-Mapping enthalten: {path}")
+        raise ContextValidationError(
+            f"Kontextdatei muss ein YAML-Mapping enthalten: {path}"
+        )
     return data
 
 
@@ -73,9 +79,13 @@ def dump_frontmatter(data: dict[str, Any]) -> str:
 
 def parse_frontmatter(text: str, source: Path) -> tuple[dict[str, Any], str]:
     if text.startswith("\ufeff"):
-        raise OutputValidationError(f"{source}: UTF-8 BOM vor dem YAML-Frontmatter ist nicht zulässig.")
+        raise OutputValidationError(
+            f"{source}: UTF-8 BOM vor dem YAML-Frontmatter ist nicht zulässig."
+        )
     if not text.startswith("---\n"):
-        raise OutputValidationError(f"{source}: Datei muss unmittelbar mit '---' beginnen.")
+        raise OutputValidationError(
+            f"{source}: Datei muss unmittelbar mit '---' beginnen."
+        )
 
     closing = text.find("\n---\n", 4)
     if closing < 0:
@@ -86,7 +96,11 @@ def parse_frontmatter(text: str, source: Path) -> tuple[dict[str, Any], str]:
     try:
         data = yaml.load(yaml_text, Loader=UniqueKeyLoader)
     except yaml.YAMLError as exc:
-        raise OutputValidationError(f"{source}: Ungültiges YAML-Frontmatter: {exc}") from exc
+        raise OutputValidationError(
+            f"{source}: Ungültiges YAML-Frontmatter: {exc}"
+        ) from exc
     if not isinstance(data, dict):
-        raise OutputValidationError(f"{source}: YAML-Frontmatter muss ein Mapping sein.")
+        raise OutputValidationError(
+            f"{source}: YAML-Frontmatter muss ein Mapping sein."
+        )
     return data, markdown

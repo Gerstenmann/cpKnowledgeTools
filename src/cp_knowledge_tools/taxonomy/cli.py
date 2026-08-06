@@ -25,9 +25,7 @@ def _discover_markdown_files(
             discovered.update(path.rglob("*.md"))
             continue
 
-        raise FileNotFoundError(
-            f"Input path does not exist: {path}"
-        )
+        raise FileNotFoundError(f"Input path does not exist: {path}")
 
     return sorted(discovered)
 
@@ -35,18 +33,13 @@ def _discover_markdown_files(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cp-taxonomy-validate",
-        description=(
-            "Validate Domain Specific Markup documents."
-        ),
+        description=("Validate Domain Specific Markup documents."),
     )
 
     parser.add_argument(
         "paths",
         nargs="+",
-        help=(
-            "Markdown files or directories containing "
-            "Domain DSM documents."
-        ),
+        help=("Markdown files or directories containing Domain DSM documents."),
     )
 
     return parser
@@ -76,17 +69,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             issue_count += 1
 
     if issue_count:
-        print(
-            f"\nValidation failed: "
-            f"{issue_count} issue(s) in "
-            f"{len(files)} file(s)."
-        )
+        print(f"\nValidation failed: {issue_count} issue(s) in {len(files)} file(s).")
         return 1
 
-    print(
-        f"Validation successful: "
-        f"{len(files)} file(s)."
-    )
+    print(f"Validation successful: {len(files)} file(s).")
     return 0
 
 

@@ -15,7 +15,13 @@ _CONTEXT_ID = re.compile(r"^[a-z][a-z0-9_-]*$")
 
 
 def builtin_context_dir() -> Path:
-    return Path(str(files("cp_knowledge_tools.template_generator.resources").joinpath("contexts")))
+    return Path(
+        str(
+            files("cp_knowledge_tools.template_generator.resources").joinpath(
+                "contexts"
+            )
+        )
+    )
 
 
 def available_contexts(context_dir: Path | None = None) -> list[str]:
@@ -28,23 +34,31 @@ def load_context(context_id: str, context_dir: Path | None = None) -> ContextSpe
     path = directory / f"{context_id}.yaml"
     if not path.is_file():
         choices = ", ".join(available_contexts(directory)) or "keine"
-        raise ContextValidationError(f"Unbekannter Kontext '{context_id}'. Verfügbar: {choices}")
+        raise ContextValidationError(
+            f"Unbekannter Kontext '{context_id}'. Verfügbar: {choices}"
+        )
     data = load_yaml_file(path)
     return context_from_mapping(data, source=path)
 
 
 def _safe_relative_path(value: Any, field: str, source: Path) -> Path:
     if not isinstance(value, str) or not value.strip():
-        raise ContextValidationError(f"{source}: {field} muss ein nichtleerer String sein.")
+        raise ContextValidationError(
+            f"{source}: {field} muss ein nichtleerer String sein."
+        )
     posix = PurePosixPath(value)
     if posix.is_absolute() or ".." in posix.parts:
-        raise ContextValidationError(f"{source}: Unsicherer relativer Pfad in {field}: {value!r}")
+        raise ContextValidationError(
+            f"{source}: Unsicherer relativer Pfad in {field}: {value!r}"
+        )
     return Path(*posix.parts)
 
 
 def _require_text(value: Any, field: str, source: Path) -> str:
     if not isinstance(value, str) or not value.strip():
-        raise ContextValidationError(f"{source}: {field} muss ein nichtleerer String sein.")
+        raise ContextValidationError(
+            f"{source}: {field} muss ein nichtleerer String sein."
+        )
     return value.strip()
 
 
@@ -61,20 +75,32 @@ def context_from_mapping(data: dict[str, Any], source: Path) -> ContextSpec:
     raw_dirs = data.get("directories", [])
     raw_docs = data.get("documents", [])
     if not isinstance(raw_dirs, list) or not isinstance(raw_docs, list):
-        raise ContextValidationError(f"{source}: directories und documents müssen Listen sein.")
+        raise ContextValidationError(
+            f"{source}: directories und documents müssen Listen sein."
+        )
 
     directories: list[DirectorySpec] = []
     seen_dirs: set[Path] = set()
     for index, item in enumerate(raw_dirs):
         if not isinstance(item, dict):
-            raise ContextValidationError(f"{source}: directories[{index}] muss ein Mapping sein.")
+            raise ContextValidationError(
+                f"{source}: directories[{index}] muss ein Mapping sein."
+            )
         directory = DirectorySpec(
-            path=_safe_relative_path(item.get("path"), f"directories[{index}].path", source),
-            purpose=_require_text(item.get("purpose"), f"directories[{index}].purpose", source),
-            example=_require_text(item.get("example"), f"directories[{index}].example", source),
+            path=_safe_relative_path(
+                item.get("path"), f"directories[{index}].path", source
+            ),
+            purpose=_require_text(
+                item.get("purpose"), f"directories[{index}].purpose", source
+            ),
+            example=_require_text(
+                item.get("example"), f"directories[{index}].example", source
+            ),
         )
         if directory.path in seen_dirs:
-            raise ContextValidationError(f"{source}: Doppelter Verzeichnispfad: {directory.path}")
+            raise ContextValidationError(
+                f"{source}: Doppelter Verzeichnispfad: {directory.path}"
+            )
         seen_dirs.add(directory.path)
         directories.append(directory)
 
@@ -82,16 +108,26 @@ def context_from_mapping(data: dict[str, Any], source: Path) -> ContextSpec:
     seen_docs: set[Path] = set()
     for index, item in enumerate(raw_docs):
         if not isinstance(item, dict):
-            raise ContextValidationError(f"{source}: documents[{index}] muss ein Mapping sein.")
-        doc_path = _safe_relative_path(item.get("path"), f"documents[{index}].path", source)
+            raise ContextValidationError(
+                f"{source}: documents[{index}] muss ein Mapping sein."
+            )
+        doc_path = _safe_relative_path(
+            item.get("path"), f"documents[{index}].path", source
+        )
         if doc_path.suffix.lower() != ".md":
-            raise ContextValidationError(f"{source}: Dokument muss auf .md enden: {doc_path}")
+            raise ContextValidationError(
+                f"{source}: Dokument muss auf .md enden: {doc_path}"
+            )
         frontmatter = item.get("frontmatter")
         if not isinstance(frontmatter, dict) or not frontmatter:
-            raise ContextValidationError(f"{source}: {doc_path} benötigt Frontmatter als Mapping.")
+            raise ContextValidationError(
+                f"{source}: {doc_path} benötigt Frontmatter als Mapping."
+            )
         raw_sections = item.get("sections", [])
         if not isinstance(raw_sections, list) or not raw_sections:
-            raise ContextValidationError(f"{source}: {doc_path} benötigt mindestens einen Abschnitt.")
+            raise ContextValidationError(
+                f"{source}: {doc_path} benötigt mindestens einen Abschnitt."
+            )
 
         sections: list[SectionSpec] = []
         seen_headings: set[tuple[int, str]] = set()
@@ -112,11 +148,17 @@ def context_from_mapping(data: dict[str, Any], source: Path) -> ContextSpec:
             )
             heading_key = (level, heading.casefold())
             if heading_key in seen_headings:
-                raise ContextValidationError(f"{source}: Doppelte Überschrift in {doc_path}: {heading}")
+                raise ContextValidationError(
+                    f"{source}: Doppelte Überschrift in {doc_path}: {heading}"
+                )
             seen_headings.add(heading_key)
             starter = section.get("starter", [])
-            if not isinstance(starter, list) or not all(isinstance(line, str) for line in starter):
-                raise ContextValidationError(f"{source}: starter muss eine String-Liste sein: {doc_path}")
+            if not isinstance(starter, list) or not all(
+                isinstance(line, str) for line in starter
+            ):
+                raise ContextValidationError(
+                    f"{source}: starter muss eine String-Liste sein: {doc_path}"
+                )
             sections.append(
                 SectionSpec(
                     heading=heading,
@@ -137,13 +179,19 @@ def context_from_mapping(data: dict[str, Any], source: Path) -> ContextSpec:
 
         document = DocumentSpec(
             path=doc_path,
-            purpose=_require_text(item.get("purpose"), f"documents[{index}].purpose", source),
-            example=_require_text(item.get("example"), f"documents[{index}].example", source),
+            purpose=_require_text(
+                item.get("purpose"), f"documents[{index}].purpose", source
+            ),
+            example=_require_text(
+                item.get("example"), f"documents[{index}].example", source
+            ),
             frontmatter=frontmatter,
             sections=sections,
         )
         if document.path in seen_docs:
-            raise ContextValidationError(f"{source}: Doppelter Dokumentpfad: {document.path}")
+            raise ContextValidationError(
+                f"{source}: Doppelter Dokumentpfad: {document.path}"
+            )
         seen_docs.add(document.path)
         documents.append(document)
 

@@ -13,10 +13,7 @@ def test_search_text(tmp_path: Path) -> None:
     note = tmp_path / "Knowledge" / "Example.md"
     note.parent.mkdir()
     note.write_text(
-        "# Example\n"
-        "First line\n"
-        "Important architecture decision\n"
-        "Last line\n",
+        "# Example\nFirst line\nImportant architecture decision\nLast line\n",
         encoding="utf-8",
     )
 
@@ -49,11 +46,7 @@ def test_search_text_case_insensitive(tmp_path: Path) -> None:
 def test_search_frontmatter_string(tmp_path: Path) -> None:
     note = tmp_path / "Example.md"
     note.write_text(
-        "---\n"
-        "status: active\n"
-        "type: specification\n"
-        "---\n"
-        "# Example\n",
+        "---\nstatus: active\ntype: specification\n---\n# Example\n",
         encoding="utf-8",
     )
 
@@ -73,11 +66,7 @@ def test_search_frontmatter_string(tmp_path: Path) -> None:
 def test_search_frontmatter_list(tmp_path: Path) -> None:
     note = tmp_path / "Example.md"
     note.write_text(
-        "---\n"
-        "tags:\n"
-        "  - governance\n"
-        "  - architecture\n"
-        "---\n",
+        "---\ntags:\n  - governance\n  - architecture\n---\n",
         encoding="utf-8",
     )
 
@@ -94,9 +83,7 @@ def test_search_frontmatter_list(tmp_path: Path) -> None:
 
 def test_normalize_wikilink_target() -> None:
     assert (
-        normalize_wikilink_target(
-            "[[Systems/Architecture#Scope|Architecture]]"
-        )
+        normalize_wikilink_target("[[Systems/Architecture#Scope|Architecture]]")
         == "Systems/Architecture"
     )
 

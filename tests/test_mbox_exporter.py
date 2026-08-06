@@ -38,22 +38,16 @@ def test_export_emails(tmp_path: Path) -> None:
     assert markdown_count == 1
     assert jsonl_path.exists()
 
-    json_record = json.loads(
-        jsonl_path.read_text(encoding="utf-8").strip()
-    )
+    json_record = json.loads(jsonl_path.read_text(encoding="utf-8").strip())
 
     assert json_record["subject"] == "Capture the Flag Esports Map"
-    assert json_record["to"] == [
-        "Evgenii <evgenypermiakov@gmail.com>"
-    ]
+    assert json_record["to"] == ["Evgenii <evgenypermiakov@gmail.com>"]
 
     markdown_files = list(markdown_dir.glob("*.md"))
 
     assert len(markdown_files) == 1
 
-    markdown_text = markdown_files[0].read_text(
-        encoding="utf-8"
-    )
+    markdown_text = markdown_files[0].read_text(encoding="utf-8")
 
     assert "# Capture the Flag Esports Map" in markdown_text
     assert "Hello Evgenii." in markdown_text

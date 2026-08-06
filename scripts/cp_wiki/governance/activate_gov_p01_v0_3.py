@@ -48,13 +48,9 @@ except ImportError as exc:
 
 VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
-CANONICAL_SCRIPT = (
-    TOOLS
-    / "scripts/cp_wiki/governance/activate_gov_p01_v0_3.py"
-)
+CANONICAL_SCRIPT = TOOLS / "scripts/cp_wiki/governance/activate_gov_p01_v0_3.py"
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 
 OWNER = "Christoph Peters"
@@ -88,12 +84,9 @@ PROC_ACTIVE_REL = Path(
 )
 
 VALIDATOR_CANDIDATES = [
-    TOOLS
-    / "scripts/cp_wiki/validation/"
+    TOOLS / "scripts/cp_wiki/validation/"
     "validate_cpwiki_managed_artifacts_draft_v3_1.py",
-    TOOLS
-    / "scripts/cp_wiki/validation/"
-    "validate_cpwiki_managed_artifacts_v3_1.py",
+    TOOLS / "scripts/cp_wiki/validation/validate_cpwiki_managed_artifacts_v3_1.py",
 ]
 
 
@@ -247,9 +240,7 @@ def validate_identity(
     for field, wanted in expected.items():
         actual = str(fm.get(field) or "")
         if actual != wanted:
-            raise ActivationError(
-                f"{field} expected {wanted!r}, got {actual!r}"
-            )
+            raise ActivationError(f"{field} expected {wanted!r}, got {actual!r}")
 
 
 def require_active_specification(
@@ -272,8 +263,7 @@ def require_active_specification(
         actual = str(fm.get(field) or "")
         if actual != wanted:
             raise ActivationError(
-                f"{specification_id}: {field} expected {wanted!r}, "
-                f"got {actual!r}"
+                f"{specification_id}: {field} expected {wanted!r}, got {actual!r}"
             )
 
 
@@ -477,7 +467,8 @@ def build_active_baseline_044(source: str) -> str:
     validated = [
         value
         for value in list_values(fm_after, "validated_against")
-        if value not in {
+        if value
+        not in {
             "CPKS-SPEC-PROC@0.1",
             "CPKS-BL@0.43",
         }
@@ -908,9 +899,7 @@ def read_validator_report(report_root: Path) -> tuple[Path, dict[str, Any]]:
         reverse=True,
     )
     if not reports:
-        raise ActivationError(
-            f"Validator report not found below: {report_root}"
-        )
+        raise ActivationError(f"Validator report not found below: {report_root}")
     path = reports[0]
     return path, json.loads(path.read_text(encoding="utf-8"))
 

@@ -30,13 +30,9 @@ import tempfile
 
 VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
-CANONICAL_SCRIPT = (
-    TOOLS
-    / "scripts/cp_wiki/governance/place_cpks_spec_art_v0_2.py"
-)
+CANONICAL_SCRIPT = TOOLS / "scripts/cp_wiki/governance/place_cpks_spec_art_v0_2.py"
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 TARGET_REL = Path(
     "Development/cpKnowledgeSystem/Specifications/"
@@ -91,9 +87,7 @@ def validate(text: str) -> None:
     for field, wanted in expected.items():
         actual = scalar(fm, field)
         if actual != wanted:
-            raise PlacementError(
-                f"{field} expected {wanted!r}, got {actual!r}"
-            )
+            raise PlacementError(f"{field} expected {wanted!r}, got {actual!r}")
 
     for field in ("approved_by", "approved_at", "effective_from"):
         if scalar(fm, field) is not None:
@@ -130,10 +124,7 @@ def main() -> int:
     target = VAULT / TARGET_REL
     timestamp = dt.datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%z")
     mode = "apply" if args.apply else "dry-run"
-    run_dir = (
-        RUN_ROOT
-        / f"{timestamp}-place-CPKS-SPEC-ART-0.2-{mode}"
-    )
+    run_dir = RUN_ROOT / f"{timestamp}-place-CPKS-SPEC-ART-0.2-{mode}"
     run_dir.mkdir(parents=True, exist_ok=False)
 
     if target.exists():

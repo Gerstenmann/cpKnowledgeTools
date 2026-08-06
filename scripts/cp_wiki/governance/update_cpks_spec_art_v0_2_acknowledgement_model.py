@@ -36,13 +36,11 @@ import tempfile
 VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
 CANONICAL_SCRIPT = (
-    TOOLS
-    / "scripts/cp_wiki/governance/"
+    TOOLS / "scripts/cp_wiki/governance/"
     "update_cpks_spec_art_v0_2_acknowledgement_model.py"
 )
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 TARGET_REL = Path(
     "Development/cpKnowledgeSystem/Specifications/"
@@ -70,9 +68,7 @@ def assert_canonical_script_location() -> None:
 def replace_once(text: str, old: str, new: str, label: str) -> str:
     count = text.count(old)
     if count != 1:
-        raise UpdateError(
-            f"Expected exactly one anchor for {label}, found {count}."
-        )
+        raise UpdateError(f"Expected exactly one anchor for {label}, found {count}.")
     return text.replace(old, new, 1)
 
 
@@ -91,9 +87,7 @@ def validate_target(text: str) -> None:
         )
         actual = match.group(1).strip() if match else None
         if actual != wanted:
-            raise UpdateError(
-                f"{field} expected {wanted!r}, got {actual!r}"
-            )
+            raise UpdateError(f"{field} expected {wanted!r}, got {actual!r}")
 
     if "### 17.8 Bestätigte historische Diagnosen" not in text:
         raise UpdateError("Normative acknowledgement section is missing.")
@@ -247,10 +241,7 @@ def main() -> int:
 
     timestamp = dt.datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%z")
     mode = "apply" if args.apply else "dry-run"
-    run_dir = (
-        RUN_ROOT
-        / f"{timestamp}-update-CPKS-SPEC-ART-0.2-acknowledgement-{mode}"
-    )
+    run_dir = RUN_ROOT / f"{timestamp}-update-CPKS-SPEC-ART-0.2-acknowledgement-{mode}"
     run_dir.mkdir(parents=True, exist_ok=False)
 
     (run_dir / "planned-changes.diff").write_text(

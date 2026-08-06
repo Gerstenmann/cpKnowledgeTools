@@ -88,11 +88,8 @@ def list_vault_files(
     results: list[dict[str, Any]] = []
 
     for file_info in vault.list_markdown_files():
-        if (
+        if normalized_prefix and not file_info.relative_path.casefold().startswith(
             normalized_prefix
-            and not file_info.relative_path.casefold().startswith(
-                normalized_prefix
-            )
         ):
             continue
 
@@ -195,10 +192,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--host",
         default=DEFAULT_HTTP_HOST,
-        help=(
-            "HTTP bind address. Keep 127.0.0.1 when using "
-            "the Secure MCP Tunnel."
-        ),
+        help=("HTTP bind address. Keep 127.0.0.1 when using the Secure MCP Tunnel."),
     )
 
     parser.add_argument(

@@ -8,13 +8,7 @@ from cp_knowledge_tools.mcp.markdown import (
 
 
 def test_split_frontmatter() -> None:
-    content = (
-        "---\n"
-        "title: Example\n"
-        "status: active\n"
-        "---\n"
-        "# Heading\n"
-    )
+    content = "---\ntitle: Example\nstatus: active\n---\n# Heading\n"
 
     frontmatter, body = split_frontmatter(content)
 

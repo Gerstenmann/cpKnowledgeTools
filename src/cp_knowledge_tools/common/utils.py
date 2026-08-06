@@ -13,8 +13,8 @@ def decode(value):
         return str(make_header(decode_header(value)))
     except Exception:
         return str(value)
-		
-		
+
+
 def clean_text(text):
     if not text:
         return ""
@@ -36,6 +36,7 @@ def clean_text(text):
     text = "\n".join(lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
+
 
 def html_to_text(html):
     """Konvertiert HTML in lesbaren Text."""

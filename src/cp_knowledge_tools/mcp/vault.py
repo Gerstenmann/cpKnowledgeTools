@@ -41,6 +41,7 @@ class Vault:
             relative_path=normalized_path,
             content=content,
         )
+
     """Read-only filesystem boundary around an Obsidian vault."""
 
     def __init__(self, root: Path) -> None:
@@ -120,9 +121,7 @@ class Vault:
         path = self.resolve_path(relative_path)
 
         if not path.exists() or not path.is_file():
-            raise VaultFileNotFoundError(
-                f"Vault file does not exist: {relative_path}"
-            )
+            raise VaultFileNotFoundError(f"Vault file does not exist: {relative_path}")
 
         if path.suffix.lower() not in SUPPORTED_MARKDOWN_SUFFIXES:
             raise UnsupportedFileTypeError(

@@ -71,11 +71,17 @@ class TemplateGenerator:
         if explanation_path.exists() and not force:
             skipped_files.append(explanation_path)
         else:
-            explanation_path.write_text(render_explanation(context), encoding="utf-8", newline="\n")
+            explanation_path.write_text(
+                render_explanation(context), encoding="utf-8", newline="\n"
+            )
             written_files.append(explanation_path)
 
         self._write_manifest(context, context_root, written_files, skipped_files)
-        validation_errors = tuple(self.validator.validate_context_output(context, output_base)) if validate else ()
+        validation_errors = (
+            tuple(self.validator.validate_context_output(context, output_base))
+            if validate
+            else ()
+        )
 
         return GenerationResult(
             context_id=context.context_id,
@@ -88,7 +94,9 @@ class TemplateGenerator:
 
     def validate(self, context_id: str, output_base: Path) -> list[str]:
         context = load_context(context_id, self.context_dir)
-        return self.validator.validate_context_output(context, output_base.expanduser().resolve())
+        return self.validator.validate_context_output(
+            context, output_base.expanduser().resolve()
+        )
 
     @staticmethod
     def default_output_base() -> Path:
@@ -116,8 +124,12 @@ class TemplateGenerator:
             "context_version": context.version,
             "generated_at": datetime.now(UTC).isoformat(),
             "output_root": context.output_root.as_posix(),
-            "written_files": [str(path.relative_to(context_root)) for path in written_files],
-            "skipped_files": [str(path.relative_to(context_root)) for path in skipped_files],
+            "written_files": [
+                str(path.relative_to(context_root)) for path in written_files
+            ],
+            "skipped_files": [
+                str(path.relative_to(context_root)) for path in skipped_files
+            ],
         }
         manifest_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n",

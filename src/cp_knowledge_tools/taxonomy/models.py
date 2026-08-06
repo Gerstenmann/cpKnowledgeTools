@@ -19,10 +19,7 @@ class ValidationIssue:
 
     def render(self) -> str:
         block_text = f" [{self.block}]" if self.block else ""
-        return (
-            f"{self.path}:{self.line}"
-            f"{block_text} {self.code}: {self.message}"
-        )
+        return f"{self.path}:{self.line}{block_text} {self.code}: {self.message}"
 
 
 @dataclass(slots=True)

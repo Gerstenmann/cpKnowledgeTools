@@ -33,8 +33,7 @@ SCRIPT_ROOT = TOOLS / "scripts/cp_wiki/validation"
 CANONICAL_SCRIPT = SCRIPT_ROOT / "test_cpwiki_filename_normalization_v3.py"
 VALIDATOR_PATH = SCRIPT_ROOT / "validate_cpwiki_managed_artifacts_draft_v3.py"
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/validation"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/validation"
 )
 
 
@@ -127,7 +126,9 @@ def main() -> int:
 
     # Both Unicode spellings must collapse to one normalized filename.
     if normalized["Café"] != normalized["Cafe\u0301"]:
-        raise IntegrationFailure("Composed and decomposed Café did not normalize equally.")
+        raise IntegrationFailure(
+            "Composed and decomposed Café did not normalize equally."
+        )
 
     created_names: list[str] = []
     seen_names: set[str] = set()
@@ -182,10 +183,14 @@ def main() -> int:
         run(["git", "add", case_source.name], fixture)
         run(["git", "commit", "-q", "-m", "Add case rename fixture"], fixture)
         run(["git", "mv", case_source.name, "case-rename-intermediate.md"], fixture)
-        run(["git", "mv", "case-rename-intermediate.md", "case rename test.md"], fixture)
+        run(
+            ["git", "mv", "case-rename-intermediate.md", "case rename test.md"], fixture
+        )
         status = run(["git", "status", "--short"], fixture).stdout.strip()
         if not status:
-            raise IntegrationFailure("Git did not detect the controlled case-only rename.")
+            raise IntegrationFailure(
+                "Git did not detect the controlled case-only rename."
+            )
         git_report.update(
             {
                 "case_only_rename_detected": True,

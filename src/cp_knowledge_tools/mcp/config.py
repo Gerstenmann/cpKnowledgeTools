@@ -32,9 +32,7 @@ class MCPConfig:
         vault_root = vault_root.resolve()
 
         if not vault_root.exists():
-            raise VaultConfigurationError(
-                f"Vault root does not exist: {vault_root}"
-            )
+            raise VaultConfigurationError(f"Vault root does not exist: {vault_root}")
 
         if not vault_root.is_dir():
             raise VaultConfigurationError(

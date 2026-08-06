@@ -30,13 +30,9 @@ import tempfile
 
 VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
-CANONICAL_SCRIPT = (
-    TOOLS
-    / "scripts/cp_wiki/governance/activate_cpks_dec_020_v1_0.py"
-)
+CANONICAL_SCRIPT = TOOLS / "scripts/cp_wiki/governance/activate_cpks_dec_020_v1_0.py"
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 
 DEC_REL = Path(
@@ -65,7 +61,7 @@ def split_frontmatter(text: str) -> tuple[str, str]:
         raise ActivationError("Missing YAML frontmatter.")
     for index in range(1, len(lines)):
         if lines[index].strip() == "---":
-            return "".join(lines[1:index]), "".join(lines[index + 1:])
+            return "".join(lines[1:index]), "".join(lines[index + 1 :])
     raise ActivationError("Unclosed YAML frontmatter.")
 
 
@@ -120,8 +116,7 @@ def add_list_item(frontmatter: str, field: str, value: str) -> str:
             start = index
             end = index + 1
             while end < len(lines) and (
-                lines[end].startswith("  - ")
-                or lines[end].strip() == ""
+                lines[end].startswith("  - ") or lines[end].strip() == ""
             ):
                 if lines[end].strip() == "":
                     break
@@ -145,9 +140,7 @@ def replace_list_single(
     if values == [new_value]:
         return frontmatter
     if values != [expected_old]:
-        raise ActivationError(
-            f"{field} expected {[expected_old]!r}, got {values!r}"
-        )
+        raise ActivationError(f"{field} expected {[expected_old]!r}, got {values!r}")
 
     pattern = re.compile(
         rf"(?m)^({re.escape(field)}:\s*\n)\s*-\s*"
@@ -183,9 +176,7 @@ def insert_before_required(
         return text
     count = text.count(marker)
     if count != 1:
-        raise ActivationError(
-            f"{label}: marker expected exactly once, found {count}."
-        )
+        raise ActivationError(f"{label}: marker expected exactly once, found {count}.")
     return text.replace(marker, insertion.rstrip() + "\n\n" + marker, 1)
 
 
@@ -239,10 +230,8 @@ def build_baseline_043(active_text: str) -> str:
 
     body = replace_required(
         body,
-        "Diese Datei ist die aktive systemweite Authoritative Baseline "
-        "`CPKS-BL@0.42`.",
-        "Diese Datei ist die aktive systemweite Authoritative Baseline "
-        "`CPKS-BL@0.43`.",
+        "Diese Datei ist die aktive systemweite Authoritative Baseline `CPKS-BL@0.42`.",
+        "Diese Datei ist die aktive systemweite Authoritative Baseline `CPKS-BL@0.43`.",
         "baseline header version",
     )
     body = replace_required(
@@ -341,11 +330,7 @@ Für die Aktivierung wurden bestätigt:
 - [x] Commit und Push bleiben getrennte nachgelagerte Handlungen
 
 """
-    body = (
-        body[:section_20_start]
-        + new_section_20
-        + body[section_21_start:]
-    )
+    body = body[:section_20_start] + new_section_20 + body[section_21_start:]
 
     body = replace_required(
         body,
@@ -387,8 +372,7 @@ Für die Aktivierung wurden bestätigt:
     )
 
     old_short = (
-        "> `cpKnowledgeSystem` ist das übergeordnete Wissens- und "
-        "Agentensystem."
+        "> `cpKnowledgeSystem` ist das übergeordnete Wissens- und Agentensystem."
     )
     if old_short not in body:
         raise ActivationError("Short-form baseline marker not found.")
@@ -536,10 +520,7 @@ def main() -> int:
 
     timestamp = dt.datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%z")
     mode = "apply" if args.apply else "dry-run"
-    run_dir = (
-        RUN_ROOT
-        / f"{timestamp}-activate-CPKS-DEC-020-and-CPKS-BL-0.43-{mode}"
-    )
+    run_dir = RUN_ROOT / f"{timestamp}-activate-CPKS-DEC-020-and-CPKS-BL-0.43-{mode}"
     run_dir.mkdir(parents=True, exist_ok=False)
 
     decision_path = VAULT / DEC_REL
@@ -575,9 +556,7 @@ def main() -> int:
             print("Final state already exists and passed validation.")
             print(f"Run report: {run_dir}")
             return 0
-        raise ActivationError(
-            "CPKS-DEC-020 already exists in an unexpected state."
-        )
+        raise ActivationError("CPKS-DEC-020 already exists in an unexpected state.")
 
     if history_path.exists():
         raise ActivationError(
@@ -590,9 +569,7 @@ def main() -> int:
         scalar(baseline_fm, "version") == "0.42"
         and scalar(baseline_fm, "status") == "active"
     ):
-        raise ActivationError(
-            "Expected CPKS-BL@0.42 as active starting state."
-        )
+        raise ActivationError("Expected CPKS-BL@0.42 as active starting state.")
 
     baseline_history = historical_baseline(baseline_before)
     baseline_after = build_baseline_043(baseline_before)

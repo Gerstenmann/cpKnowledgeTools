@@ -58,8 +58,7 @@ except ImportError as exc:  # pragma: no cover
 VALIDATION_BASIS = ["CPKS-SPEC-ART@0.2", "CPKS-SPEC-PROC@0.3"]
 DEFAULT_VAULT = Path("/Users/cp/Documents/cp-wiki")
 DEFAULT_REPORT_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/validation"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/validation"
 )
 
 MANAGED_TYPES: dict[str, str] = {
@@ -386,7 +385,9 @@ def support_is_current(doc: Document) -> bool:
     candidates: list[str] = []
     for field in ("validated_against", "validation_basis", "rule_basis"):
         candidates.extend(
-            item for item in as_list(doc.frontmatter.get(field)) if isinstance(item, str)
+            item
+            for item in as_list(doc.frontmatter.get(field))
+            if isinstance(item, str)
         )
     return "CPKS-SPEC-ART@0.2" in candidates
 
@@ -398,7 +399,11 @@ def assign_validation_profile(doc: Document) -> str:
         if doc.scan_zone in {"governance_history", "process_history"}:
             return "historical_managed"
         if "development" in doc.scan_zone:
-            return "closed_development_managed" if is_closed_path(doc.relative_path) else "current_development_managed"
+            return (
+                "closed_development_managed"
+                if is_closed_path(doc.relative_path)
+                else "current_development_managed"
+            )
         return "unmanaged"
 
     if doc.scope_class == "unmanaged":
@@ -416,7 +421,9 @@ def assign_validation_profile(doc: Document) -> str:
         "process_development",
         "referenced_specification_development",
     }:
-        if doc.status in CLOSED_DEVELOPMENT_STATUSES or is_closed_path(doc.relative_path):
+        if doc.status in CLOSED_DEVELOPMENT_STATUSES or is_closed_path(
+            doc.relative_path
+        ):
             return "closed_development_managed"
         return "current_development_managed"
     return "unmanaged"
@@ -516,7 +523,6 @@ def add(
             line=line,
         )
     )
-
 
 
 def validate_acknowledgement(
@@ -715,11 +721,7 @@ def raw_field_is_quoted(doc: Document, field: str) -> bool:
     if not match:
         return False
     raw = match.group(1).strip()
-    return (
-        len(raw) >= 2
-        and raw[0] in {'"', "'"}
-        and raw[-1] == raw[0]
-    )
+    return len(raw) >= 2 and raw[0] in {'"', "'"} and raw[-1] == raw[0]
 
 
 def select_line_heads(documents: list[Document]) -> dict[str, Document]:
@@ -853,7 +855,9 @@ def build_alias_index(
     for alias, claimed in declarations.items():
         if len(set(claimed)) > 1:
             for doc in documents:
-                if doc.artifact_id in claimed and alias in as_list(doc.frontmatter.get("former_ids")):
+                if doc.artifact_id in claimed and alias in as_list(
+                    doc.frontmatter.get("former_ids")
+                ):
                     add(
                         findings,
                         doc,
@@ -878,7 +882,11 @@ def split_reference(value: str, aliases: AliasIndex) -> tuple[str, str | None, b
 
 
 def legacy_reference_severity(doc: Document) -> str:
-    if doc.validation_profile in {"historical_managed", "closed_development_managed", "legacy_support"}:
+    if doc.validation_profile in {
+        "historical_managed",
+        "closed_development_managed",
+        "legacy_support",
+    }:
         return "info"
     return "error"
 
@@ -939,7 +947,9 @@ def validate_stable_reference_field(
                 findings,
                 doc,
                 "error" if strict else "warning",
-                "invalid_affected_artifact_reference" if field == "affected_artifacts" else "invalid_reference_form",
+                "invalid_affected_artifact_reference"
+                if field == "affected_artifacts"
+                else "invalid_reference_form",
                 "Stable relation must use an unversioned stable ID.",
                 field=field,
                 actual=value,
@@ -969,7 +979,11 @@ def validate_versioned_reference_value(
         return None
     validate_alias_use(doc, findings, field, value, aliases)
     canonical, version, _ = split_reference(value, aliases)
-    if version is None or not ID_RE.fullmatch(canonical) or not VERSION_RE.fullmatch(version):
+    if (
+        version is None
+        or not ID_RE.fullmatch(canonical)
+        or not VERSION_RE.fullmatch(version)
+    ):
         add(
             findings,
             doc,
@@ -1031,7 +1045,9 @@ def validate_target_artifact(
         add(
             findings,
             doc,
-            "warning" if not strict or doc.validation_profile == "legacy_support" else "error",
+            "warning"
+            if not strict or doc.validation_profile == "legacy_support"
+            else "error",
             "legacy_target_artifact_descriptor",
             "Structured target_artifact lacks the required reference field.",
             field="target_artifact",
@@ -1062,7 +1078,8 @@ def validate_target_artifact(
 
     target_status = raw.get("target_status")
     if target_status is not None and (
-        not isinstance(target_status, str) or target_status not in ALL_RECOGNIZED_STATUSES
+        not isinstance(target_status, str)
+        or target_status not in ALL_RECOGNIZED_STATUSES
     ):
         add(
             findings,
@@ -1133,7 +1150,9 @@ def validate_mixed_references(
             )
 
 
-def validate_date_fields(doc: Document, findings: list[Finding], *, required: bool) -> None:
+def validate_date_fields(
+    doc: Document, findings: list[Finding], *, required: bool
+) -> None:
     for field in ("created", "revised"):
         if required and is_empty(doc.frontmatter.get(field)):
             add(
@@ -1160,7 +1179,12 @@ def validate_date_fields(doc: Document, findings: list[Finding], *, required: bo
             )
     created = scalar_text(doc.frontmatter.get("created"))
     revised = scalar_text(doc.frontmatter.get("revised"))
-    if created and revised and DATE_RE.fullmatch(created) and DATE_RE.fullmatch(revised):
+    if (
+        created
+        and revised
+        and DATE_RE.fullmatch(created)
+        and DATE_RE.fullmatch(revised)
+    ):
         if revised < created:
             add(
                 findings,
@@ -1180,7 +1204,14 @@ def validate_identity_and_version(
     *,
     full: bool,
 ) -> None:
-    required = ["document_type", doc.id_field, "title", "version", "status", "canonical_path"]
+    required = [
+        "document_type",
+        doc.id_field,
+        "title",
+        "version",
+        "status",
+        "canonical_path",
+    ]
     if full:
         required.extend(["owner", "created", "revised"])
     for field in required:
@@ -1216,7 +1247,11 @@ def validate_identity_and_version(
             actual=len(artifact_id),
             expected="<= 32",
         )
-    if doc.document_type == "process" and artifact_id and not PROCESS_ID_RE.fullmatch(artifact_id):
+    if (
+        doc.document_type == "process"
+        and artifact_id
+        and not PROCESS_ID_RE.fullmatch(artifact_id)
+    ):
         add(
             findings,
             doc,
@@ -1238,7 +1273,9 @@ def validate_identity_and_version(
                 field="version",
                 actual=doc.version,
             )
-        if not isinstance(doc.frontmatter.get("version"), str) or not raw_field_is_quoted(doc, "version"):
+        if not isinstance(
+            doc.frontmatter.get("version"), str
+        ) or not raw_field_is_quoted(doc, "version"):
             add(
                 findings,
                 doc,
@@ -1306,7 +1343,9 @@ def validate_canonical_path_and_filename(
                 findings,
                 doc,
                 "error",
-                "active_filename_mismatch" if doc.status == "active" else "versioned_filename_mismatch",
+                "active_filename_mismatch"
+                if doc.status == "active"
+                else "versioned_filename_mismatch",
                 "Filename does not match ID, version, status and normalized title.",
                 actual=actual,
                 expected=expected,
@@ -1325,7 +1364,12 @@ def validate_lifecycle(doc: Document, findings: list[Finding]) -> None:
             "Active managed artifact is outside an active canonical zone.",
             actual=profile,
         )
-    if profile == "current_managed" and doc.scan_zone == "active_processes" and doc.document_type == "process" and status != "active":
+    if (
+        profile == "current_managed"
+        and doc.scan_zone == "active_processes"
+        and doc.document_type == "process"
+        and status != "active"
+    ):
         add(
             findings,
             doc,
@@ -1354,7 +1398,11 @@ def validate_lifecycle(doc: Document, findings: list[Finding]) -> None:
             "active_artifact_in_history_or_archive",
             "Active artifact is located in history or archive.",
         )
-    if profile == "closed_development_managed" and status in {"active", "draft", "proposed"}:
+    if profile == "closed_development_managed" and status in {
+        "active",
+        "draft",
+        "proposed",
+    }:
         add(
             findings,
             doc,
@@ -1365,7 +1413,10 @@ def validate_lifecycle(doc: Document, findings: list[Finding]) -> None:
             actual=status,
             expected=sorted(CLOSED_DEVELOPMENT_STATUSES | {"archived"}),
         )
-    if profile == "current_development_managed" and status in CLOSED_DEVELOPMENT_STATUSES:
+    if (
+        profile == "current_development_managed"
+        and status in CLOSED_DEVELOPMENT_STATUSES
+    ):
         add(
             findings,
             doc,
@@ -1450,7 +1501,12 @@ def validate_managed_document(
     for field in VERSIONED_SCALAR_FIELDS:
         if field in doc.frontmatter:
             validate_versioned_reference_value(
-                doc, findings, field, doc.frontmatter.get(field), aliases, strict=strict_refs
+                doc,
+                findings,
+                field,
+                doc.frontmatter.get(field),
+                aliases,
+                strict=strict_refs,
             )
     if "target_artifact" in doc.frontmatter:
         validate_target_artifact(doc, findings, aliases, strict=strict_refs)
@@ -1500,7 +1556,9 @@ def validate_support_document(
                 findings,
                 doc,
                 "error" if strict else "warning",
-                "missing_affected_artifacts" if strict else "affected_artifacts_missing_on_legacy_change_artifact",
+                "missing_affected_artifacts"
+                if strict
+                else "affected_artifacts_missing_on_legacy_change_artifact",
                 "Current change artifact requires affected_artifacts."
                 if strict
                 else "Legacy change artifact predates the current impact rule.",
@@ -1513,7 +1571,9 @@ def validate_support_document(
 
     for field in STABLE_FIELDS - {"affected_artifacts"}:
         if field in doc.frontmatter:
-            validate_stable_reference_field(doc, findings, field, aliases, strict=strict)
+            validate_stable_reference_field(
+                doc, findings, field, aliases, strict=strict
+            )
     for field in VERSIONED_LIST_FIELDS:
         if field in doc.frontmatter:
             for value in as_list(doc.frontmatter.get(field)):
@@ -1646,7 +1706,9 @@ def resolve_versioned_references(
                 findings,
                 doc,
                 "info" if allow_planned else "error",
-                "planned_target_not_materialized" if allow_planned else "unresolved_versioned_reference",
+                "planned_target_not_materialized"
+                if allow_planned
+                else "unresolved_versioned_reference",
                 "Planned target version is not materialized yet."
                 if allow_planned
                 else "Version-bound reference does not resolve.",
@@ -1889,10 +1951,14 @@ def render_markdown(
         lines.append(f"| `{document_type}` | {count} |")
 
     lines.extend(["", "## 4. Alias model", ""])
-    lines.append("Approved and distributed former IDs are resolved without rewriting historical files.")
+    lines.append(
+        "Approved and distributed former IDs are resolved without rewriting historical files."
+    )
     lines.extend(["", "| Former ID | Current ID | Source |", "|---|---|---|"])
     for alias, current in sorted(aliases.aliases.items()):
-        lines.append(f"| `{alias}` | `{current}` | `{aliases.sources.get(alias, '')}` |")
+        lines.append(
+            f"| `{alias}` | `{current}` | `{aliases.sources.get(alias, '')}` |"
+        )
 
     lines.extend(["", "## 5. Historical acknowledgements", ""])
     if acknowledgement_stats.acknowledged_documents:
@@ -1906,11 +1972,20 @@ def render_markdown(
     else:
         lines.append("No valid historical acknowledgement metadata was found.")
 
-    lines.extend(["", "## 6. Finding summary", "", "| Severity | Code | Count |", "|---|---|---:|"])
+    lines.extend(
+        [
+            "",
+            "## 6. Finding summary",
+            "",
+            "| Severity | Code | Count |",
+            "|---|---|---:|",
+        ]
+    )
     ordering = {"error": 0, "warning": 1, "info": 2}
     summary = Counter((finding.severity, finding.code) for finding in findings)
     for (severity, code), count in sorted(
-        summary.items(), key=lambda item: (ordering.get(item[0][0], 9), -item[1], item[0][1])
+        summary.items(),
+        key=lambda item: (ordering.get(item[0][0], 9), -item[1], item[0][1]),
     ):
         lines.append(f"| `{severity}` | `{code}` | {count} |")
 
@@ -1944,8 +2019,12 @@ def render_markdown(
                         f"`{markdown_escape(finding.path)}`",
                         f"`{markdown_escape(finding.field)}`" if finding.field else "",
                         markdown_escape(finding.message),
-                        f"`{markdown_escape(finding.actual)}`" if finding.actual is not None else "",
-                        f"`{markdown_escape(finding.expected)}`" if finding.expected is not None else "",
+                        f"`{markdown_escape(finding.actual)}`"
+                        if finding.actual is not None
+                        else "",
+                        f"`{markdown_escape(finding.expected)}`"
+                        if finding.expected is not None
+                        else "",
                     ]
                 )
                 + " |"
@@ -1983,7 +2062,9 @@ def write_reports(
 ) -> Path:
     generated = dt.datetime.now().astimezone()
     timestamp = generated.strftime("%Y%m%dT%H%M%S%z")
-    report_dir = report_root.expanduser() / f"{timestamp}-managed-artifact-validation-v3-1"
+    report_dir = (
+        report_root.expanduser() / f"{timestamp}-managed-artifact-validation-v3-1"
+    )
     report_dir.mkdir(parents=True, exist_ok=False)
 
     payload = {
@@ -1993,14 +2074,27 @@ def write_reports(
         "mode": "read-only",
         "files_inventoried": len(documents),
         "scope_counts": dict(Counter(doc.scope_class for doc in documents)),
-        "validation_profiles": dict(Counter(doc.validation_profile for doc in documents)),
+        "validation_profiles": dict(
+            Counter(doc.validation_profile for doc in documents)
+        ),
         "scan_zones": dict(Counter(doc.scan_zone for doc in documents)),
-        "document_types": dict(Counter(doc.document_type or "no_document_type" for doc in documents)),
+        "document_types": dict(
+            Counter(doc.document_type or "no_document_type" for doc in documents)
+        ),
         "active_managed_processes": len(
-            [doc for doc in documents if doc.document_type == "process" and doc.status == "active"]
+            [
+                doc
+                for doc in documents
+                if doc.document_type == "process" and doc.status == "active"
+            ]
         ),
         "unmanaged_files_under_processes": len(
-            [doc for doc in documents if doc.scan_zone == "active_processes" and doc.scope_class == "unmanaged"]
+            [
+                doc
+                for doc in documents
+                if doc.scan_zone == "active_processes"
+                and doc.scope_class == "unmanaged"
+            ]
         ),
         "alias_mappings": aliases.aliases,
         "alias_sources": aliases.sources,
@@ -2049,7 +2143,9 @@ def managed_note(
 ) -> str:
     approval = ""
     if status == "active":
-        approval = "approved_by: Owner\napproved_at: 2026-07-26\neffective_from: 2026-07-26\n"
+        approval = (
+            "approved_by: Owner\napproved_at: 2026-07-26\neffective_from: 2026-07-26\n"
+        )
     return f"""---
 document_type: {document_type}
 {id_field}: {artifact_id}
@@ -2114,8 +2210,7 @@ def run_self_tests() -> dict[str, Any]:
 
         # 1. Active managed artifact with distributed alias declaration.
         active_path = Path(
-            "Systems/cpKnowledgeSystem/Governance/Policies/"
-            "TEST-POL Policy.md"
+            "Systems/cpKnowledgeSystem/Governance/Policies/TEST-POL Policy.md"
         )
         write_fixture(
             vault / active_path,
@@ -2209,8 +2304,8 @@ def run_self_tests() -> dict[str, Any]:
                     "validation_acknowledgement:\n"
                     "  disposition: accepted_historical\n"
                     "  reviewed_by: Owner\n"
-                    "  reviewed_at: \"2026-07-26\"\n"
-                    "  source_report_generated_at: \"2026-07-26T23:13:34+02:00\"\n"
+                    '  reviewed_at: "2026-07-26"\n'
+                    '  source_report_generated_at: "2026-07-26T23:13:34+02:00"\n'
                     "  accepted_codes:\n"
                     "    - invalid_reference_form\n"
                     "    - legacy_artifact_id_resolved\n"
@@ -2221,8 +2316,7 @@ def run_self_tests() -> dict[str, Any]:
 
         # 5. Current support with a valid planned target descriptor.
         current_support_path = Path(
-            "Development/cpKnowledgeSystem/Governance/Reviews/"
-            "Current Preflight.md"
+            "Development/cpKnowledgeSystem/Governance/Reviews/Current Preflight.md"
         )
         write_fixture(
             vault / current_support_path,
@@ -2256,7 +2350,7 @@ def run_self_tests() -> dict[str, Any]:
                     "governed_by:\n  - TEST-POLICY-LEGACY@1.0\n"
                     "target_artifact:\n"
                     "  document_type: specification\n"
-                    "  target_version: \"0.3\"\n"
+                    '  target_version: "0.3"\n'
                 ),
             ),
         )
@@ -2299,7 +2393,9 @@ def run_self_tests() -> dict[str, Any]:
         }
         missing = expected_profiles - set(profiles)
         if missing:
-            raise SelfTestFailure(f"Missing validation profiles in fixture: {sorted(missing)}")
+            raise SelfTestFailure(
+                f"Missing validation profiles in fixture: {sorted(missing)}"
+            )
 
         codes = Counter(finding.code for finding in findings)
         for required_code in (
@@ -2308,7 +2404,9 @@ def run_self_tests() -> dict[str, Any]:
             "legacy_target_artifact_descriptor",
         ):
             if not codes[required_code]:
-                raise SelfTestFailure(f"Expected diagnostic not produced: {required_code}")
+                raise SelfTestFailure(
+                    f"Expected diagnostic not produced: {required_code}"
+                )
 
         # Negative guardrails: invalid YAML, duplicate version, invalid target,
         # current legacy relation and filename mismatch must all be detected.
@@ -2333,7 +2431,7 @@ def run_self_tests() -> dict[str, Any]:
                 "validation_acknowledgement:\n"
                 "  disposition: accepted_historical\n"
                 "  reviewed_by: Owner\n"
-                "  reviewed_at: \"2026-07-26\"\n"
+                '  reviewed_at: "2026-07-26"\n'
                 "  accepted_codes:\n"
                 "    - legacy_artifact_id_in_current_reference\n"
             ),
@@ -2375,7 +2473,9 @@ def run_self_tests() -> dict[str, Any]:
             "validation_acknowledgement_not_allowed",
         ):
             if not negative_codes[required_code]:
-                raise SelfTestFailure(f"Negative guardrail not detected: {required_code}")
+                raise SelfTestFailure(
+                    f"Negative guardrail not detected: {required_code}"
+                )
 
         return {
             "profiles": dict(profiles),
@@ -2443,8 +2543,12 @@ def main() -> int:
     ):
         print(f"{profile + ':':38} {profile_counts[profile]}")
     print(f"Alias mappings:                        {len(aliases.aliases)}")
-    print(f"Historical acknowledgements:           {acknowledgement_stats.acknowledged_documents}")
-    print(f"Acknowledged findings suppressed:      {acknowledgement_stats.suppressed_findings}")
+    print(
+        f"Historical acknowledgements:           {acknowledgement_stats.acknowledged_documents}"
+    )
+    print(
+        f"Acknowledged findings suppressed:      {acknowledgement_stats.suppressed_findings}"
+    )
     print(f"Errors:                                {severity_counts['error']}")
     print(f"Warnings:                              {severity_counts['warning']}")
     print(f"Info:                                  {severity_counts['info']}")

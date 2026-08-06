@@ -42,8 +42,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=TemplateGenerator.default_output_base(),
         help="Ausgabebasis; Standard: ~/Downloads/cp-wiki-template-output",
     )
-    generate.add_argument("--force", action="store_true", help="Bestehende Dateien überschreiben.")
-    generate.add_argument("--no-validate", action="store_true", help="Nachvalidierung überspringen.")
+    generate.add_argument(
+        "--force", action="store_true", help="Bestehende Dateien überschreiben."
+    )
+    generate.add_argument(
+        "--no-validate", action="store_true", help="Nachvalidierung überspringen."
+    )
 
     validate = sub.add_parser("validate", help="Bereits erzeugten Kontext validieren.")
     validate.add_argument("context", nargs="+", help="Kontext-ID oder 'all'.")
@@ -59,7 +63,9 @@ def build_parser() -> argparse.ArgumentParser:
 def _resolve_contexts(values: list[str], context_dir: Path | None) -> list[str]:
     if "all" in values:
         if len(values) > 1:
-            raise ValueError("'all' darf nicht mit weiteren Kontexten kombiniert werden.")
+            raise ValueError(
+                "'all' darf nicht mit weiteren Kontexten kombiniert werden."
+            )
         return available_contexts(context_dir)
     return values
 
@@ -100,8 +106,12 @@ def main(argv: list[str] | None = None) -> int:
                     validate=not args.no_validate,
                 )
                 print(f"[{context_id}] Ausgabe: {result.output_root}")
-                print(f"[{context_id}] Dateien geschrieben: {len(result.written_files)}")
-                print(f"[{context_id}] Dateien übersprungen: {len(result.skipped_files)}")
+                print(
+                    f"[{context_id}] Dateien geschrieben: {len(result.written_files)}"
+                )
+                print(
+                    f"[{context_id}] Dateien übersprungen: {len(result.skipped_files)}"
+                )
                 if result.validation_errors:
                     failed = True
                     for error in result.validation_errors:

@@ -19,9 +19,7 @@ from cp_knowledge_tools.taxonomy.models import (
 from cp_knowledge_tools.taxonomy.schema import DSM_ALLOWED_BLOCKS
 
 BLOCK_START_PATTERN = re.compile(r"^@([a-z][a-z0-9_]*)$")
-KEY_PATTERN = re.compile(
-    r"^\s*(?:-\s+)?([a-z][a-z0-9_]*):"
-)
+KEY_PATTERN = re.compile(r"^\s*(?:-\s+)?([a-z][a-z0-9_]*):")
 
 
 class UniqueKeyLoader(yaml.SafeLoader):
@@ -144,10 +142,7 @@ class DSMParser:
             if existing:
                 add_issue(
                     code="DSM002",
-                    message=(
-                        f"Block @{current_name} occurs more "
-                        "than once."
-                    ),
+                    message=(f"Block @{current_name} occurs more than once."),
                     line=current_start,
                     block=current_name,
                 )
@@ -171,11 +166,7 @@ class DSMParser:
                     source_line = current_start
 
                     if mark is not None:
-                        source_line = (
-                            current_start
-                            + mark.line
-                            + 1
-                        )
+                        source_line = current_start + mark.line + 1
 
                     add_issue(
                         code="DSM007",
@@ -187,10 +178,7 @@ class DSMParser:
                     if not isinstance(block.data, dict):
                         add_issue(
                             code="DSM008",
-                            message=(
-                                "Block content must be a "
-                                "top-level mapping."
-                            ),
+                            message=("Block content must be a top-level mapping."),
                             line=current_start + 1,
                             block=current_name,
                         )
@@ -218,9 +206,7 @@ class DSMParser:
                     )
                     continue
 
-                start_match = BLOCK_START_PATTERN.fullmatch(
-                    stripped
-                )
+                start_match = BLOCK_START_PATTERN.fullmatch(stripped)
 
                 if start_match:
                     current_name = start_match.group(1)
@@ -230,10 +216,7 @@ class DSMParser:
                     if current_name not in DSM_ALLOWED_BLOCKS:
                         add_issue(
                             code="DSM004",
-                            message=(
-                                f"Unsupported block "
-                                f"@{current_name}."
-                            ),
+                            message=(f"Unsupported block @{current_name}."),
                             line=line_number,
                             block=current_name,
                         )
@@ -244,9 +227,7 @@ class DSMParser:
                 finish_block(line_number)
                 continue
 
-            nested_match = BLOCK_START_PATTERN.fullmatch(
-                stripped
-            )
+            nested_match = BLOCK_START_PATTERN.fullmatch(stripped)
 
             if nested_match:
                 add_issue(
@@ -269,10 +250,7 @@ class DSMParser:
                 if current_name not in DSM_ALLOWED_BLOCKS:
                     add_issue(
                         code="DSM004",
-                        message=(
-                            f"Unsupported block "
-                            f"@{current_name}."
-                        ),
+                        message=(f"Unsupported block @{current_name}."),
                         line=line_number,
                         block=current_name,
                     )
@@ -282,10 +260,7 @@ class DSMParser:
             if "\t" in source_line:
                 add_issue(
                     code="DSM009",
-                    message=(
-                        "Tab characters are not allowed "
-                        "inside machine blocks."
-                    ),
+                    message=("Tab characters are not allowed inside machine blocks."),
                     line=line_number,
                     block=current_name,
                 )
@@ -293,10 +268,7 @@ class DSMParser:
             if source_line.lstrip().startswith("#"):
                 add_issue(
                     code="DSM010",
-                    message=(
-                        "Comments are not allowed inside "
-                        "machine blocks."
-                    ),
+                    message=("Comments are not allowed inside machine blocks."),
                     line=line_number,
                     block=current_name,
                 )
@@ -306,10 +278,7 @@ class DSMParser:
         if current_name is not None:
             add_issue(
                 code="DSM001",
-                message=(
-                    f"Block @{current_name} is not closed "
-                    "with @end."
-                ),
+                message=(f"Block @{current_name} is not closed with @end."),
                 line=current_start,
                 block=current_name,
             )

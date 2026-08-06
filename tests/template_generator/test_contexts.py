@@ -1,4 +1,3 @@
-
 import pytest
 
 from cp_knowledge_tools.template_generator.context_loader import (

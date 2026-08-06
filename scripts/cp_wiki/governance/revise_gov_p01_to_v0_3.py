@@ -36,13 +36,9 @@ import tempfile
 
 VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
-CANONICAL_SCRIPT = (
-    TOOLS
-    / "scripts/cp_wiki/governance/revise_gov_p01_to_v0_3.py"
-)
+CANONICAL_SCRIPT = TOOLS / "scripts/cp_wiki/governance/revise_gov_p01_to_v0_3.py"
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 
 SOURCE_REL = Path(
@@ -82,7 +78,7 @@ def split_frontmatter(text: str) -> tuple[str, str]:
         raise RevisionError("Missing YAML frontmatter.")
     for index in range(1, len(lines)):
         if lines[index].strip() == "---":
-            return "".join(lines[1:index]), "".join(lines[index + 1:])
+            return "".join(lines[1:index]), "".join(lines[index + 1 :])
     raise RevisionError("Unclosed YAML frontmatter.")
 
 
@@ -123,9 +119,7 @@ def validate_process(
     for field, wanted in expected.items():
         actual = scalar(fm, field)
         if actual != wanted:
-            raise RevisionError(
-                f"{field} expected {wanted!r}, got {actual!r}"
-            )
+            raise RevisionError(f"{field} expected {wanted!r}, got {actual!r}")
 
 
 def build_archived_source(source_text: str) -> str:
@@ -199,9 +193,7 @@ def main() -> int:
 
     timestamp = dt.datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%z")
     mode = "apply" if args.apply else "dry-run"
-    run_dir = (
-        RUN_ROOT / f"{timestamp}-revise-GOV-P01-to-0.3-{mode}"
-    )
+    run_dir = RUN_ROOT / f"{timestamp}-revise-GOV-P01-to-0.3-{mode}"
     run_dir.mkdir(parents=True, exist_ok=False)
 
     if target_path.exists() and archive_path.exists() and not source_path.exists():
@@ -220,9 +212,7 @@ def main() -> int:
             canonical_path=ARCHIVE_REL.as_posix(),
         )
         if target_existing != TARGET_CONTENT:
-            raise RevisionError(
-                "GOV-P01@0.3 exists with unexpected content."
-            )
+            raise RevisionError("GOV-P01@0.3 exists with unexpected content.")
         report = {
             "mode": mode,
             "state": "already_final",

@@ -49,13 +49,11 @@ except ImportError as exc:
 VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
 CANONICAL_SCRIPT = (
-    TOOLS
-    / "scripts/cp_wiki/migrations/"
+    TOOLS / "scripts/cp_wiki/migrations/"
     "acknowledge_historical_validator_findings_v3_1.py"
 )
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/migrations"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/migrations"
 )
 
 SOURCE_REPORT_GENERATED_AT = "2026-07-26T23:13:34.788366+02:00"
@@ -66,7 +64,89 @@ RATIONALE = (
     "und nach Vorliegen aktueller Nachfolgeartefakte als abgeschlossen akzeptiert."
 )
 
-MANIFEST: dict[str, list[str]] = {'Development/cpKnowledgeSystem/Governance/Draft Decisions/CPKS-DEC-012@1.0 Governance Artifact Consolidation and Dependency Management.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Draft Decisions/CPKS-DEC-014@0.1 Organisation des Governance-Prozessregisters und der Prozessbeschreibungen.md': ['invalid_affected_artifact_reference', 'invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Draft Decisions/CPKS-DEC-019@0.1 Governance Artifact Naming, Versioning and Lifecycle Placement.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Draft Processes/Archive/GOV-P01@0.2 Governance Artifact Consolidation and Impact Review.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Reviews/GOV-P01 v0.2 Governance Review.md': ['legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-BASELINE Update Preflight v0.2.md': ['invalid_affected_artifact_reference', 'invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-BL@0.4 Baseline Update Preflight.md': ['invalid_affected_artifact_reference'], 'Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-DEC-017 Activation and Impact Preflight v0.1.md': ['invalid_affected_artifact_reference', 'invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-FWK-AI-WORKING 0.3 Preflight v0.2.md': ['invalid_affected_artifact_reference', 'invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-FWK-AI-WORKING 0.3 Preflight.md': ['affected_artifacts_missing_on_legacy_change_artifact', 'invalid_reference_form', 'legacy_artifact_id_resolved'], 'Development/cpKnowledgeSystem/Governance/Reviews/Preflights/GOV-P01 v0.1 Preflight v0.2.md': ['affected_artifacts_missing_on_legacy_change_artifact', 'invalid_reference_form', 'legacy_artifact_id_resolved', 'legacy_target_artifact_descriptor', 'unknown_target_artifact_descriptor_field'], 'Development/cpKnowledgeSystem/Governance/Reviews/Preflights/GOV-P01 v0.1 Preflight.md': ['affected_artifacts_missing_on_legacy_change_artifact', 'invalid_reference_form', 'legacy_artifact_id_resolved', 'legacy_target_artifact_descriptor', 'unknown_target_artifact_descriptor_field'], 'Systems/cpKnowledgeSystem/Governance/Archive/Baselines/CPKS-BL@0.2 cpKnowledgeSystem Authoritative Baseline.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Systems/cpKnowledgeSystem/Governance/Archive/Baselines/CPKS-BL@0.3 cpKnowledgeSystem Authoritative Baseline.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Systems/cpKnowledgeSystem/Governance/Archive/Frameworks/CPKS-FWK-AIW@0.2 AI Working Governance Framework.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Systems/cpKnowledgeSystem/Governance/Archive/Frameworks/CPKS-FWK-AIW@0.3 AI Working Governance Framework.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Systems/cpKnowledgeSystem/Governance/Decisions/History/CPKS-DEC-012@1.1 Governance Artifact Consolidation and Dependency Management.md': ['invalid_reference_form', 'legacy_artifact_id_resolved'], 'Systems/cpKnowledgeSystem/Governance/Decisions/History/CPKS-DEC-014@1.0 Organisation des Governance-Prozessregisters und der Prozessbeschreibungen.md': ['invalid_reference_form', 'legacy_artifact_id_resolved']}
+MANIFEST: dict[str, list[str]] = {
+    "Development/cpKnowledgeSystem/Governance/Draft Decisions/CPKS-DEC-012@1.0 Governance Artifact Consolidation and Dependency Management.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Draft Decisions/CPKS-DEC-014@0.1 Organisation des Governance-Prozessregisters und der Prozessbeschreibungen.md": [
+        "invalid_affected_artifact_reference",
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Draft Decisions/CPKS-DEC-019@0.1 Governance Artifact Naming, Versioning and Lifecycle Placement.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Draft Processes/Archive/GOV-P01@0.2 Governance Artifact Consolidation and Impact Review.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/GOV-P01 v0.2 Governance Review.md": [
+        "legacy_artifact_id_resolved"
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-BASELINE Update Preflight v0.2.md": [
+        "invalid_affected_artifact_reference",
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-BL@0.4 Baseline Update Preflight.md": [
+        "invalid_affected_artifact_reference"
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-DEC-017 Activation and Impact Preflight v0.1.md": [
+        "invalid_affected_artifact_reference",
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-FWK-AI-WORKING 0.3 Preflight v0.2.md": [
+        "invalid_affected_artifact_reference",
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/Preflights/CPKS-FWK-AI-WORKING 0.3 Preflight.md": [
+        "affected_artifacts_missing_on_legacy_change_artifact",
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/Preflights/GOV-P01 v0.1 Preflight v0.2.md": [
+        "affected_artifacts_missing_on_legacy_change_artifact",
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+        "legacy_target_artifact_descriptor",
+        "unknown_target_artifact_descriptor_field",
+    ],
+    "Development/cpKnowledgeSystem/Governance/Reviews/Preflights/GOV-P01 v0.1 Preflight.md": [
+        "affected_artifacts_missing_on_legacy_change_artifact",
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+        "legacy_target_artifact_descriptor",
+        "unknown_target_artifact_descriptor_field",
+    ],
+    "Systems/cpKnowledgeSystem/Governance/Archive/Baselines/CPKS-BL@0.2 cpKnowledgeSystem Authoritative Baseline.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Systems/cpKnowledgeSystem/Governance/Archive/Baselines/CPKS-BL@0.3 cpKnowledgeSystem Authoritative Baseline.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Systems/cpKnowledgeSystem/Governance/Archive/Frameworks/CPKS-FWK-AIW@0.2 AI Working Governance Framework.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Systems/cpKnowledgeSystem/Governance/Archive/Frameworks/CPKS-FWK-AIW@0.3 AI Working Governance Framework.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Systems/cpKnowledgeSystem/Governance/Decisions/History/CPKS-DEC-012@1.1 Governance Artifact Consolidation and Dependency Management.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+    "Systems/cpKnowledgeSystem/Governance/Decisions/History/CPKS-DEC-014@1.0 Organisation des Governance-Prozessregisters und der Prozessbeschreibungen.md": [
+        "invalid_reference_form",
+        "legacy_artifact_id_resolved",
+    ],
+}
 
 MANAGED_TYPES = {
     "baseline",
@@ -154,9 +234,7 @@ def is_eligible(relative_path: str, frontmatter: dict[str, Any]) -> bool:
         )
 
     if document_type in SUPPORT_TYPES:
-        return relative_path.startswith(
-            "Development/cpKnowledgeSystem/Governance/"
-        )
+        return relative_path.startswith("Development/cpKnowledgeSystem/Governance/")
 
     return False
 
@@ -280,8 +358,7 @@ def main() -> int:
     timestamp = dt.datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%z")
     mode = "apply" if args.apply else "dry-run"
     run_dir = (
-        RUN_ROOT
-        / f"{timestamp}-acknowledge-historical-validator-findings-v3-1-{mode}"
+        RUN_ROOT / f"{timestamp}-acknowledge-historical-validator-findings-v3-1-{mode}"
     )
     run_dir.mkdir(parents=True, exist_ok=False)
 
@@ -309,9 +386,7 @@ def main() -> int:
         )
 
         if after != before:
-            combined_diff.append(
-                unified_diff(before, after, relative_path)
-            )
+            combined_diff.append(unified_diff(before, after, relative_path))
             updates[path] = (before, after, mode_bits)
 
     (run_dir / "planned-changes.diff").write_text(
@@ -361,9 +436,7 @@ def main() -> int:
             parsed = parse_frontmatter(raw)
             expected_codes = MANIFEST[relative_path.as_posix()]
             if not validate_existing_acknowledgement(parsed, expected_codes):
-                raise MigrationError(
-                    f"Post-write validation failed: {relative_path}"
-                )
+                raise MigrationError(f"Post-write validation failed: {relative_path}")
 
     except Exception:
         for path in reversed(changed):

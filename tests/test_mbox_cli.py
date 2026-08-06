@@ -28,4 +28,3 @@ def test_run_import(tmp_path: Path) -> None:
         == statistics["total"]
     )
     assert jsonl_path.exists()
-

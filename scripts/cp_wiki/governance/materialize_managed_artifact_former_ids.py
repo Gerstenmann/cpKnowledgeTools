@@ -29,8 +29,7 @@ CANONICAL_SCRIPT = (
     TOOLS / "scripts/cp_wiki/governance/materialize_managed_artifact_former_ids.py"
 )
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 TODAY = "2026-07-26"
 
@@ -112,9 +111,7 @@ def migrate(text: str, *, id_field: str, current_id: str, former_id: str) -> str
     id_line = f"{id_field}: {current_id}"
     indexes = [index for index, line in enumerate(fm) if line.strip() == id_line]
     if len(indexes) != 1:
-        raise MigrationError(
-            f"Expected exactly one {id_line!r}, found {len(indexes)}."
-        )
+        raise MigrationError(f"Expected exactly one {id_line!r}, found {len(indexes)}.")
 
     raw = "".join(fm)
     former_match = re.search(

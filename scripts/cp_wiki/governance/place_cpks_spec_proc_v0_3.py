@@ -26,8 +26,7 @@ VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
 CANONICAL_SCRIPT = TOOLS / "scripts/cp_wiki/governance/place_cpks_spec_proc_v0_3.py"
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 TARGET_REL = Path(
     "Development/cpKnowledgeSystem/Specifications/"
@@ -80,9 +79,7 @@ def validate(text: str) -> None:
     for field, wanted in expected.items():
         actual = scalar(fm, field)
         if actual != wanted:
-            raise PlacementError(
-                f"{field} expected {wanted!r}, got {actual!r}"
-            )
+            raise PlacementError(f"{field} expected {wanted!r}, got {actual!r}")
     if "  - CPKS-SPEC-PROCESS-DESCRIPTION" not in fm:
         raise PlacementError("former_ids mapping is missing.")
     if "withdrawn" not in text:

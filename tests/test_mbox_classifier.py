@@ -34,9 +34,7 @@ def make_email(
 
 
 def test_calendar_email_is_discarded() -> None:
-    email = make_email(
-        subject="Abgelehnt: Python Coders"
-    )
+    email = make_email(subject="Abgelehnt: Python Coders")
 
     result = classify_email(email, get_rules())
 
@@ -48,8 +46,7 @@ def test_project_email_is_analyzed() -> None:
     email = make_email(
         subject="Gruppengröße und Honorar",
         body=(
-            "Wir müssen die Gruppengröße und die Vergütung "
-            "für den Coding Club klären."
+            "Wir müssen die Gruppengröße und die Vergütung für den Coding Club klären."
         ),
     )
 

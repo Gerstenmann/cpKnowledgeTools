@@ -57,17 +57,13 @@ except ImportError as exc:
 VAULT = Path("/Users/cp/Documents/cp-wiki")
 TOOLS = Path("/Users/cp/Developer/cpKnowledgeTools")
 CANONICAL_SCRIPT = (
-    TOOLS
-    / "scripts/cp_wiki/governance/"
-    "activate_cpks_specs_and_prepare_gov_p01.py"
+    TOOLS / "scripts/cp_wiki/governance/activate_cpks_specs_and_prepare_gov_p01.py"
 )
 RUN_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/governance"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance"
 )
 VALIDATION_ROOT = Path(
-    "/Users/cp/Library/Application Support/"
-    "cpKnowledgeTools/Runs/cp-wiki/validation"
+    "/Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/validation"
 )
 
 APPROVED_BY = "Christoph Peters"
@@ -95,9 +91,7 @@ GOV_REL = Path(
     "GOV-P01@0.3 Governance Artifact Consolidation and Impact Review.md"
 )
 
-ARCHIVE_DIR_REL = Path(
-    "Development/cpKnowledgeSystem/Specifications/Archive"
-)
+ARCHIVE_DIR_REL = Path("Development/cpKnowledgeSystem/Specifications/Archive")
 PREDECESSORS = {
     Path(
         "Development/cpKnowledgeSystem/Specifications/"
@@ -107,13 +101,11 @@ PREDECESSORS = {
     Path(
         "Development/cpKnowledgeSystem/Specifications/"
         "CPKS-SPEC-PROC@0.1 Process Description Specification.md"
-    ): ARCHIVE_DIR_REL
-    / "CPKS-SPEC-PROC@0.1 Process Description Specification.md",
+    ): ARCHIVE_DIR_REL / "CPKS-SPEC-PROC@0.1 Process Description Specification.md",
     Path(
         "Development/cpKnowledgeSystem/Specifications/"
         "CPKS-SPEC-PROC@0.2 Process Description Specification.md"
-    ): ARCHIVE_DIR_REL
-    / "CPKS-SPEC-PROC@0.2 Process Description Specification.md",
+    ): ARCHIVE_DIR_REL / "CPKS-SPEC-PROC@0.2 Process Description Specification.md",
 }
 
 
@@ -211,9 +203,7 @@ def validate_identity(
     for field, wanted in expected.items():
         actual = str(fm.get(field) or "")
         if actual != wanted:
-            raise ActivationError(
-                f"{field} expected {wanted!r}, got {actual!r}"
-            )
+            raise ActivationError(f"{field} expected {wanted!r}, got {actual!r}")
 
 
 def activate_specification(
@@ -229,9 +219,7 @@ def activate_specification(
     if fm.get("document_type") != "specification":
         raise ActivationError("Source is not a specification.")
     if fm.get("specification_id") != specification_id:
-        raise ActivationError(
-            f"Expected specification_id {specification_id}."
-        )
+        raise ActivationError(f"Expected specification_id {specification_id}.")
     if str(fm.get("version")) != version or fm.get("status") != "draft":
         raise ActivationError(
             f"{specification_id}@{version} is not the expected draft."
@@ -360,9 +348,7 @@ def withdraw_predecessor(text: str, target_path: Path) -> str:
     if fm.get("status") == "active":
         raise ActivationError("An active specification cannot be withdrawn.")
     if fm.get("status") not in {"draft", "proposed", "withdrawn"}:
-        raise ActivationError(
-            f"Unexpected predecessor status: {fm.get('status')}"
-        )
+        raise ActivationError(f"Unexpected predecessor status: {fm.get('status')}")
 
     raw = replace_scalar(raw, "status", "withdrawn")
     raw = replace_scalar(raw, "revised", APPROVED_AT)
@@ -546,8 +532,7 @@ def main() -> int:
     timestamp = dt.datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%z")
     mode = "apply" if args.apply else "dry-run"
     run_dir = (
-        RUN_ROOT
-        / f"{timestamp}-activate-CPKS-specifications-prepare-GOV-P01-{mode}"
+        RUN_ROOT / f"{timestamp}-activate-CPKS-specifications-prepare-GOV-P01-{mode}"
     )
     run_dir.mkdir(parents=True, exist_ok=False)
 
@@ -638,8 +623,12 @@ def main() -> int:
                 "source": source.relative_to(VAULT).as_posix(),
                 "target": target.relative_to(VAULT).as_posix(),
             }
-            for source, (target, _before, _after, _mode_bits)
-            in predecessor_updates.items()
+            for source, (
+                target,
+                _before,
+                _after,
+                _mode_bits,
+            ) in predecessor_updates.items()
         ],
         "prepare": [
             {

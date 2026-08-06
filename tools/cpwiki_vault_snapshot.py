@@ -114,7 +114,7 @@ def run_git(root: Path, *args: str) -> str | None:
             stderr=subprocess.DEVNULL,
             text=True,
         )
-    except (FileNotFoundError, subprocess.CalledProcessError):
+    except FileNotFoundError, subprocess.CalledProcessError:
         return None
     return result.stdout.strip()
 
@@ -155,7 +155,9 @@ def load_structured_file(path: Path) -> dict[str, Any]:
     else:
         raise SnapshotError(f"Unsupported expected-structure format: {path.suffix}")
     if not isinstance(data, dict):
-        raise SnapshotError("Expected-structure file must contain a mapping/object at the root.")
+        raise SnapshotError(
+            "Expected-structure file must contain a mapping/object at the root."
+        )
     return data
 
 
@@ -181,7 +183,9 @@ def matches_exclude(relative: Path, patterns: Sequence[str]) -> bool:
     return False
 
 
-def read_markdown_frontmatter(path: Path, max_bytes: int = 131_072) -> dict[str, Any] | None:
+def read_markdown_frontmatter(
+    path: Path, max_bytes: int = 131_072
+) -> dict[str, Any] | None:
     try:
         with path.open("rb") as handle:
             raw = handle.read(max_bytes)
@@ -228,7 +232,9 @@ def scan_vault(
     def onerror(exc: OSError) -> None:
         errors.append(f"{type(exc).__name__}: {exc}")
 
-    for current_dir, dirnames, filenames in os.walk(root, topdown=True, followlinks=False, onerror=onerror):
+    for current_dir, dirnames, filenames in os.walk(
+        root, topdown=True, followlinks=False, onerror=onerror
+    ):
         current = Path(current_dir)
         relative_dir = current.relative_to(root)
 
@@ -245,7 +251,9 @@ def scan_vault(
             kept_dirs.append(dirname)
         dirnames[:] = kept_dirs
 
-        entries = [(name, "file") for name in filenames] + [(name, "dir") for name in dirnames]
+        entries = [(name, "file") for name in filenames] + [
+            (name, "dir") for name in dirnames
+        ]
         for name, kind in sorted(entries, key=lambda x: x[0].casefold()):
             absolute = current / name
             relative = absolute.relative_to(root)
@@ -269,10 +277,16 @@ def scan_vault(
                 try:
                     link_target = os.readlink(absolute)
                 except OSError as exc:
-                    errors.append(f"{normalize_rel(relative)}: cannot read symlink: {exc}")
+                    errors.append(
+                        f"{normalize_rel(relative)}: cannot read symlink: {exc}"
+                    )
 
             frontmatter: dict[str, Any] | None = None
-            if read_frontmatter and item_type == "file" and absolute.suffix.lower() == ".md":
+            if (
+                read_frontmatter
+                and item_type == "file"
+                and absolute.suffix.lower() == ".md"
+            ):
                 frontmatter = read_markdown_frontmatter(absolute)
 
             modified = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
@@ -315,7 +329,13 @@ def aggregate_top_level(items: Sequence[InventoryItem]) -> list[dict[str, Any]]:
     for item in items:
         bucket = summary.setdefault(
             item.top_level,
-            {"name": item.top_level, "directories": 0, "files": 0, "symlinks": 0, "size_bytes": 0},
+            {
+                "name": item.top_level,
+                "directories": 0,
+                "files": 0,
+                "symlinks": 0,
+                "size_bytes": 0,
+            },
         )
         if item.item_type == "dir":
             bucket["directories"] += 1
@@ -327,7 +347,9 @@ def aggregate_top_level(items: Sequence[InventoryItem]) -> list[dict[str, Any]]:
     return sorted(summary.values(), key=lambda row: row["name"].casefold())
 
 
-def extension_summary(items: Sequence[InventoryItem], limit: int = 30) -> list[dict[str, Any]]:
+def extension_summary(
+    items: Sequence[InventoryItem], limit: int = 30
+) -> list[dict[str, Any]]:
     counts: dict[str, dict[str, int]] = {}
     for item in items:
         if item.item_type != "file":
@@ -360,7 +382,15 @@ def render_tree(items: Sequence[InventoryItem], max_depth: int) -> str:
         for index, item in enumerate(children):
             last = index == len(children) - 1
             connector = "└── " if last else "├── "
-            suffix = "/" if item.item_type == "dir" else (" → " + item.link_target if item.item_type == "symlink" and item.link_target else "")
+            suffix = (
+                "/"
+                if item.item_type == "dir"
+                else (
+                    " → " + item.link_target
+                    if item.item_type == "symlink" and item.link_target
+                    else ""
+                )
+            )
             lines.append(f"{prefix}{connector}{item.name}{suffix}")
             if item.item_type == "dir":
                 visit(item.relative_path, prefix + ("    " if last else "│   "))
@@ -369,26 +399,38 @@ def render_tree(items: Sequence[InventoryItem], max_depth: int) -> str:
     return "\n".join(lines)
 
 
-def parse_expected(data: dict[str, Any]) -> tuple[dict[str, Any], list[ExpectedPath], list[str]]:
+def parse_expected(
+    data: dict[str, Any],
+) -> tuple[dict[str, Any], list[ExpectedPath], list[str]]:
     specification = data.get("specification") or {}
     if not isinstance(specification, dict):
         raise SnapshotError("expected.specification must be a mapping")
 
     expected: list[ExpectedPath] = []
-    for section, severity in (("required_paths", "required"), ("recommended_paths", "recommended"), ("deprecated_paths", "deprecated")):
+    for section, severity in (
+        ("required_paths", "required"),
+        ("recommended_paths", "recommended"),
+        ("deprecated_paths", "deprecated"),
+    ):
         raw_items = data.get(section, [])
         if not isinstance(raw_items, list):
             raise SnapshotError(f"{section} must be a list")
         for raw in raw_items:
             if isinstance(raw, str):
-                expected.append(ExpectedPath(path=raw.strip("/"), item_type="any", severity=severity))
+                expected.append(
+                    ExpectedPath(
+                        path=raw.strip("/"), item_type="any", severity=severity
+                    )
+                )
             elif isinstance(raw, dict):
                 expected.append(
                     ExpectedPath(
                         path=str(raw.get("path", "")).strip("/"),
                         item_type=str(raw.get("type", "any")),
                         severity=severity,
-                        rationale=str(raw.get("rationale")) if raw.get("rationale") is not None else None,
+                        rationale=str(raw.get("rationale"))
+                        if raw.get("rationale") is not None
+                        else None,
                     )
                 )
             else:
@@ -400,10 +442,14 @@ def parse_expected(data: dict[str, Any]) -> tuple[dict[str, Any], list[ExpectedP
     return specification, expected, [str(value) for value in allowed_top_level]
 
 
-def compare_expected(items: Sequence[InventoryItem], expected_data: dict[str, Any]) -> dict[str, Any]:
+def compare_expected(
+    items: Sequence[InventoryItem], expected_data: dict[str, Any]
+) -> dict[str, Any]:
     specification, expected_paths, allowed_top_level = parse_expected(expected_data)
     actual = {item.relative_path: item for item in items}
-    actual_top = sorted({item.top_level for item in items if item.depth == 1}, key=str.casefold)
+    actual_top = sorted(
+        {item.top_level for item in items if item.depth == 1}, key=str.casefold
+    )
 
     missing_required: list[dict[str, Any]] = []
     missing_recommended: list[dict[str, Any]] = []
@@ -414,11 +460,25 @@ def compare_expected(items: Sequence[InventoryItem], expected_data: dict[str, An
         item = actual.get(exp.path)
         if exp.severity == "deprecated":
             if item:
-                deprecated_present.append({"path": exp.path, "actual_type": item.item_type, "rationale": exp.rationale})
+                deprecated_present.append(
+                    {
+                        "path": exp.path,
+                        "actual_type": item.item_type,
+                        "rationale": exp.rationale,
+                    }
+                )
             continue
         if item is None:
-            target = missing_required if exp.severity == "required" else missing_recommended
-            target.append({"path": exp.path, "expected_type": exp.item_type, "rationale": exp.rationale})
+            target = (
+                missing_required if exp.severity == "required" else missing_recommended
+            )
+            target.append(
+                {
+                    "path": exp.path,
+                    "expected_type": exp.item_type,
+                    "rationale": exp.rationale,
+                }
+            )
             continue
         if exp.item_type != "any" and item.item_type != exp.item_type:
             type_mismatches.append(
@@ -430,11 +490,25 @@ def compare_expected(items: Sequence[InventoryItem], expected_data: dict[str, An
                 }
             )
 
-    unexpected_top_level = [name for name in actual_top if allowed_top_level and name not in allowed_top_level]
-    score_total = max(1, sum(1 for item in expected_paths if item.severity == "required"))
-    score_ok = score_total - len(missing_required) - sum(1 for row in type_mismatches if row["severity"] == "required")
+    unexpected_top_level = [
+        name
+        for name in actual_top
+        if allowed_top_level and name not in allowed_top_level
+    ]
+    score_total = max(
+        1, sum(1 for item in expected_paths if item.severity == "required")
+    )
+    score_ok = (
+        score_total
+        - len(missing_required)
+        - sum(1 for row in type_mismatches if row["severity"] == "required")
+    )
     compliance_percent = max(0.0, round(score_ok / score_total * 100, 1))
-    status = "conformant" if not missing_required and not type_mismatches and not deprecated_present else "non-conformant"
+    status = (
+        "conformant"
+        if not missing_required and not type_mismatches and not deprecated_present
+        else "non-conformant"
+    )
 
     return {
         "specification": specification,
@@ -450,7 +524,9 @@ def compare_expected(items: Sequence[InventoryItem], expected_data: dict[str, An
     }
 
 
-def load_previous_manifest(output_base: Path, current_dir: Path, explicit: str | None) -> tuple[Path | None, dict[str, Any] | None]:
+def load_previous_manifest(
+    output_base: Path, current_dir: Path, explicit: str | None
+) -> tuple[Path | None, dict[str, Any] | None]:
     if explicit and explicit.lower() != "latest":
         path = Path(explicit).expanduser().resolve()
         if path.is_dir():
@@ -460,7 +536,11 @@ def load_previous_manifest(output_base: Path, current_dir: Path, explicit: str |
         return path, json.loads(path.read_text(encoding="utf-8"))
 
     candidates = sorted(
-        (path for path in output_base.glob("*/manifest.json") if path.parent != current_dir),
+        (
+            path
+            for path in output_base.glob("*/manifest.json")
+            if path.parent != current_dir
+        ),
         key=lambda path: path.stat().st_mtime_ns,
         reverse=True,
     )
@@ -470,13 +550,19 @@ def load_previous_manifest(output_base: Path, current_dir: Path, explicit: str |
     return path, json.loads(path.read_text(encoding="utf-8"))
 
 
-def compare_previous(items: Sequence[InventoryItem], previous_manifest: dict[str, Any] | None) -> dict[str, Any] | None:
+def compare_previous(
+    items: Sequence[InventoryItem], previous_manifest: dict[str, Any] | None
+) -> dict[str, Any] | None:
     if not previous_manifest:
         return None
     previous_items = previous_manifest.get("inventory", [])
     if not isinstance(previous_items, list):
         return None
-    previous = {str(row.get("relative_path")): row for row in previous_items if isinstance(row, dict)}
+    previous = {
+        str(row.get("relative_path")): row
+        for row in previous_items
+        if isinstance(row, dict)
+    }
     current = {item.relative_path: asdict(item) for item in items}
 
     added = sorted(set(current) - set(previous), key=str.casefold)
@@ -485,20 +571,43 @@ def compare_previous(items: Sequence[InventoryItem], previous_manifest: dict[str
     for path in sorted(set(current) & set(previous), key=str.casefold):
         before = previous[path]
         after = current[path]
-        fields = [field for field in ("item_type", "size_bytes", "modified_ns", "link_target") if before.get(field) != after.get(field)]
+        fields = [
+            field
+            for field in ("item_type", "size_bytes", "modified_ns", "link_target")
+            if before.get(field) != after.get(field)
+        ]
         if fields:
-            changed.append({"path": path, "fields": fields, "before": {f: before.get(f) for f in fields}, "after": {f: after.get(f) for f in fields}})
+            changed.append(
+                {
+                    "path": path,
+                    "fields": fields,
+                    "before": {f: before.get(f) for f in fields},
+                    "after": {f: after.get(f) for f in fields},
+                }
+            )
     return {"added": added, "removed": removed, "changed": changed}
 
 
 def write_json(path: Path, value: Any) -> None:
-    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def write_inventory_csv(path: Path, items: Sequence[InventoryItem]) -> None:
     fields = [
-        "relative_path", "name", "item_type", "extension", "size_bytes", "modified_at",
-        "modified_ns", "depth", "top_level", "is_hidden", "is_symlink", "link_target",
+        "relative_path",
+        "name",
+        "item_type",
+        "extension",
+        "size_bytes",
+        "modified_at",
+        "modified_ns",
+        "depth",
+        "top_level",
+        "is_hidden",
+        "is_symlink",
+        "link_target",
         "frontmatter",
     ]
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -506,7 +615,11 @@ def write_inventory_csv(path: Path, items: Sequence[InventoryItem]) -> None:
         writer.writeheader()
         for item in items:
             row = asdict(item)
-            row["frontmatter"] = json.dumps(row["frontmatter"], ensure_ascii=False) if row["frontmatter"] is not None else ""
+            row["frontmatter"] = (
+                json.dumps(row["frontmatter"], ensure_ascii=False)
+                if row["frontmatter"] is not None
+                else ""
+            )
             writer.writerow(row)
 
 
@@ -554,7 +667,11 @@ def render_comparison_md(comparison: dict[str, Any]) -> str:
                     lines.append(f"- `{row}`")
                 else:
                     path = row.get("path", "")
-                    details = ", ".join(f"{key}={value}" for key, value in row.items() if key != "path" and value not in (None, ""))
+                    details = ", ".join(
+                        f"{key}={value}"
+                        for key, value in row.items()
+                        if key != "path" and value not in (None, "")
+                    )
                     lines.append(f"- `{path}`" + (f" — {details}" if details else ""))
         lines.append("")
     return "\n".join(lines)
@@ -587,12 +704,18 @@ def render_delta_md(delta: dict[str, Any] | None, previous_path: Path | None) ->
         for row in delta["changed"][:500]:
             lines.append(f"- `{row['path']}` — {', '.join(row['fields'])}")
         if len(delta["changed"]) > 500:
-            lines.append(f"- … {len(delta['changed']) - 500} more entries in delta.json")
+            lines.append(
+                f"- … {len(delta['changed']) - 500} more entries in delta.json"
+            )
     lines.append("")
     return "\n".join(lines)
 
 
-def render_snapshot_report(manifest: dict[str, Any], comparison: dict[str, Any] | None, delta: dict[str, Any] | None) -> str:
+def render_snapshot_report(
+    manifest: dict[str, Any],
+    comparison: dict[str, Any] | None,
+    delta: dict[str, Any] | None,
+) -> str:
     counts = manifest["counts"]
     git_state = manifest["git"]
     lines = [
@@ -699,13 +822,41 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path.cwd() / "artifacts" / "vault-snapshots",
         help="Base directory containing one subdirectory per snapshot",
     )
-    parser.add_argument("--expected", type=Path, help="YAML or JSON expected-structure model")
-    parser.add_argument("--label", default="", help="Development-step label, e.g. 'after vault spec v1.2'")
-    parser.add_argument("--snapshot-version", default="", help="Optional explicit snapshot/specification version")
-    parser.add_argument("--max-tree-depth", type=int, default=8, help="Maximum depth rendered in tree.md; 0 means unlimited")
-    parser.add_argument("--include-hidden", action="store_true", help="Include hidden files and directories")
-    parser.add_argument("--read-frontmatter", action="store_true", help="Read YAML frontmatter from Markdown files")
-    parser.add_argument("--exclude", action="append", default=[], help="Additional exclusion glob or path component; repeatable")
+    parser.add_argument(
+        "--expected", type=Path, help="YAML or JSON expected-structure model"
+    )
+    parser.add_argument(
+        "--label",
+        default="",
+        help="Development-step label, e.g. 'after vault spec v1.2'",
+    )
+    parser.add_argument(
+        "--snapshot-version",
+        default="",
+        help="Optional explicit snapshot/specification version",
+    )
+    parser.add_argument(
+        "--max-tree-depth",
+        type=int,
+        default=8,
+        help="Maximum depth rendered in tree.md; 0 means unlimited",
+    )
+    parser.add_argument(
+        "--include-hidden",
+        action="store_true",
+        help="Include hidden files and directories",
+    )
+    parser.add_argument(
+        "--read-frontmatter",
+        action="store_true",
+        help="Read YAML frontmatter from Markdown files",
+    )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        help="Additional exclusion glob or path component; repeatable",
+    )
     parser.add_argument(
         "--previous",
         default="latest",
@@ -732,14 +883,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.expected:
         expected_path = args.expected.expanduser().resolve()
         if not expected_path.exists():
-            raise SnapshotError(f"Expected-structure file does not exist: {expected_path}")
+            raise SnapshotError(
+                f"Expected-structure file does not exist: {expected_path}"
+            )
         expected_data = load_structured_file(expected_path)
-        expected_version = expected_version or str((expected_data.get("specification") or {}).get("version") or "") or None
+        expected_version = (
+            expected_version
+            or str((expected_data.get("specification") or {}).get("version") or "")
+            or None
+        )
 
     captured = utc_now()
     timestamp = captured.strftime("%Y%m%dT%H%M%SZ")
     label_slug = safe_slug(args.label) if args.label else "snapshot"
-    version_slug = f"spec-{safe_slug(expected_version)}" if expected_version else f"tool-{TOOL_VERSION}"
+    version_slug = (
+        f"spec-{safe_slug(expected_version)}"
+        if expected_version
+        else f"tool-{TOOL_VERSION}"
+    )
     snapshot_id = f"{timestamp}_{version_slug}_{label_slug}"
     snapshot_dir = output_base / snapshot_id
     snapshot_dir.mkdir(parents=True, exist_ok=False)
@@ -766,7 +927,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "directories": sum(item.item_type == "dir" for item in items),
         "files": sum(item.item_type == "file" for item in items),
         "symlinks": sum(item.item_type == "symlink" for item in items),
-        "size_bytes": sum(item.size_bytes for item in items if item.item_type == "file"),
+        "size_bytes": sum(
+            item.size_bytes for item in items if item.item_type == "file"
+        ),
         "items": len(items),
         "errors": len(errors),
     }
@@ -775,7 +938,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     previous_path: Path | None = None
     previous_manifest: dict[str, Any] | None = None
     if args.previous:
-        previous_path, previous_manifest = load_previous_manifest(output_base, snapshot_dir, args.previous)
+        previous_path, previous_manifest = load_previous_manifest(
+            output_base, snapshot_dir, args.previous
+        )
     delta = compare_previous(items, previous_manifest)
 
     manifest = {
@@ -784,7 +949,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "captured_at": iso_utc(captured),
         "label": args.label or None,
         "expected_specification_version": expected_version,
-        "tool": {"name": TOOL_NAME, "version": TOOL_VERSION, "python": sys.version.split()[0]},
+        "tool": {
+            "name": TOOL_NAME,
+            "version": TOOL_VERSION,
+            "python": sys.version.split()[0],
+        },
         "host": {"platform": platform.platform(), "hostname": platform.node()},
         "vault": {"name": root.name, "root": str(root)},
         "git": asdict(git_state),
@@ -793,11 +962,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             "read_frontmatter": args.read_frontmatter,
             "exclude_patterns": exclude_patterns,
             "max_tree_depth": args.max_tree_depth,
-            "expected_structure": str(args.expected.expanduser().resolve()) if args.expected else None,
+            "expected_structure": str(args.expected.expanduser().resolve())
+            if args.expected
+            else None,
             "previous_manifest": str(previous_path) if previous_path else None,
         },
         "counts": counts,
-        "fingerprints": {"structure_sha256": structure_hash, "state_sha256": state_hash},
+        "fingerprints": {
+            "structure_sha256": structure_hash,
+            "state_sha256": state_hash,
+        },
         "top_level": aggregate_top_level(items),
         "extensions": extension_summary(items),
         "comparison_summary": None
@@ -812,7 +986,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
         "delta_summary": None
         if delta is None
-        else {"added": len(delta["added"]), "removed": len(delta["removed"]), "changed": len(delta["changed"])},
+        else {
+            "added": len(delta["added"]),
+            "removed": len(delta["removed"]),
+            "changed": len(delta["changed"]),
+        },
         "inventory": [asdict(item) for item in items],
     }
 
@@ -832,24 +1010,34 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if comparison is not None:
         write_json(snapshot_dir / "comparison.json", comparison)
-        (snapshot_dir / "comparison.md").write_text(render_comparison_md(comparison), encoding="utf-8")
+        (snapshot_dir / "comparison.md").write_text(
+            render_comparison_md(comparison), encoding="utf-8"
+        )
     if delta is not None:
         write_json(snapshot_dir / "delta.json", delta)
-    (snapshot_dir / "delta.md").write_text(render_delta_md(delta, previous_path), encoding="utf-8")
+    (snapshot_dir / "delta.md").write_text(
+        render_delta_md(delta, previous_path), encoding="utf-8"
+    )
     report_text = render_snapshot_report(manifest, comparison, delta)
     (snapshot_dir / "snapshot-report.md").write_text(report_text, encoding="utf-8")
-    (snapshot_dir / "errors.log").write_text("\n".join(errors) + ("\n" if errors else ""), encoding="utf-8")
+    (snapshot_dir / "errors.log").write_text(
+        "\n".join(errors) + ("\n" if errors else ""), encoding="utf-8"
+    )
 
     published_dir: Path | None = None
     if args.publish_report_to:
         publish_base = args.publish_report_to.expanduser().resolve()
         published_dir = publish_base / snapshot_id
         published_dir.mkdir(parents=True, exist_ok=False)
-        shutil.copy2(snapshot_dir / "snapshot-report.md", published_dir / "snapshot-report.md")
+        shutil.copy2(
+            snapshot_dir / "snapshot-report.md", published_dir / "snapshot-report.md"
+        )
         shutil.copy2(snapshot_dir / "tree.md", published_dir / "tree.md")
         shutil.copy2(snapshot_dir / "delta.md", published_dir / "delta.md")
         if comparison is not None:
-            shutil.copy2(snapshot_dir / "comparison.md", published_dir / "comparison.md")
+            shutil.copy2(
+                snapshot_dir / "comparison.md", published_dir / "comparison.md"
+            )
         reference = {
             "schema_version": "1.0",
             "snapshot_id": snapshot_id,
@@ -879,7 +1067,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         pass
 
     print(f"Snapshot completed: {snapshot_dir}")
-    print(f"Items: {counts['items']} | Files: {counts['files']} | Directories: {counts['directories']} | Errors: {counts['errors']}")
+    print(
+        f"Items: {counts['items']} | Files: {counts['files']} | Directories: {counts['directories']} | Errors: {counts['errors']}"
+    )
     print(f"Structure fingerprint: {structure_hash}")
     if comparison:
         print(
@@ -887,7 +1077,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{comparison['required_compliance_percent']}%"
         )
     if delta:
-        print(f"Delta: +{len(delta['added'])} -{len(delta['removed'])} ~{len(delta['changed'])}")
+        print(
+            f"Delta: +{len(delta['added'])} -{len(delta['removed'])} ~{len(delta['changed'])}"
+        )
     if published_dir:
         print(f"Published compact report: {published_dir}")
     return 0
