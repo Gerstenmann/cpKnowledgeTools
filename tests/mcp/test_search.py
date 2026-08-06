@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from cp_knowledge_tools.mcp.search import (
+from cp_knowledge_tools.mcp.cp_wiki.search import (
     normalize_wikilink_target,
     resolve_wikilink,
     search_frontmatter,
     search_text,
 )
-from cp_knowledge_tools.mcp.vault import Vault
+from cp_knowledge_tools.mcp.cp_wiki.vault import Vault
 
 
 def test_search_text(tmp_path: Path) -> None:

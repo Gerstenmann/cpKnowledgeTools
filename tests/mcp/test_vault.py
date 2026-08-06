@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from cp_knowledge_tools.mcp.errors import (
+from cp_knowledge_tools.mcp.cp_wiki.errors import (
     UnsupportedFileTypeError,
     VaultFileNotFoundError,
     VaultPathError,
 )
-from cp_knowledge_tools.mcp.vault import Vault
+from cp_knowledge_tools.mcp.cp_wiki.vault import Vault
 
 
 def test_list_markdown_files(tmp_path: Path) -> None:

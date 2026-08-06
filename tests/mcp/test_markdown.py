@@ -1,6 +1,6 @@
 import pytest
 
-from cp_knowledge_tools.mcp.markdown import (
+from cp_knowledge_tools.mcp.cp_wiki.markdown import (
     extract_markdown_title,
     parse_markdown,
     split_frontmatter,
