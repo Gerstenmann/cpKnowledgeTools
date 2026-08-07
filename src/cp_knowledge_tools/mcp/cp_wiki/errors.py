@@ -19,3 +19,11 @@ class VaultFileNotFoundError(VaultError):
 
 class UnsupportedFileTypeError(VaultError):
     """Raised when a requested file type is not supported."""
+
+
+class InvalidJsonError(VaultError):
+    """Raised when a JSON file cannot be decoded or parsed."""
+
+
+class VaultFileTooLargeError(VaultError):
+    """Raised when a requested vault file exceeds its read limit."""
