@@ -25,8 +25,9 @@ mcp = FastMCP(
     name="cp-wiki-read-only",
     instructions=(
         "Read-only access to the local cp-wiki Obsidian vault. "
-        "The server can list, read and search Markdown notes, "
-        "but cannot create, modify, move or delete files."
+        "The server can list, read and search Markdown notes and can list "
+        "and read JSON files as structured data, but cannot create, modify, "
+        "move or delete files."
     ),
     host=DEFAULT_HTTP_HOST,
     port=DEFAULT_HTTP_PORT,
@@ -51,7 +52,10 @@ def get_vault() -> Vault:
     """Create a vault instance from current environment configuration."""
 
     config = MCPConfig.from_environment()
-    return Vault(config.vault_root)
+    return Vault(
+        config.vault_root,
+        max_json_bytes=config.max_json_bytes,
+    )
 
 
 @mcp.tool(annotations=read_only_annotations("Vault information"))
@@ -59,11 +63,14 @@ def vault_info() -> dict[str, Any]:
     """Return basic information about the configured cp-wiki vault."""
 
     vault = get_vault()
-    files = vault.list_markdown_files()
+    markdown_files = vault.list_markdown_files()
+    json_files = vault.list_json_files()
 
     return {
         "vault_root": str(vault.root),
-        "markdown_file_count": len(files),
+        "markdown_file_count": len(markdown_files),
+        "json_file_count": len(json_files),
+        "maximum_readable_json_bytes": vault.max_json_bytes,
         "read_only": True,
     }
 
@@ -101,6 +108,34 @@ def list_vault_files(
     return results
 
 
+@mcp.tool(annotations=read_only_annotations("List vault JSON files"))
+def list_vault_json_files(
+    path_prefix: str = "",
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+    """List JSON files inside the vault."""
+
+    if limit < 1 or limit > 1000:
+        raise ValueError("limit must be between 1 and 1000.")
+
+    normalized_prefix = path_prefix.strip().casefold()
+    vault = get_vault()
+    results: list[dict[str, Any]] = []
+
+    for file_info in vault.list_json_files():
+        if normalized_prefix and not file_info.relative_path.casefold().startswith(
+            normalized_prefix
+        ):
+            continue
+
+        results.append(asdict(file_info))
+
+        if len(results) >= limit:
+            break
+
+    return results
+
+
 @mcp.tool(annotations=read_only_annotations("Read vault note"))
 def read_vault_note(
     relative_path: str,
@@ -111,6 +146,23 @@ def read_vault_note(
     document = vault.read_document(relative_path)
 
     return asdict(document)
+
+
+@mcp.tool(annotations=read_only_annotations("Read vault JSON"))
+def read_vault_json(
+    relative_path: str,
+) -> dict[str, Any]:
+    """Read and parse one JSON file as structured data."""
+
+    vault = get_vault()
+    path = vault.resolve_path(relative_path)
+    data = vault.read_json(relative_path)
+
+    return {
+        "relative_path": path.relative_to(vault.root).as_posix(),
+        "size_bytes": path.stat().st_size,
+        "data": data,
+    }
 
 
 @mcp.tool(annotations=read_only_annotations("Search vault text"))
