@@ -41,7 +41,10 @@ from cp_knowledge_tools.publication import (  # noqa: E402
     PublicationUnitAssembler,
     load_publication_manifest,
 )
-from cp_knowledge_tools.semantics import RuleBasedSemanticInterpreter  # noqa: E402
+from cp_knowledge_tools.semantics import (  # noqa: E402
+    RuleBasedSemanticInterpreter,
+    SemanticStateMaterializer,
+)
 from cp_knowledge_tools.sources.adapters.local_html import (  # noqa: E402
     LocalHtmlAdapter,
 )
@@ -55,60 +58,64 @@ SOURCE_BINDINGS = {
 # These are deterministic extraction/interpretation rules for the synthetic
 # reference case. They are implementation configuration, not Golden Truth.
 EVIDENCE_RULES = {
-    "workshop_proposal": ("proposal", ["concept workshop could take place", "12 September 2024"]),
-    "workshop_confirmed": ("status", ["Concept workshop", "Confirmed for", "12 September 2024"]),
-    "training_19sep": ("proposal", ["Internal team training could start", "19 September 2024"]),
-    "training_26sep": ("status", ["Team training", "26 September 2024", "not on 19 September"]),
-    "capacity_about20": ("proposal", ["around", "20 students"]),
-    "capacity_16": ("status", ["limited to", "16 students"]),
-    "adviser_open": ("response", ["club advisers", "not yet been selected"]),
-    "adviser_james": ("status", ["James Stone will coordinate the pilot"]),
-    "scope_open": ("response", ["purely extracurricular", "classroom activities"]),
-    "scope_afterschool": ("status", ["after-school only"]),
-    "academic_deferred": ("status", ["Classroom integration is postponed"]),
-    "competition_later": ("proposal", ["Only after an internal pilot", "regional or international competition"]),
-    "competition_not_approved": ("status", ["No external competition is approved at this stage"]),
-    "previous_success": ("response", ["used Minecraft successfully in some classes"]),
-    "budget_abstract": ("status", ["approved internal budget"]),
-    "budget_exact": ("status", ["provisional cost ceiling", "EUR 3,200"]),
+    "entity_roster_proposal": ("proposal", ["From", "To", "Cc", "Date", "Subject"]),
+    "entity_roster_status": ("status", ["From", "To", "Cc", "Date", "Subject"]),
+    "pilot_description": ("proposal", ["propose a small", "concept would combine"]),
+    "workshop_proposal": ("proposal", ["concept workshop could take place"]),
+    "workshop_confirmed": ("status", ["Concept workshop", "Confirmed for"]),
+    "training_initial": ("proposal", ["Internal team training could start"]),
+    "training_current": ("status", ["Team training", "Starts on"]),
+    "capacity_initial": ("proposal", ["I estimate that around", "might be interested"]),
+    "capacity_current": ("status", ["Capacity", "pilot is limited to"]),
+    "adviser_open": ("response", ["club advisers", "school year"]),
+    "adviser_confirmed": ("status", ["School adviser", "coordinate the pilot"]),
+    "scope_open": ("response", ["first pilot should be", "classroom activities"]),
+    "scope_afterschool": ("status", ["Initial scope", "first pilot is"]),
+    "academic_deferred": ("status", ["Classroom integration", "pilot has been evaluated"]),
+    "competition_later": ("proposal", ["Only after an internal pilot", "explore regional"]),
+    "competition_not_approved": ("status", ["External competition", "at this stage"]),
+    "previous_success": ("response", ["detailed proposal", "after-school Minecraft club"]),
+    "general_benefits": ("proposal", ["reports and examples", "concrete learning objectives"]),
+    "budget_abstract": ("status", ["public-facing description", "participant communications"]),
+    "budget_exact": ("status", ["initial pilot has", "participant communications"]),
 }
 
 RULES = {
     "entities": [
-        {"rule_key": "school", "label": "Rhein-Main International School", "class": "organization"},
-        {"rule_key": "provider", "label": "CodeLab Rhine-Main", "class": "organization"},
-        {"rule_key": "chris", "label": "Chris Berger", "class": "person"},
-        {"rule_key": "vera", "label": "Vera Anders", "class": "person"},
-        {"rule_key": "alex", "label": "Alex Bryant", "class": "person"},
-        {"rule_key": "james", "label": "James Stone", "class": "person"},
-        {"rule_key": "pilot", "label": "Minecraft Education esports pilot", "class": "pilot_subject"},
+        {"rule_key": "school", "entity_class": "organization", "evidence_keys": ["entity_roster_proposal"], "extraction": {"evidence_key": "entity_roster_proposal", "pattern": r"To Vera Anders, (?P<value>.*?) Cc", "parser": "entity_mention"}},
+        {"rule_key": "provider", "entity_class": "organization", "evidence_keys": ["entity_roster_proposal"], "extraction": {"evidence_key": "entity_roster_proposal", "pattern": r"From Chris Berger, (?P<value>.*?) To", "parser": "entity_mention"}},
+        {"rule_key": "chris", "entity_class": "person", "evidence_keys": ["entity_roster_proposal"], "extraction": {"evidence_key": "entity_roster_proposal", "pattern": r"From (?P<value>.*?), CodeLab Rhine-Main", "parser": "entity_mention"}},
+        {"rule_key": "vera", "entity_class": "person", "evidence_keys": ["entity_roster_proposal"], "extraction": {"evidence_key": "entity_roster_proposal", "pattern": r"To (?P<value>.*?), Rhein-Main International School", "parser": "entity_mention"}},
+        {"rule_key": "alex", "entity_class": "person", "evidence_keys": ["entity_roster_proposal"], "extraction": {"evidence_key": "entity_roster_proposal", "pattern": r"Cc (?P<value>.*?), Director of Digital Learning", "parser": "entity_mention"}},
+        {"rule_key": "james", "entity_class": "person", "evidence_keys": ["entity_roster_status"], "extraction": {"evidence_key": "entity_roster_status", "pattern": r"Cc Alex Bryant; (?P<value>.*?) Date", "parser": "entity_mention"}},
+        {"rule_key": "pilot", "entity_class": "pilot_subject", "evidence_keys": ["pilot_description"], "extraction": {"evidence_key": "pilot_description", "pattern": r"propose a small (?P<value>.*?)\. The concept", "parser": "entity_mention"}},
     ],
     "claims": [
-        {"rule_key": "workshop_12sep", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.workshop_date", "value": "2024-09-12", "epistemic_status": "confirmed", "source_keys": ["proposal", "status"], "evidence_keys": ["workshop_proposal", "workshop_confirmed"], "time_modality": "planned", "current": True},
-        {"rule_key": "training_19sep", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.training_start", "value": "2024-09-19", "epistemic_status": "reported", "source_keys": ["proposal"], "evidence_keys": ["training_19sep"], "time_modality": "planned", "current": False, "preserved": True},
-        {"rule_key": "training_26sep", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.training_start", "value": "2024-09-26", "epistemic_status": "confirmed", "source_keys": ["status"], "evidence_keys": ["training_26sep"], "time_modality": "planned", "current": True},
-        {"rule_key": "capacity_about20", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.capacity", "value": 20, "value_qualifier": "approximately", "epistemic_status": "reported", "source_keys": ["proposal"], "evidence_keys": ["capacity_about20"], "current": False, "preserved": True},
-        {"rule_key": "capacity_max16", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.capacity", "value": 16, "value_qualifier": "maximum", "epistemic_status": "confirmed", "source_keys": ["status"], "evidence_keys": ["capacity_16"], "current": True},
-        {"rule_key": "adviser_not_selected", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.adviser_state", "value": "not_selected", "epistemic_status": "reported", "source_keys": ["response"], "evidence_keys": ["adviser_open"], "current": False, "preserved": True},
-        {"rule_key": "adviser_james", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.adviser", "object_entity_key": "james", "value": None, "epistemic_status": "confirmed", "source_keys": ["status"], "evidence_keys": ["adviser_james"], "current": True},
-        {"rule_key": "scope_open", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.scope_state", "value": "academic_and_or_extracurricular_open", "epistemic_status": "reported", "source_keys": ["response"], "evidence_keys": ["scope_open"], "current": False, "preserved": True},
-        {"rule_key": "scope_afterschool", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.scope", "value": "after-school only", "epistemic_status": "confirmed", "source_keys": ["status"], "evidence_keys": ["scope_afterschool"], "current": True},
-        {"rule_key": "academic_deferred", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.classroom_integration", "value": "deferred", "epistemic_status": "confirmed", "source_keys": ["status"], "evidence_keys": ["academic_deferred"], "current": True},
-        {"rule_key": "competition_later_possible", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.external_competition_future", "value": "possible_later_phase", "epistemic_status": "reported", "source_keys": ["proposal", "status"], "evidence_keys": ["competition_later", "competition_not_approved"], "current": True, "preserved": True},
-        {"rule_key": "competition_not_approved", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.external_competition_approval", "value": "not_approved", "epistemic_status": "confirmed", "source_keys": ["status"], "evidence_keys": ["competition_not_approved"], "current": True},
-        {"rule_key": "previous_success_reported", "subject_key": "school", "predicate": "cpkt.test.minecraft.previous_use_success", "value": "previous_minecraft_use_described_as_successful", "epistemic_status": "reported", "source_keys": ["response"], "evidence_keys": ["previous_success"], "current": True},
-        {"rule_key": "budget_approved", "subject_key": "pilot", "predicate": "cpkt.test.minecraft.internal_budget_status", "value": "approved internal budget", "epistemic_status": "confirmed", "source_keys": ["status"], "evidence_keys": ["budget_abstract"], "current": True},
+        {"rule_key": "workshop_confirmed_date", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.workshop_date", "evidence_keys": ["workshop_proposal", "workshop_confirmed"], "extraction": {"evidence_key": "workshop_confirmed", "pattern": r"Confirmed for (?P<value>\d{1,2} [A-Za-z]+ \d{4})", "parser": "date"}, "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_confirmed_status_context", "time_modality": "planned", "time_role": "claim_object_time", "time_precision": "day"},
+        {"rule_key": "training_initial_date", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.training_start", "evidence_keys": ["training_initial"], "extraction": {"evidence_key": "training_initial", "pattern": r"start on (?P<value>\d{1,2} [A-Za-z]+ \d{4})", "parser": "date"}, "epistemic_status": "reported", "epistemic_classification_basis": "source_reports_proposed_plan", "time_modality": "planned", "time_role": "claim_object_time", "time_precision": "day"},
+        {"rule_key": "training_current_date", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.training_start", "evidence_keys": ["training_current"], "extraction": {"evidence_key": "training_current", "pattern": r"Starts on (?P<value>\d{1,2} [A-Za-z]+ \d{4})", "parser": "date"}, "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_confirmed_status_context", "time_modality": "planned", "time_role": "claim_object_time", "time_precision": "day"},
+        {"rule_key": "capacity_initial_estimate", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.capacity", "evidence_keys": ["capacity_initial"], "extraction": {"evidence_key": "capacity_initial", "pattern": r"around (?P<value>\d+) students", "parser": "integer"}, "value_qualifier": "approximately", "epistemic_status": "reported", "epistemic_classification_basis": "source_reports_estimate"},
+        {"rule_key": "capacity_confirmed_maximum", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.capacity", "evidence_keys": ["capacity_current"], "extraction": {"evidence_key": "capacity_current", "pattern": r"limited to (?P<value>\d+) students", "parser": "integer"}, "value_qualifier": "maximum", "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_confirmed_status_context"},
+        {"rule_key": "adviser_not_selected", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.adviser_state", "evidence_keys": ["adviser_open"], "extraction": {"evidence_key": "adviser_open", "pattern": r"(?P<value>not yet been selected)", "parser": "text"}, "semantic_value_map": {"not yet been selected": "not_selected"}, "epistemic_status": "reported", "epistemic_classification_basis": "source_reports_open_state"},
+        {"rule_key": "adviser_confirmed_person", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.adviser", "evidence_keys": ["adviser_confirmed"], "extraction": {"evidence_key": "adviser_confirmed", "pattern": r"School adviser (?P<value>[A-Z][A-Za-z'-]+ [A-Z][A-Za-z'-]+) will coordinate", "parser": "entity_mention"}, "object_kind": "entity_mention", "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_confirmed_status_context"},
+        {"rule_key": "scope_open", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.scope_state", "evidence_keys": ["scope_open"], "extraction": {"evidence_key": "scope_open", "pattern": r"pilot should be (?P<value>purely extracurricular or also include classroom activities)", "parser": "text"}, "semantic_value_map": {"purely extracurricular or also include classroom activities": "academic_and_or_extracurricular_open"}, "epistemic_status": "reported", "epistemic_classification_basis": "source_reports_unresolved_option"},
+        {"rule_key": "scope_afterschool", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.scope", "evidence_keys": ["scope_afterschool"], "extraction": {"evidence_key": "scope_afterschool", "pattern": r"first pilot is (?P<value>after-school only)", "parser": "text"}, "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_confirmed_status_context"},
+        {"rule_key": "academic_deferred", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.classroom_integration", "evidence_keys": ["academic_deferred"], "extraction": {"evidence_key": "academic_deferred", "pattern": r"Classroom integration is (?P<value>postponed)", "parser": "text"}, "semantic_value_map": {"postponed": "deferred"}, "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_confirmed_status_context"},
+        {"rule_key": "competition_later_possible", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.external_competition_future", "evidence_keys": ["competition_later", "competition_not_approved"], "extraction": {"evidence_key": "competition_later", "pattern": r"(?P<value>after an internal pilot), explore", "parser": "text", "ignore_case": True}, "semantic_value_map": {"after an internal pilot": "possible_later_phase"}, "epistemic_status": "reported", "epistemic_classification_basis": "source_reports_conditional_future_option"},
+        {"rule_key": "competition_not_approved", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.external_competition_approval", "evidence_keys": ["competition_not_approved"], "extraction": {"evidence_key": "competition_not_approved", "pattern": r"(?P<value>No external competition is approved at this stage)", "parser": "text"}, "semantic_value_map": {"No external competition is approved at this stage": "not_approved"}, "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_confirmed_status_context"},
+        {"rule_key": "previous_success_reported", "subject_entity_key": "school", "predicate_ref": "cpkt.test.minecraft.previous_use_success", "evidence_keys": ["previous_success"], "extraction": {"evidence_key": "previous_success", "pattern": r"(?P<value>used Minecraft successfully in some classes)", "parser": "text"}, "semantic_value_map": {"used Minecraft successfully in some classes": "previous_minecraft_use_described_as_successful"}, "epistemic_status": "reported", "epistemic_classification_basis": "source_reports_previous_use"},
+        {"rule_key": "budget_approved", "subject_entity_key": "pilot", "predicate_ref": "cpkt.test.minecraft.internal_budget_status", "evidence_keys": ["budget_abstract"], "extraction": {"evidence_key": "budget_abstract", "pattern": r"(?P<value>approved internal budget)", "parser": "text"}, "epistemic_status": "confirmed", "epistemic_classification_basis": "explicit_approved_status_statement"},
     ],
     "evidence_links": [
-        {"rule_key": "workshop_proposal", "claim_key": "workshop_12sep", "evidence_key": "workshop_proposal", "role": "reports_statement"},
-        {"rule_key": "workshop_confirmed", "claim_key": "workshop_12sep", "evidence_key": "workshop_confirmed", "role": "supports"},
-        {"rule_key": "training_19sep", "claim_key": "training_19sep", "evidence_key": "training_19sep", "role": "reports_statement"},
-        {"rule_key": "training_26sep", "claim_key": "training_26sep", "evidence_key": "training_26sep", "role": "supports"},
-        {"rule_key": "capacity_about20", "claim_key": "capacity_about20", "evidence_key": "capacity_about20", "role": "reports_statement"},
-        {"rule_key": "capacity_16", "claim_key": "capacity_max16", "evidence_key": "capacity_16", "role": "supports"},
-        {"rule_key": "capacity_qualifies", "claim_key": "capacity_about20", "evidence_key": "capacity_16", "role": "qualifies"},
+        {"rule_key": "workshop_proposal_report", "claim_key": "workshop_confirmed_date", "evidence_key": "workshop_proposal", "role": "reports_statement"},
+        {"rule_key": "workshop_confirmed_support", "claim_key": "workshop_confirmed_date", "evidence_key": "workshop_confirmed", "role": "supports"},
+        {"rule_key": "training_initial_report", "claim_key": "training_initial_date", "evidence_key": "training_initial", "role": "reports_statement"},
+        {"rule_key": "training_current_support", "claim_key": "training_current_date", "evidence_key": "training_current", "role": "supports"},
+        {"rule_key": "capacity_initial_report", "claim_key": "capacity_initial_estimate", "evidence_key": "capacity_initial", "role": "reports_statement"},
+        {"rule_key": "capacity_current_support", "claim_key": "capacity_confirmed_maximum", "evidence_key": "capacity_current", "role": "supports"},
+        {"rule_key": "capacity_current_qualifies_initial", "claim_key": "capacity_initial_estimate", "evidence_key": "capacity_current", "role": "qualifies"},
         {"rule_key": "adviser_open", "claim_key": "adviser_not_selected", "evidence_key": "adviser_open", "role": "reports_statement"},
-        {"rule_key": "adviser_james", "claim_key": "adviser_james", "evidence_key": "adviser_james", "role": "supports"},
+        {"rule_key": "adviser_confirmed_support", "claim_key": "adviser_confirmed_person", "evidence_key": "adviser_confirmed", "role": "supports"},
         {"rule_key": "scope_open", "claim_key": "scope_open", "evidence_key": "scope_open", "role": "reports_statement"},
         {"rule_key": "scope_afterschool", "claim_key": "scope_afterschool", "evidence_key": "scope_afterschool", "role": "supports"},
         {"rule_key": "academic_deferred", "claim_key": "academic_deferred", "evidence_key": "academic_deferred", "role": "supports"},
@@ -119,20 +126,42 @@ RULES = {
         {"rule_key": "budget_abstract", "claim_key": "budget_approved", "evidence_key": "budget_abstract", "role": "supports"},
     ],
     "events": [
-        {"rule_key": "concept_workshop", "event_type": "cpkt.test.event_type.concept_workshop", "label": "Concept Workshop", "event_time": "2024-09-12", "time_precision": "day", "time_modality": "planned", "source_keys": ["proposal", "status"], "evidence_keys": ["workshop_proposal", "workshop_confirmed"]},
-        {"rule_key": "training_start", "event_type": "cpkt.test.event_type.training_start", "label": "Team training start", "event_time": "2024-09-26", "time_precision": "day", "time_modality": "planned", "source_keys": ["status"], "evidence_keys": ["training_26sep"]},
-        {"rule_key": "internal_pilot", "event_type": "cpkt.test.event_type.internal_pilot", "label": "Internal pilot", "event_time": None, "time_precision": "unknown", "time_modality": "planned", "source_keys": ["status"], "evidence_keys": ["scope_afterschool"]},
+        {"rule_key": "concept_workshop", "event_type_ref": "cpkt.test.event_type.concept_workshop", "label": "Concept Workshop", "evidence_keys": ["workshop_proposal", "workshop_confirmed"], "extraction": {"evidence_key": "workshop_confirmed", "pattern": r"Confirmed for (?P<value>\d{1,2} [A-Za-z]+ \d{4})", "parser": "date"}, "time_precision": "day", "time_modality": "planned"},
+        {"rule_key": "training_start", "event_type_ref": "cpkt.test.event_type.training_start", "label": "Team training start", "evidence_keys": ["training_current"], "extraction": {"evidence_key": "training_current", "pattern": r"Starts on (?P<value>\d{1,2} [A-Za-z]+ \d{4})", "parser": "date"}, "time_precision": "day", "time_modality": "planned"},
+        {"rule_key": "internal_pilot", "event_type_ref": "cpkt.test.event_type.internal_pilot", "label": "Internal pilot", "time_precision": "unknown", "time_modality": "planned", "evidence_keys": ["scope_afterschool"]},
     ],
     "participations": [
-        {"rule_key": "james_coordinates_pilot", "entity_key": "james", "event_key": "internal_pilot", "role": "organizer", "source_keys": ["status"]},
-    ],
-    "conflict_sets": [
-        {"rule_key": "training_date", "claim_keys": ["training_19sep", "training_26sep"], "conflict_dimensions": ["temporal"], "preferred_claim_key": "training_26sep", "preference_context": "current_confirmed_pilot_plan", "rationale": "The confirmed status replaces the earlier 19 September plan with 26 September while preserving the earlier state."},
-        {"rule_key": "capacity", "claim_keys": ["capacity_about20", "capacity_max16"], "conflict_dimensions": ["factual", "contextual"], "preferred_claim_key": "capacity_max16", "preference_context": "current_confirmed_pilot_capacity", "rationale": "The later confirmed maximum qualifies the earlier estimate."},
-        {"rule_key": "pilot_scope", "claim_keys": ["scope_open", "scope_afterschool", "academic_deferred"], "conflict_dimensions": ["contextual", "temporal"], "preferred_claim_key": "scope_afterschool", "preference_context": "current_confirmed_pilot_scope", "rationale": "The confirmed pilot scope resolves the earlier open scope for the current pilot stage."},
+        {"rule_key": "adviser_coordinates_pilot", "entity_key": "james", "event_key": "internal_pilot", "role": "organizer", "evidence_keys": ["adviser_confirmed"]},
     ],
     "pattern_claims": [
-        {"rule_key": "doc01_general_benefits", "source_key": "proposal", "required_text": "I have seen reports and examples suggesting that Minecraft Education can support STEM learning and social collaboration.", "epistemic_status": "reported", "evidence_roles": ["reports_statement"]},
+        {"rule_key": "doc01_general_benefits", "evidence_keys": ["general_benefits"], "extraction": {"evidence_key": "general_benefits", "pattern": r"(?P<value>I have seen reports and examples suggesting that .*?\.)", "parser": "text"}, "epistemic_status": "reported", "epistemic_classification_basis": "source_reports_external_examples", "evidence_role": "reports_statement"},
+    ],
+}
+
+# Scenario-level curation is deliberately downstream of Candidate creation.
+# It preserves the MVP state/history/conflict result without pretending that
+# extraction itself determines current or preferred state.
+CURATION_RULES = {
+    "claim_states": {
+        "workshop_confirmed_date": {"current": True, "preserved": True},
+        "training_initial_date": {"current": False, "preserved": True},
+        "training_current_date": {"current": True, "preserved": True},
+        "capacity_initial_estimate": {"current": False, "preserved": True},
+        "capacity_confirmed_maximum": {"current": True, "preserved": True},
+        "adviser_not_selected": {"current": False, "preserved": True},
+        "adviser_confirmed_person": {"current": True, "preserved": True},
+        "scope_open": {"current": False, "preserved": True},
+        "scope_afterschool": {"current": True, "preserved": True},
+        "academic_deferred": {"current": True, "preserved": True},
+        "competition_later_possible": {"current": True, "preserved": True},
+        "competition_not_approved": {"current": True, "preserved": True},
+        "previous_success_reported": {"current": True, "preserved": True},
+        "budget_approved": {"current": True, "preserved": True},
+    },
+    "conflict_sets": [
+        {"rule_key": "training_date", "claim_keys": ["training_initial_date", "training_current_date"], "conflict_dimensions": ["temporal"], "preferred_claim_key": "training_current_date", "preference_context": "current_confirmed_pilot_plan", "rationale": "The confirmed status supersedes the earlier proposed plan while preserving the earlier state."},
+        {"rule_key": "capacity", "claim_keys": ["capacity_initial_estimate", "capacity_confirmed_maximum"], "conflict_dimensions": ["factual", "contextual"], "preferred_claim_key": "capacity_confirmed_maximum", "preference_context": "current_confirmed_pilot_capacity", "rationale": "The confirmed maximum qualifies the earlier reported estimate."},
+        {"rule_key": "pilot_scope", "claim_keys": ["scope_open", "scope_afterschool", "academic_deferred"], "conflict_dimensions": ["contextual", "temporal"], "preferred_claim_key": "scope_afterschool", "preference_context": "current_confirmed_pilot_scope", "rationale": "The confirmed pilot scope resolves the earlier open scope for the current pilot stage."},
     ],
 }
 
@@ -146,13 +175,13 @@ ENTITY_GT = {
     "pilot": "ENT-ME-ESPORTS-PILOT",
 }
 CLAIM_GT = {
-    "workshop_12sep": "CLM-WORKSHOP-12SEP",
-    "training_19sep": "CLM-TRAINING-19SEP",
-    "training_26sep": "CLM-TRAINING-26SEP",
-    "capacity_about20": "CLM-CAPACITY-ABOUT20",
-    "capacity_max16": "CLM-CAPACITY-MAX16",
+    "workshop_confirmed_date": "CLM-WORKSHOP-12SEP",
+    "training_initial_date": "CLM-TRAINING-19SEP",
+    "training_current_date": "CLM-TRAINING-26SEP",
+    "capacity_initial_estimate": "CLM-CAPACITY-ABOUT20",
+    "capacity_confirmed_maximum": "CLM-CAPACITY-MAX16",
     "adviser_not_selected": "CLM-ADVISER-NOT-SELECTED",
-    "adviser_james": "CLM-ADVISER-JAMES-STONE",
+    "adviser_confirmed_person": "CLM-ADVISER-JAMES-STONE",
     "scope_open": "CLM-SCOPE-OPEN",
     "scope_afterschool": "CLM-SCOPE-AFTERSCHOOL",
     "academic_deferred": "CLM-ACADEMIC-DEFERRED",
@@ -164,12 +193,12 @@ CLAIM_GT = {
 EVIDENCE_GT = {
     "workshop_proposal": "EA-01",
     "workshop_confirmed": "EA-02",
-    "training_19sep": "EA-03",
-    "training_26sep": "EA-04",
-    "capacity_about20": "EA-05",
-    "capacity_16": "EA-06",
+    "training_initial": "EA-03",
+    "training_current": "EA-04",
+    "capacity_initial": "EA-05",
+    "capacity_current": "EA-06",
     "adviser_open": "EA-07",
-    "adviser_james": "EA-08",
+    "adviser_confirmed": "EA-08",
     "scope_open": "EA-09",
     "scope_afterschool": "EA-10",
     "academic_deferred": "EA-11",
@@ -180,15 +209,15 @@ EVIDENCE_GT = {
     "budget_exact": "EA-16-RESTRICTED",
 }
 EVIDENCE_LINK_GT = {
-    "workshop_proposal": "EL-01",
-    "workshop_confirmed": "EL-02",
-    "training_19sep": "EL-03",
-    "training_26sep": "EL-04",
-    "capacity_about20": "EL-05",
-    "capacity_16": "EL-06",
-    "capacity_qualifies": "EL-07",
+    "workshop_proposal_report": "EL-01",
+    "workshop_confirmed_support": "EL-02",
+    "training_initial_report": "EL-03",
+    "training_current_support": "EL-04",
+    "capacity_initial_report": "EL-05",
+    "capacity_current_support": "EL-06",
+    "capacity_current_qualifies_initial": "EL-07",
     "adviser_open": "EL-08",
-    "adviser_james": "EL-09",
+    "adviser_confirmed_support": "EL-09",
     "scope_open": "EL-10",
     "scope_afterschool": "EL-11",
     "academic_deferred": "EL-12",
@@ -458,7 +487,22 @@ def main() -> int:
     )
 
     interpreter = RuleBasedSemanticInterpreter()
-    semantic = interpreter.interpret(records, evidence, RULES)
+    interpretation = interpreter.interpret(records, evidence, RULES)
+    candidate_artifact_path = output_root / "semantic/candidate_payloads.json"
+    candidate_artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    candidate_artifact_path.write_text(
+        json.dumps(interpretation.to_dict(), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    if interpretation.known_gaps:
+        gap_refs = ", ".join(
+            gap.interpretation_rule_ref for gap in interpretation.known_gaps
+        )
+        raise RuntimeError(f"Required MVP semantic extraction gaps: {gap_refs}")
+    semantic = SemanticStateMaterializer().materialize(
+        interpretation,
+        CURATION_RULES,
+    )
 
     pu_path = output_root / "publication/KO-GT-ME-ESPORTS-PILOT@0.1.md"
     assembler = PublicationUnitAssembler()
@@ -637,7 +681,7 @@ def main() -> int:
             "all_source_identities_preserved": len({record.source_ref for record in records.values()}) == 3,
             "evidence_addresses": [
                 {
-                    "gt_id": EVIDENCE_GT[key],
+                    "gt_id": EVIDENCE_GT.get(key, f"RUN-EVIDENCE-{key.upper()}"),
                     "source_key": SOURCE_GT[address.source_key],
                     "actual_evidence_address_ref": address.evidence_address_ref,
                     "snapshot_ref": address.snapshot_ref,
@@ -651,6 +695,25 @@ def main() -> int:
             ],
         },
         "semantic": {
+            "candidate_boundary": {
+                "artifact_path": str(
+                    candidate_artifact_path.relative_to(output_root)
+                ),
+                "candidate_count": len(interpretation.candidate_payloads),
+                "known_gaps": [
+                    {
+                        "gap_code": gap.gap_code,
+                        "interpretation_rule_ref": gap.interpretation_rule_ref,
+                        "detail": gap.detail,
+                        "evidence_address_refs": gap.evidence_address_refs,
+                    }
+                    for gap in interpretation.known_gaps
+                ],
+                "candidate_payloads": [
+                    candidate.to_dict()
+                    for candidate in interpretation.candidate_payloads
+                ],
+            },
             "entities": [
                 {"gt_id": ENTITY_GT[item["rule_key"]], "actual_entity_ref": item["entity_ref"], "label": item["label"], "class": item["class"]}
                 for item in semantic["entities"]
@@ -659,7 +722,7 @@ def main() -> int:
                 {
                     "gt_id": CLAIM_GT[item["rule_key"]],
                     "actual_claim_ref": item["claim_ref"],
-                    "value": ENTITY_GT["james"] if item["rule_key"] == "adviser_james" else item["value"],
+                    "value": ENTITY_GT["james"] if item["rule_key"] == "adviser_confirmed_person" else item["value"],
                     "epistemic_status": item["epistemic_status"],
                     "source_keys": [SOURCE_GT[key] for key in item["source_keys"]],
                     "time_modality": item["time_modality"],

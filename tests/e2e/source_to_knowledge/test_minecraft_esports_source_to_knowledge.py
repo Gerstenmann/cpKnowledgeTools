@@ -137,6 +137,50 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
     # Semantic
     semantic = result["semantic"]
 
+    candidate_boundary = semantic["candidate_boundary"]
+    assert candidate_boundary["candidate_count"] > 0
+    assert candidate_boundary["known_gaps"] == []
+    candidate_artifact = tmp_path / candidate_boundary["artifact_path"]
+    assert candidate_artifact.is_file()
+    assert _load_json(candidate_artifact)["candidate_payloads"] == (
+        candidate_boundary["candidate_payloads"]
+    )
+    candidates_by_rule = {
+        item["interpretation_rule_ref"]: item
+        for item in candidate_boundary["candidate_payloads"]
+    }
+    assert candidates_by_rule["training_initial_date"]["proposed_claim"]["value"] == (
+        "2024-09-19"
+    )
+    assert candidates_by_rule["training_current_date"]["proposed_claim"]["value"] == (
+        "2024-09-26"
+    )
+    assert candidates_by_rule["capacity_initial_estimate"]["proposed_claim"][
+        "value"
+    ] == 20
+    assert candidates_by_rule["capacity_confirmed_maximum"]["proposed_claim"][
+        "value"
+    ] == 16
+    training_provenance = candidates_by_rule["training_current_date"][
+        "producer_provenance"
+    ]
+    assert training_provenance["extraction"]["extracted_text"] == (
+        "26 September 2024"
+    )
+    assert "predicate_ref" in training_provenance["semantic_mapping"][
+        "configured_fields"
+    ]
+    forbidden_candidate_fields = {
+        "candidate_id",
+        "candidate_revision",
+        "candidate_processing_state",
+        "review_state",
+        "publication_state",
+        "policy_decision",
+    }
+    for candidate in candidate_boundary["candidate_payloads"]:
+        assert forbidden_candidate_fields.isdisjoint(candidate)
+
     entity_index = _index(semantic["entities"])
     assert len(entity_index) == counts["entities_exact"]
     for expected in scenario["entities"]:

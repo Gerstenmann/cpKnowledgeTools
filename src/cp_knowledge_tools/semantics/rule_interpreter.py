@@ -1,250 +1,509 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 
-from cp_knowledge_tools.platform.hashing import stable_token
 from cp_knowledge_tools.sources.models import EvidenceAddress, SourceRecord
+
+from .candidates import (
+    Applicability,
+    EpistemicContext,
+    EvidenceProvenance,
+    KnownGap,
+    ProducerProvenance,
+    ProposedClaim,
+    ProposedEntity,
+    ProposedEvent,
+    ProposedEvidenceLink,
+    ProposedParticipation,
+    ProposedTime,
+    SemanticCandidatePayload,
+    SemanticInterpretationResult,
+    SemanticMappingProvenance,
+    SemanticValue,
+)
+from .extraction import DeterministicEvidenceExtractor, ExtractionResult
 
 
 class RuleBasedSemanticInterpreter:
-    """Small deterministic semantic reference interpreter.
+    """Produce non-canonical semantic proposals from source-neutral Evidence.
 
-    This engine is source-neutral. Scenario-specific extraction rules are
-    supplied by the caller. The engine never reads Golden Truth or Expected
-    Result files.
+    Scenario rules supply semantic mappings and deterministic extraction
+    instructions. Material factual values are read from ``EvidenceAddress``
+    text; they are not accepted as completed Claim or Event values.
     """
+
+    producer_ref = "CPKT-RULE-INTERPRETER"
+    producer_version = "0.2"
+
+    def __init__(
+        self,
+        extractor: DeterministicEvidenceExtractor | None = None,
+    ) -> None:
+        self._extractor = extractor or DeterministicEvidenceExtractor()
 
     def interpret(
         self,
         records: dict[str, SourceRecord],
         evidence: dict[str, EvidenceAddress],
         rules: dict[str, Any],
-    ) -> dict[str, Any]:
-        entities = self._entities(records, rules.get("entities", []))
-        entity_by_key = {item["rule_key"]: item for item in entities}
+    ) -> SemanticInterpretationResult:
+        candidates: list[SemanticCandidatePayload] = []
+        gaps: list[KnownGap] = []
+        link_rules = rules.get("evidence_links", [])
 
-        claims = self._claims(records, evidence, entity_by_key, rules.get("claims", []))
-        claim_by_key = {item["rule_key"]: item for item in claims}
+        for rule in rules.get("entities", []):
+            candidate, gap = self._entity_candidate(records, evidence, rule)
+            self._collect(candidate, gap, candidates, gaps)
 
-        evidence_links = self._evidence_links(
-            evidence, claim_by_key, rules.get("evidence_links", [])
-        )
-        events = self._events(records, rules.get("events", []))
-        event_by_key = {item["rule_key"]: item for item in events}
-        participations = self._participations(
-            entity_by_key, event_by_key, rules.get("participations", [])
-        )
-        conflict_sets = self._conflicts(claim_by_key, rules.get("conflict_sets", []))
-        pattern_claims = self._pattern_claims(records, rules.get("pattern_claims", []))
-
-        return {
-            "entities": entities,
-            "claims": claims,
-            "evidence_links": evidence_links,
-            "events": events,
-            "participations": participations,
-            "conflict_sets": conflict_sets,
-            "pattern_claims": pattern_claims,
-        }
-
-    def _entities(
-        self,
-        records: dict[str, SourceRecord],
-        rules: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        corpus = "\n".join(record.normalized_text for record in records.values())
-        result = []
-        for rule in rules:
-            label = rule["label"]
-            if label not in corpus:
-                raise ValueError(f"Entity label is not grounded in Sources: {label!r}")
-            result.append(
-                {
-                    "rule_key": rule["rule_key"],
-                    "entity_ref": stable_token("ENT", rule["class"], label),
-                    "label": label,
-                    "class": rule["class"],
-                }
+        for rule in rules.get("claims", []):
+            candidate, gap = self._claim_candidate(
+                records,
+                evidence,
+                rule,
+                link_rules,
             )
-        return result
+            self._collect(candidate, gap, candidates, gaps)
 
-    def _claims(
+        for rule in rules.get("events", []):
+            candidate, gap = self._event_candidate(records, evidence, rule)
+            self._collect(candidate, gap, candidates, gaps)
+
+        for rule in rules.get("participations", []):
+            candidate = self._participation_candidate(records, evidence, rule)
+            candidates.append(candidate)
+
+        for rule in rules.get("pattern_claims", []):
+            candidate, gap = self._pattern_claim_candidate(records, evidence, rule)
+            self._collect(candidate, gap, candidates, gaps)
+
+        return SemanticInterpretationResult(
+            candidate_payloads=tuple(candidates),
+            known_gaps=tuple(gaps),
+        )
+
+    def _entity_candidate(
         self,
         records: dict[str, SourceRecord],
         evidence: dict[str, EvidenceAddress],
-        entity_by_key: dict[str, dict[str, Any]],
-        rules: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        result = []
-        for rule in rules:
-            source_keys = list(rule["source_keys"])
-            for source_key in source_keys:
-                if source_key not in records:
-                    raise ValueError(f"Claim source missing: {source_key}")
-            evidence_keys = list(rule.get("evidence_keys", []))
-            if not evidence_keys:
-                raise ValueError(f"Material Claim lacks Evidence: {rule['rule_key']}")
-            for evidence_key in evidence_keys:
-                if evidence_key not in evidence:
-                    raise ValueError(f"Claim Evidence missing: {evidence_key}")
+        rule: dict[str, Any],
+    ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
+        addresses = self._addresses(records, evidence, rule)
+        extraction, gap = self._extract(rule, evidence, addresses)
+        if gap is not None:
+            return None, gap
+        assert extraction is not None
+        label = str(extraction.value)
+        mapping = self._mapping_provenance(
+            rule,
+            configured_fields=("entity_class",),
+        )
+        return (
+            SemanticCandidatePayload(
+                candidate_payload_kind="implementation_local.proposed_entity",
+                interpretation_rule_ref=rule["rule_key"],
+                proposed_entity=ProposedEntity(
+                    entity_key=rule["rule_key"],
+                    label=label,
+                    entity_class=rule["entity_class"],
+                ),
+                applicability=self._applicability(rule),
+                profile_refs=tuple(rule.get("profile_refs", ())),
+                producer_provenance=self._producer(
+                    addresses,
+                    extraction,
+                    mapping,
+                ),
+            ),
+            None,
+        )
 
-            subject = entity_by_key[rule["subject_key"]]
-            value = rule.get("value")
-            object_entity_key = rule.get("object_entity_key")
-            object_ref = (
-                entity_by_key[object_entity_key]["entity_ref"]
-                if object_entity_key
-                else None
-            )
-            claim_ref = stable_token(
-                "CLM",
-                subject["entity_ref"],
-                rule["predicate"],
-                object_ref or value,
-                rule.get("time_modality"),
-            )
-            result.append(
-                {
-                    "rule_key": rule["rule_key"],
-                    "claim_ref": claim_ref,
-                    "subject_ref": subject["entity_ref"],
-                    "predicate_ref": rule["predicate"],
-                    "value": value,
-                    "object_ref": object_ref,
-                    "epistemic_status": rule["epistemic_status"],
-                    "source_keys": source_keys,
-                    "evidence_keys": evidence_keys,
-                    "time_modality": rule.get("time_modality"),
-                    "current": rule.get("current", True),
-                    "preserved": rule.get("preserved", True),
-                    "value_qualifier": rule.get("value_qualifier"),
-                }
-            )
-        return result
+    def _claim_candidate(
+        self,
+        records: dict[str, SourceRecord],
+        evidence: dict[str, EvidenceAddress],
+        rule: dict[str, Any],
+        link_rules: list[dict[str, Any]],
+    ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
+        addresses = self._addresses(records, evidence, rule)
+        extraction, gap = self._extract(rule, evidence, addresses)
+        if gap is not None:
+            return None, gap
+        assert extraction is not None
+        value, value_mapping_from, value_mapping_to = self._semantic_value(
+            extraction.value,
+            rule,
+        )
+        object_entity_label = None
+        if rule.get("object_kind") == "entity_mention":
+            object_entity_label = str(value)
+            value = None
 
-    def _evidence_links(
+        candidate_links = self._candidate_evidence_links(
+            evidence,
+            rule["rule_key"],
+            link_rules,
+        )
+        mapping_fields = [
+            "subject_entity_key",
+            "predicate_ref",
+            "epistemic_status",
+            "epistemic_classification_basis",
+        ]
+        if "semantic_value_map" in rule:
+            mapping_fields.append("semantic_value_map")
+        if candidate_links:
+            mapping_fields.append("evidence_links.role")
+        for optional in ("time_modality", "value_qualifier", "object_kind"):
+            if optional in rule:
+                mapping_fields.append(optional)
+        mapping = self._mapping_provenance(
+            rule,
+            configured_fields=tuple(mapping_fields),
+            value_mapping_from=value_mapping_from,
+            value_mapping_to=value_mapping_to,
+        )
+        time = ()
+        if rule.get("time_role"):
+            time = (
+                ProposedTime(
+                    role=rule["time_role"],
+                    value=str(value) if value is not None else None,
+                    precision=rule.get("time_precision", "unknown"),
+                    modality=rule.get("time_modality", "unknown"),
+                ),
+            )
+        return (
+            SemanticCandidatePayload(
+                candidate_payload_kind="implementation_local.proposed_claim",
+                interpretation_rule_ref=rule["rule_key"],
+                proposed_claim=ProposedClaim(
+                    claim_key=rule["rule_key"],
+                    subject_entity_key=rule["subject_entity_key"],
+                    predicate_ref=rule["predicate_ref"],
+                    value=value,
+                    object_entity_label=object_entity_label,
+                    time_modality=rule.get("time_modality"),
+                    value_qualifier=rule.get("value_qualifier"),
+                ),
+                evidence_links=candidate_links,
+                time=time,
+                epistemic_context=EpistemicContext(
+                    status=rule["epistemic_status"],
+                    classification_basis=rule["epistemic_classification_basis"],
+                ),
+                applicability=self._applicability(rule),
+                profile_refs=tuple(rule.get("profile_refs", ())),
+                producer_provenance=self._producer(
+                    addresses,
+                    extraction,
+                    mapping,
+                ),
+            ),
+            None,
+        )
+
+    def _event_candidate(
+        self,
+        records: dict[str, SourceRecord],
+        evidence: dict[str, EvidenceAddress],
+        rule: dict[str, Any],
+    ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
+        addresses = self._addresses(records, evidence, rule)
+        extraction = None
+        event_time = None
+        if "extraction" in rule:
+            extraction, gap = self._extract(rule, evidence, addresses)
+            if gap is not None:
+                return None, gap
+            assert extraction is not None
+            event_time = str(extraction.value)
+        mapping = self._mapping_provenance(
+            rule,
+            configured_fields=(
+                "event_type_ref",
+                "label",
+                "time_precision",
+                "time_modality",
+            ),
+        )
+        time = (
+            ProposedTime(
+                role="event_time",
+                value=event_time,
+                precision=rule.get("time_precision", "unknown"),
+                modality=rule.get("time_modality", "planned"),
+            ),
+        )
+        return (
+            SemanticCandidatePayload(
+                candidate_payload_kind="implementation_local.proposed_event",
+                interpretation_rule_ref=rule["rule_key"],
+                proposed_event=ProposedEvent(
+                    event_key=rule["rule_key"],
+                    event_type_ref=rule["event_type_ref"],
+                    label=rule["label"],
+                    event_time=event_time,
+                    time_precision=rule.get("time_precision", "unknown"),
+                    time_modality=rule.get("time_modality", "planned"),
+                ),
+                time=time,
+                applicability=self._applicability(rule),
+                profile_refs=tuple(rule.get("profile_refs", ())),
+                producer_provenance=self._producer(
+                    addresses,
+                    extraction,
+                    mapping,
+                ),
+            ),
+            None,
+        )
+
+    def _participation_candidate(
+        self,
+        records: dict[str, SourceRecord],
+        evidence: dict[str, EvidenceAddress],
+        rule: dict[str, Any],
+    ) -> SemanticCandidatePayload:
+        addresses = self._addresses(records, evidence, rule)
+        role = rule["role"]
+        if not role:
+            raise ValueError("Event Participation role is mandatory")
+        mapping = self._mapping_provenance(
+            rule,
+            configured_fields=("entity_key", "event_key", "role"),
+        )
+        return SemanticCandidatePayload(
+            candidate_payload_kind="implementation_local.proposed_participation",
+            interpretation_rule_ref=rule["rule_key"],
+            proposed_participation=ProposedParticipation(
+                participation_key=rule["rule_key"],
+                entity_key=rule["entity_key"],
+                event_key=rule["event_key"],
+                role=role,
+            ),
+            applicability=self._applicability(rule),
+            profile_refs=tuple(rule.get("profile_refs", ())),
+            producer_provenance=self._producer(addresses, None, mapping),
+        )
+
+    def _pattern_claim_candidate(
+        self,
+        records: dict[str, SourceRecord],
+        evidence: dict[str, EvidenceAddress],
+        rule: dict[str, Any],
+    ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
+        addresses = self._addresses(records, evidence, rule)
+        extraction, gap = self._extract(rule, evidence, addresses)
+        if gap is not None:
+            return None, gap
+        assert extraction is not None
+        mapping = self._mapping_provenance(
+            rule,
+            configured_fields=(
+                "epistemic_status",
+                "epistemic_classification_basis",
+                "evidence_role",
+            ),
+        )
+        link = ProposedEvidenceLink(
+            evidence_link_key=f"{rule['rule_key']}.reports",
+            evidence_address_ref=addresses[0].evidence_address_ref,
+            role=rule["evidence_role"],
+        )
+        return (
+            SemanticCandidatePayload(
+                candidate_payload_kind=(
+                    "implementation_local.proposed_unscoped_statement"
+                ),
+                interpretation_rule_ref=rule["rule_key"],
+                proposed_claim=ProposedClaim(
+                    claim_key=rule["rule_key"],
+                    subject_entity_key=None,
+                    predicate_ref=None,
+                    value=None,
+                    statement=str(extraction.value),
+                ),
+                evidence_links=(link,),
+                epistemic_context=EpistemicContext(
+                    status=rule["epistemic_status"],
+                    classification_basis=rule["epistemic_classification_basis"],
+                ),
+                applicability=self._applicability(rule),
+                profile_refs=tuple(rule.get("profile_refs", ())),
+                producer_provenance=self._producer(
+                    addresses,
+                    extraction,
+                    mapping,
+                ),
+            ),
+            None,
+        )
+
+    def _addresses(
+        self,
+        records: dict[str, SourceRecord],
+        evidence: dict[str, EvidenceAddress],
+        rule: dict[str, Any],
+    ) -> tuple[EvidenceAddress, ...]:
+        evidence_keys = tuple(rule.get("evidence_keys", ()))
+        if not evidence_keys:
+            raise ValueError(
+                f"Semantic proposal lacks Evidence: {rule['rule_key']}"
+            )
+        addresses = []
+        for evidence_key in evidence_keys:
+            if evidence_key not in evidence:
+                raise ValueError(f"Semantic Evidence missing: {evidence_key}")
+            address = evidence[evidence_key]
+            if address.source_key not in records:
+                raise ValueError(f"Semantic Source missing: {address.source_key}")
+            if records[address.source_key].record_ref != address.record_ref:
+                raise ValueError(
+                    "Evidence does not identify the active Source Record: "
+                    f"{evidence_key}"
+                )
+            addresses.append(address)
+        return tuple(addresses)
+
+    def _extract(
+        self,
+        rule: dict[str, Any],
+        evidence: dict[str, EvidenceAddress],
+        addresses: tuple[EvidenceAddress, ...],
+    ) -> tuple[ExtractionResult | None, KnownGap | None]:
+        specification = rule.get("extraction")
+        if specification is None:
+            raise ValueError(
+                f"Material semantic rule lacks extraction: {rule['rule_key']}"
+            )
+        evidence_key = specification["evidence_key"]
+        if evidence_key not in evidence:
+            raise ValueError(f"Extraction Evidence missing: {evidence_key}")
+        try:
+            extraction = self._extractor.extract(evidence[evidence_key], specification)
+        except (OverflowError, ValueError):
+            return (
+                None,
+                KnownGap(
+                    gap_code="extraction_parse_error",
+                    interpretation_rule_ref=rule["rule_key"],
+                    detail=(
+                        "Configured deterministic extraction could not parse "
+                        "matched Evidence text"
+                    ),
+                    evidence_address_refs=tuple(
+                        address.evidence_address_ref for address in addresses
+                    ),
+                ),
+            )
+        if extraction is not None:
+            return extraction, None
+        return (
+            None,
+            KnownGap(
+                gap_code="extraction_no_match",
+                interpretation_rule_ref=rule["rule_key"],
+                detail=(
+                    "Configured deterministic extraction did not match Evidence text"
+                ),
+                evidence_address_refs=tuple(
+                    address.evidence_address_ref for address in addresses
+                ),
+            ),
+        )
+
+    def _semantic_value(
+        self,
+        extracted_value: SemanticValue,
+        rule: dict[str, Any],
+    ) -> tuple[SemanticValue, SemanticValue, SemanticValue]:
+        value_map = rule.get("semantic_value_map")
+        if not value_map:
+            return extracted_value, None, None
+        mapping_key = str(extracted_value)
+        if mapping_key not in value_map:
+            raise ValueError(
+                f"No semantic value mapping for {mapping_key!r} in "
+                f"{rule['rule_key']}"
+            )
+        mapped_value = value_map[mapping_key]
+        return mapped_value, extracted_value, mapped_value
+
+    def _candidate_evidence_links(
         self,
         evidence: dict[str, EvidenceAddress],
-        claim_by_key: dict[str, dict[str, Any]],
-        rules: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
+        claim_key: str,
+        link_rules: list[dict[str, Any]],
+    ) -> tuple[ProposedEvidenceLink, ...]:
         result = []
-        for rule in rules:
-            claim = claim_by_key[rule["claim_key"]]
+        for rule in link_rules:
+            if rule["claim_key"] != claim_key:
+                continue
             address = evidence[rule["evidence_key"]]
             result.append(
-                {
-                    "rule_key": rule["rule_key"],
-                    "evidence_link_ref": stable_token(
-                        "EL",
-                        claim["claim_ref"],
-                        address.evidence_address_ref,
-                        rule["role"],
-                    ),
-                    "claim_ref": claim["claim_ref"],
-                    "evidence_address_ref": address.evidence_address_ref,
-                    "role": rule["role"],
-                }
+                ProposedEvidenceLink(
+                    evidence_link_key=rule["rule_key"],
+                    evidence_address_ref=address.evidence_address_ref,
+                    role=rule["role"],
+                )
             )
-        return result
+        return tuple(result)
 
-    def _events(
+    def _producer(
         self,
-        records: dict[str, SourceRecord],
-        rules: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        result = []
-        for rule in rules:
-            for source_key in rule["source_keys"]:
-                if source_key not in records:
-                    raise ValueError(f"Event source missing: {source_key}")
-            event_ref = stable_token("EVT", rule["event_type"], rule["label"])
-            result.append(
-                {
-                    "rule_key": rule["rule_key"],
-                    "event_ref": event_ref,
-                    "event_type_ref": rule["event_type"],
-                    "label": rule["label"],
-                    "event_time": rule.get("event_time"),
-                    "time_precision": rule.get("time_precision", "unknown"),
-                    "time_modality": rule.get("time_modality", "planned"),
-                    "source_keys": list(rule["source_keys"]),
-                    "evidence_keys": list(rule.get("evidence_keys", [])),
-                }
-            )
-        return result
+        addresses: tuple[EvidenceAddress, ...],
+        extraction: ExtractionResult | None,
+        mapping: SemanticMappingProvenance,
+    ) -> ProducerProvenance:
+        return ProducerProvenance(
+            producer_ref=self.producer_ref,
+            producer_version=self.producer_version,
+            method="deterministic_evidence_interpretation",
+            evidence=tuple(
+                EvidenceProvenance(
+                    source_key=address.source_key,
+                    source_ref=address.source_ref,
+                    snapshot_ref=address.snapshot_ref,
+                    record_ref=address.record_ref,
+                    evidence_address_ref=address.evidence_address_ref,
+                )
+                for address in addresses
+            ),
+            extraction=extraction.provenance if extraction is not None else None,
+            semantic_mapping=mapping,
+        )
 
-    def _participations(
+    def _mapping_provenance(
         self,
-        entity_by_key: dict[str, dict[str, Any]],
-        event_by_key: dict[str, dict[str, Any]],
-        rules: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        result = []
-        for rule in rules:
-            entity = entity_by_key[rule["entity_key"]]
-            event = event_by_key[rule["event_key"]]
-            role = rule["role"]
-            if not role:
-                raise ValueError("Event Participation role is mandatory")
-            result.append(
-                {
-                    "rule_key": rule["rule_key"],
-                    "participation_ref": stable_token(
-                        "PART", entity["entity_ref"], event["event_ref"], role
-                    ),
-                    "entity_ref": entity["entity_ref"],
-                    "event_ref": event["event_ref"],
-                    "role": role,
-                    "source_keys": list(rule.get("source_keys", [])),
-                }
-            )
-        return result
+        rule: dict[str, Any],
+        *,
+        configured_fields: Iterable[str],
+        value_mapping_from: SemanticValue = None,
+        value_mapping_to: SemanticValue = None,
+    ) -> SemanticMappingProvenance:
+        return SemanticMappingProvenance(
+            interpretation_rule_ref=rule["rule_key"],
+            configured_fields=tuple(configured_fields),
+            value_mapping_from=value_mapping_from,
+            value_mapping_to=value_mapping_to,
+        )
 
-    def _conflicts(
-        self,
-        claim_by_key: dict[str, dict[str, Any]],
-        rules: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        result = []
-        for rule in rules:
-            claims = [claim_by_key[key] for key in rule["claim_keys"]]
-            preferred = claim_by_key[rule["preferred_claim_key"]]
-            result.append(
-                {
-                    "rule_key": rule["rule_key"],
-                    "conflict_set_ref": stable_token(
-                        "CF",
-                        *sorted(claim["claim_ref"] for claim in claims),
-                        *rule["conflict_dimensions"],
-                    ),
-                    "claim_refs": [claim["claim_ref"] for claim in claims],
-                    "conflict_dimensions": list(rule["conflict_dimensions"]),
-                    "preferred_claim_ref": preferred["claim_ref"],
-                    "preference_context": rule["preference_context"],
-                    "rationale": rule["rationale"],
-                }
-            )
-        return result
+    def _applicability(self, rule: dict[str, Any]) -> Applicability:
+        applicability = rule.get("applicability", {})
+        return Applicability(
+            context_refs=tuple(applicability.get("context_refs", ())),
+            conditions=tuple(applicability.get("conditions", ())),
+        )
 
-    def _pattern_claims(
+    def _collect(
         self,
-        records: dict[str, SourceRecord],
-        rules: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        result = []
-        for rule in rules:
-            record = records[rule["source_key"]]
-            needle = rule["required_text"]
-            if needle not in record.normalized_text:
-                raise ValueError(f"Pattern source text not found: {needle!r}")
-            result.append(
-                {
-                    "rule_key": rule["rule_key"],
-                    "statement": needle,
-                    "epistemic_status": rule["epistemic_status"],
-                    "evidence_roles": list(rule["evidence_roles"]),
-                    "source_keys": [rule["source_key"]],
-                }
-            )
-        return result
+        candidate: SemanticCandidatePayload | None,
+        gap: KnownGap | None,
+        candidates: list[SemanticCandidatePayload],
+        gaps: list[KnownGap],
+    ) -> None:
+        if candidate is not None:
+            candidates.append(candidate)
+        if gap is not None:
+            gaps.append(gap)
