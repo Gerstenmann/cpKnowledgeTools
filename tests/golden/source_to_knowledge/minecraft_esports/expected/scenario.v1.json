@@ -1,0 +1,782 @@
+{
+  "scenario_ref": "GT-S2K-MINI-DOSSIER-01",
+  "scenario_version": "1.0",
+  "title": "Minecraft Education Esports Mini-Dossier",
+  "decision_ref": "CPKS-DEC-028@1.0",
+  "architecture_ref": "CPKT-SPEC-ARCH@1.2",
+  "golden_truth_source": "Projects/Internal/Kommunikations-Wissen verarbeiten und bereitstellen/Golden-Truth-Matrix.md",
+  "sensitivity": "synthetic_non_sensitive",
+  "test_harness_contract": {
+    "result_format_version": "0.1",
+    "result_default_path": "artifacts/tests/source_to_knowledge/minecraft_esports/result.json",
+    "note": "Test-harness output only; not a cpKnowledgeSystem domain contract and not a production API."
+  },
+  "rule_sources": [
+    "CPKS-FWK-ARCH@0.1",
+    "CPKS-DEC-028@1.0",
+    "CPKS-SPEC-SRC@0.2",
+    "CPKS-SPEC-KM@0.20",
+    "CPKS-SPEC-KM-VOC@0.1",
+    "CPKS-SPEC-KM-PU@0.1",
+    "CPKS-SPEC-KPR@0.2",
+    "CPKS-SPEC-SEC@0.2",
+    "CPKS-SPEC-MEM@0.2",
+    "CPKS-SPEC-VAL@0.2",
+    "CPKT-SPEC-ARCH@1.2"
+  ],
+  "fixture_bindings": [
+    {
+      "source_key": "DOC-01",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/html/01-program-proposal.html",
+      "sha256": "3f1b20e87f06346b1a407ef2d9f2f09f1ece5dfec15ff054f2e83e532234f739",
+      "source_time": "2024-08-30T17:01:00+02:00",
+      "role": "initial_proposal"
+    },
+    {
+      "source_key": "DOC-02",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/html/02-school-response.html",
+      "sha256": "25f9e45b661a060d040c9b1e9bfa4be40987087cdedb6197d31ec14caaf47cb1",
+      "source_time": "2024-09-02T13:22:00+02:00",
+      "role": "response_and_open_states"
+    },
+    {
+      "source_key": "DOC-03",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/html/03-pilot-status.html",
+      "sha256": "36ff38dcc00b1b3aa1915a46d52c215b90e51a63b22cbfc7e6467e17f59cd99e",
+      "source_time": "2024-09-06T15:30:00+02:00",
+      "role": "confirmed_pilot_status"
+    }
+  ],
+  "fixture_order": [
+    "DOC-01",
+    "DOC-02",
+    "DOC-03"
+  ],
+  "expected_counts": {
+    "entities_exact": 7,
+    "fixed_claims_min": 14,
+    "events_min": 3,
+    "conflict_sets_min": 3,
+    "fixed_evidence_addresses_min": 16,
+    "fixed_evidence_links_min": 17
+  },
+  "entities": [
+    {
+      "gt_id": "ENT-RMIS",
+      "label": "Rhein-Main International School",
+      "class": "organization"
+    },
+    {
+      "gt_id": "ENT-CODELAB",
+      "label": "CodeLab Rhine-Main",
+      "class": "organization"
+    },
+    {
+      "gt_id": "ENT-CHRIS-BERGER",
+      "label": "Chris Berger",
+      "class": "person"
+    },
+    {
+      "gt_id": "ENT-VERA-ANDERS",
+      "label": "Vera Anders",
+      "class": "person"
+    },
+    {
+      "gt_id": "ENT-ALEX-BRYANT",
+      "label": "Alex Bryant",
+      "class": "person"
+    },
+    {
+      "gt_id": "ENT-JAMES-STONE",
+      "label": "James Stone",
+      "class": "person"
+    },
+    {
+      "gt_id": "ENT-ME-ESPORTS-PILOT",
+      "label": "Minecraft Education esports pilot",
+      "class": "pilot_subject"
+    }
+  ],
+  "claims": [
+    {
+      "gt_id": "CLM-WORKSHOP-12SEP",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-01",
+        "DOC-03"
+      ],
+      "value": "2024-09-12",
+      "time_modality": "planned"
+    },
+    {
+      "gt_id": "CLM-TRAINING-19SEP",
+      "final_epistemic_status": "reported",
+      "current": false,
+      "historical_state_must_survive": true,
+      "source_keys": [
+        "DOC-01"
+      ],
+      "value": "2024-09-19",
+      "time_modality": "planned"
+    },
+    {
+      "gt_id": "CLM-TRAINING-26SEP",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "2024-09-26",
+      "time_modality": "planned"
+    },
+    {
+      "gt_id": "CLM-CAPACITY-ABOUT20",
+      "final_epistemic_status": "reported",
+      "current": false,
+      "historical_state_must_survive": true,
+      "source_keys": [
+        "DOC-01"
+      ],
+      "value": 20,
+      "value_qualifier": "approximately"
+    },
+    {
+      "gt_id": "CLM-CAPACITY-MAX16",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": 16,
+      "value_qualifier": "maximum"
+    },
+    {
+      "gt_id": "CLM-ADVISER-NOT-SELECTED",
+      "final_epistemic_status": "reported",
+      "current": false,
+      "historical_state_must_survive": true,
+      "source_keys": [
+        "DOC-02"
+      ],
+      "value": "not_selected"
+    },
+    {
+      "gt_id": "CLM-ADVISER-JAMES-STONE",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "ENT-JAMES-STONE"
+    },
+    {
+      "gt_id": "CLM-SCOPE-OPEN",
+      "final_epistemic_status": "reported",
+      "current": false,
+      "historical_state_must_survive": true,
+      "source_keys": [
+        "DOC-02"
+      ],
+      "value": "academic_and_or_extracurricular_open"
+    },
+    {
+      "gt_id": "CLM-SCOPE-AFTERSCHOOL",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "after-school only"
+    },
+    {
+      "gt_id": "CLM-ACADEMIC-DEFERRED",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "deferred"
+    },
+    {
+      "gt_id": "CLM-EXT-COMP-LATER-POSSIBLE",
+      "final_epistemic_status": "reported",
+      "current": true,
+      "historical_state_must_survive": true,
+      "source_keys": [
+        "DOC-01",
+        "DOC-03"
+      ],
+      "value": "possible_later_phase"
+    },
+    {
+      "gt_id": "CLM-EXT-COMP-NOT-APPROVED",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "not_approved"
+    },
+    {
+      "gt_id": "CLM-PREVIOUS-MC-SUCCESS-REPORTED",
+      "final_epistemic_status": "reported",
+      "current": true,
+      "source_keys": [
+        "DOC-02"
+      ],
+      "value": "previous_minecraft_use_described_as_successful",
+      "must_not_be_confirmed_without_independent_evidence": true
+    },
+    {
+      "gt_id": "CLM-BUDGET-APPROVED",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "approved internal budget",
+      "restricted_detail_evidence": "EA-16-RESTRICTED"
+    }
+  ],
+  "pattern_rules": [
+    {
+      "rule_key": "DOC01_GENERAL_BENEFITS_REMAIN_REPORTED",
+      "source_key": "DOC-01",
+      "fixture_text": "I have seen reports and examples suggesting that Minecraft Education can support STEM learning and social collaboration.",
+      "expected_evidence_role": "reports_statement",
+      "expected_epistemic_status": "reported",
+      "forbidden_epistemic_status_from_this_evidence_alone": "confirmed"
+    }
+  ],
+  "evidence_addresses": [
+    {
+      "gt_id": "EA-01",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "concept workshop could take place",
+          "12 September 2024"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-02",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "Concept workshop",
+          "Confirmed for",
+          "12 September 2024"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-03",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "Internal team training could start",
+          "19 September 2024"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-04",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "Team training",
+          "26 September 2024",
+          "not on 19 September"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-05",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "around",
+          "20 students"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-06",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "limited to",
+          "16 students"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-07",
+      "source_key": "DOC-02",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "club advisers",
+          "not yet been selected"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-08",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "James Stone will coordinate the pilot"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-09",
+      "source_key": "DOC-02",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "purely extracurricular",
+          "classroom activities"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-10",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "after-school only"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-11",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "Classroom integration is postponed"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-12",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "Only after an internal pilot",
+          "regional or international competition"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-13",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "No external competition is approved at this stage"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-14",
+      "source_key": "DOC-02",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "used Minecraft successfully in some classes"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-15",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "approved internal budget"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-16-RESTRICTED",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "provisional cost ceiling",
+          "EUR 3,200"
+        ]
+      },
+      "must_remain_resolvable": true
+    }
+  ],
+  "evidence_links": [
+    {
+      "gt_id": "EL-01",
+      "claim_gt_id": "CLM-WORKSHOP-12SEP",
+      "evidence_gt_id": "EA-01",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-02",
+      "claim_gt_id": "CLM-WORKSHOP-12SEP",
+      "evidence_gt_id": "EA-02",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-03",
+      "claim_gt_id": "CLM-TRAINING-19SEP",
+      "evidence_gt_id": "EA-03",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-04",
+      "claim_gt_id": "CLM-TRAINING-26SEP",
+      "evidence_gt_id": "EA-04",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-05",
+      "claim_gt_id": "CLM-CAPACITY-ABOUT20",
+      "evidence_gt_id": "EA-05",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-06",
+      "claim_gt_id": "CLM-CAPACITY-MAX16",
+      "evidence_gt_id": "EA-06",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-07",
+      "claim_gt_id": "CLM-CAPACITY-ABOUT20",
+      "evidence_gt_id": "EA-06",
+      "role": "qualifies"
+    },
+    {
+      "gt_id": "EL-08",
+      "claim_gt_id": "CLM-ADVISER-NOT-SELECTED",
+      "evidence_gt_id": "EA-07",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-09",
+      "claim_gt_id": "CLM-ADVISER-JAMES-STONE",
+      "evidence_gt_id": "EA-08",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-10",
+      "claim_gt_id": "CLM-SCOPE-OPEN",
+      "evidence_gt_id": "EA-09",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-11",
+      "claim_gt_id": "CLM-SCOPE-AFTERSCHOOL",
+      "evidence_gt_id": "EA-10",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-12",
+      "claim_gt_id": "CLM-ACADEMIC-DEFERRED",
+      "evidence_gt_id": "EA-11",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-13",
+      "claim_gt_id": "CLM-EXT-COMP-LATER-POSSIBLE",
+      "evidence_gt_id": "EA-12",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-14",
+      "claim_gt_id": "CLM-EXT-COMP-LATER-POSSIBLE",
+      "evidence_gt_id": "EA-13",
+      "role": "qualifies"
+    },
+    {
+      "gt_id": "EL-15",
+      "claim_gt_id": "CLM-EXT-COMP-NOT-APPROVED",
+      "evidence_gt_id": "EA-13",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-16",
+      "claim_gt_id": "CLM-PREVIOUS-MC-SUCCESS-REPORTED",
+      "evidence_gt_id": "EA-14",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-17",
+      "claim_gt_id": "CLM-BUDGET-APPROVED",
+      "evidence_gt_id": "EA-15",
+      "role": "supports"
+    }
+  ],
+  "events": [
+    {
+      "gt_id": "EVT-CONCEPT-WORKSHOP",
+      "label": "Concept Workshop",
+      "event_type_test_role": "concept_workshop",
+      "event_time": "2024-09-12",
+      "time_precision": "day",
+      "time_modality": "planned",
+      "source_keys": [
+        "DOC-01",
+        "DOC-03"
+      ],
+      "must_not_be_actual_without_occurrence_evidence": true
+    },
+    {
+      "gt_id": "EVT-TEAM-TRAINING-START",
+      "label": "Team training start",
+      "event_type_test_role": "training_start",
+      "event_time": "2024-09-26",
+      "time_precision": "day",
+      "time_modality": "planned",
+      "source_keys": [
+        "DOC-03"
+      ],
+      "historical_plan_claim_gt_id": "CLM-TRAINING-19SEP",
+      "must_not_be_actual_without_occurrence_evidence": true
+    },
+    {
+      "gt_id": "EVT-INTERNAL-PILOT",
+      "label": "Internal pilot",
+      "event_type_test_role": "internal_pilot",
+      "event_time": null,
+      "time_precision": "unknown",
+      "time_modality": "planned",
+      "source_keys": [
+        "DOC-03"
+      ]
+    }
+  ],
+  "conflict_sets": [
+    {
+      "gt_id": "CF-TRAINING-DATE",
+      "claim_gt_ids": [
+        "CLM-TRAINING-19SEP",
+        "CLM-TRAINING-26SEP"
+      ],
+      "conflict_dimensions": [
+        "temporal"
+      ],
+      "preferred_claim_gt_id": "CLM-TRAINING-26SEP",
+      "preference_context": "current_confirmed_pilot_plan",
+      "claims_need_not_be_disputed": true
+    },
+    {
+      "gt_id": "CF-CAPACITY",
+      "claim_gt_ids": [
+        "CLM-CAPACITY-ABOUT20",
+        "CLM-CAPACITY-MAX16"
+      ],
+      "conflict_dimensions": [
+        "factual",
+        "contextual"
+      ],
+      "preferred_claim_gt_id": "CLM-CAPACITY-MAX16",
+      "preference_context": "current_confirmed_pilot_capacity"
+    },
+    {
+      "gt_id": "CF-PILOT-SCOPE",
+      "claim_gt_ids": [
+        "CLM-SCOPE-OPEN",
+        "CLM-SCOPE-AFTERSCHOOL",
+        "CLM-ACADEMIC-DEFERRED"
+      ],
+      "conflict_dimensions": [
+        "contextual",
+        "temporal"
+      ],
+      "preferred_claim_gt_id": "CLM-SCOPE-AFTERSCHOOL",
+      "preference_context": "current_confirmed_pilot_scope"
+    }
+  ],
+  "publication_unit": {
+    "knowledge_object_id": "KO-GT-ME-ESPORTS-PILOT",
+    "knowledge_object_version": "0.1",
+    "title": "Minecraft Education esports pilot – synthetic golden case",
+    "primary_kind": "event_summary",
+    "knowledge_functions": [
+      "descriptive",
+      "explanatory"
+    ],
+    "publication_state": "unpublished",
+    "canonical_path": null,
+    "publication_record_ref": null,
+    "published_at": null,
+    "publisher_ref": null,
+    "schema_ref": "CPKS-SPEC-KM-PU@0.1",
+    "semantic_model_ref": "CPKS-SPEC-KM@0.20",
+    "vocabulary_set_ref": "CPKS-SPEC-KM-VOC@0.1",
+    "cross_view_validation": "pass"
+  },
+  "policy_case": {
+    "consumer": "CONSUMER-CLAIM-READ-NO-BUDGET-EVIDENCE",
+    "purpose": "retrieve_pilot_status",
+    "claim_read": {
+      "claim_gt_id": "CLM-BUDGET-APPROVED",
+      "expected": "permit",
+      "consumer_visible_text": "The pilot has an approved internal budget."
+    },
+    "restricted_evidence_resolution": {
+      "evidence_gt_id": "EA-16-RESTRICTED",
+      "expected": "deny"
+    },
+    "forbidden_leak_literals": [
+      "EUR 3,200",
+      "3,200",
+      "3200"
+    ]
+  },
+  "retrieval_cases": [
+    {
+      "query_key": "concept_workshop_date",
+      "required_current_claim_gt_ids": [
+        "CLM-WORKSHOP-12SEP"
+      ],
+      "must_contain": [
+        "12 September 2024"
+      ],
+      "must_not_claim_actual_occurrence": true
+    },
+    {
+      "query_key": "team_training_date",
+      "required_current_claim_gt_ids": [
+        "CLM-TRAINING-26SEP"
+      ],
+      "must_contain": [
+        "26 September 2024"
+      ],
+      "must_not_present_as_current": [
+        "19 September 2024"
+      ]
+    },
+    {
+      "query_key": "team_training_history",
+      "required_claim_gt_ids": [
+        "CLM-TRAINING-19SEP",
+        "CLM-TRAINING-26SEP"
+      ],
+      "must_contain": [
+        "19 September 2024",
+        "26 September 2024"
+      ]
+    },
+    {
+      "query_key": "pilot_capacity",
+      "required_current_claim_gt_ids": [
+        "CLM-CAPACITY-MAX16"
+      ],
+      "must_contain": [
+        "16"
+      ],
+      "must_not_present_as_current": [
+        "20"
+      ]
+    },
+    {
+      "query_key": "pilot_adviser",
+      "required_current_claim_gt_ids": [
+        "CLM-ADVISER-JAMES-STONE"
+      ],
+      "must_contain": [
+        "James Stone"
+      ]
+    },
+    {
+      "query_key": "pilot_scope",
+      "required_current_claim_gt_ids": [
+        "CLM-SCOPE-AFTERSCHOOL",
+        "CLM-ACADEMIC-DEFERRED"
+      ],
+      "must_contain": [
+        "after-school only"
+      ]
+    },
+    {
+      "query_key": "external_competition",
+      "required_current_claim_gt_ids": [
+        "CLM-EXT-COMP-NOT-APPROVED",
+        "CLM-EXT-COMP-LATER-POSSIBLE"
+      ],
+      "must_contain": [
+        "not approved"
+      ],
+      "must_not_contain": [
+        "is approved"
+      ]
+    },
+    {
+      "query_key": "previous_minecraft_use",
+      "required_claim_gt_ids": [
+        "CLM-PREVIOUS-MC-SUCCESS-REPORTED"
+      ],
+      "must_preserve_reported_status": true
+    },
+    {
+      "query_key": "pilot_budget",
+      "required_current_claim_gt_ids": [
+        "CLM-BUDGET-APPROVED"
+      ],
+      "must_contain": [
+        "approved internal budget"
+      ],
+      "must_not_contain": [
+        "EUR 3,200",
+        "3,200",
+        "3200"
+      ],
+      "evidence_resolution": "not_authorized"
+    }
+  ],
+  "rebuild": {
+    "delete_derived_state": "required",
+    "rebuild_required": true,
+    "semantic_equivalence_required": true,
+    "must_preserve": [
+      "entity_resolution",
+      "claim_identities",
+      "current_state_preferences",
+      "epistemic_status",
+      "event_identities",
+      "event_times",
+      "evidence_link_roles",
+      "conflict_sets",
+      "policy_budget_redaction",
+      "golden_retrieval_results"
+    ]
+  }
+}

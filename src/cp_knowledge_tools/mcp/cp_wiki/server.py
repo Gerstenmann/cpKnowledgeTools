@@ -10,6 +10,15 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 from .config import MCPConfig
+from .governance import (
+    read_active_artifact as read_active_artifact_from_vault,
+)
+from .governance import (
+    resolve_active_artifact as resolve_active_artifact_from_vault,
+)
+from .governance import (
+    resolve_governance_bundle as resolve_governance_bundle_from_vault,
+)
 from .search import (
     resolve_wikilink,
     search_frontmatter,
@@ -24,10 +33,14 @@ DEFAULT_HTTP_PATH = "/mcp"
 mcp = FastMCP(
     name="cp-wiki-read-only",
     instructions=(
-        "Read-only access to the local cp-wiki Obsidian vault. "
-        "The server can list, read and search Markdown notes and can list "
-        "and read JSON files as structured data, but cannot create, modify, "
-        "move or delete files."
+        "Read-only access to the live local cp-wiki. Canonical governance and "
+        "architecture live in cp-wiki, not in AGENTS.md, repository files, "
+        "session context or agent memory. For normative or material development "
+        "work, resolve stable IDs with resolve_active_artifact or "
+        "resolve_governance_bundle, require integrity_ok=true, then read the "
+        "active content with read_active_artifact. The server can list, read and "
+        "search Markdown notes and structured JSON, but cannot create, modify, "
+        "move or delete Vault files."
     ),
     host=DEFAULT_HTTP_HOST,
     port=DEFAULT_HTTP_PORT,
@@ -209,6 +222,48 @@ def search_vault_frontmatter(
             max_results=max_results,
         )
     ]
+
+
+@mcp.tool(annotations=read_only_annotations("Resolve active Managed Artifact"))
+def resolve_active_artifact(
+    stable_id: str,
+) -> dict[str, Any]:
+    """Resolve a stable/current or former ID to exactly one active artifact."""
+
+    vault = get_vault()
+    resolution = resolve_active_artifact_from_vault(vault, stable_id)
+
+    return asdict(resolution)
+
+
+@mcp.tool(annotations=read_only_annotations("Read active Managed Artifact"))
+def read_active_artifact(
+    stable_id: str,
+) -> dict[str, Any]:
+    """Resolve and read an active artifact, failing closed on integrity issues."""
+
+    vault = get_vault()
+    resolution, document = read_active_artifact_from_vault(vault, stable_id)
+
+    return {
+        "resolution": asdict(resolution),
+        "document": asdict(document),
+    }
+
+
+@mcp.tool(annotations=read_only_annotations("Resolve governance bundle"))
+def resolve_governance_bundle(
+    stable_ids: list[str],
+) -> dict[str, Any]:
+    """Resolve a bounded ordered bundle of stable IDs against the live Vault."""
+
+    vault = get_vault()
+    resolutions = resolve_governance_bundle_from_vault(vault, stable_ids)
+
+    return {
+        "requested_ids": stable_ids,
+        "artifacts": [asdict(item) for item in resolutions],
+    }
 
 
 @mcp.tool(annotations=read_only_annotations("Resolve vault wikilink"))
