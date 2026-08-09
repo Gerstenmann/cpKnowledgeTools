@@ -35,6 +35,7 @@ from cp_knowledge_tools.policy import (  # noqa: E402
     PolicyEvaluator,
     PolicyRule,
     PolicySubject,
+    ProfileApplicability,
 )
 from cp_knowledge_tools.publication import (  # noqa: E402
     PublicationUnitAssembler,
@@ -498,6 +499,7 @@ def main() -> int:
         restricted_evidence_subject,
     )
     evaluator = PolicyEvaluator()
+    profile_applicability = ProfileApplicability(resolution_status="resolved")
     claim_read_evaluation = PolicyEvaluationInput(
         policy_evaluation_ref="PEVAL-MVP-CLAIM-READ",
         actor_or_consumer_ref=CONSUMER_REF,
@@ -506,7 +508,8 @@ def main() -> int:
         subject_refs=(knowledge_object_subject,),
         policy_config_ref=policy_configuration.concrete_ref,
         processing_zone="local_synthetic_test",
-        profile_refs=("CPKS-SPEC-MEM@0.2",),
+        profile_refs=(),
+        profile_applicability=profile_applicability,
         policy_anchor_ids=("PA-KO",),
         requested_at="2026-08-09T00:00:00+02:00",
         context_valid_at="2026-08-09T00:00:00+02:00",
@@ -523,7 +526,8 @@ def main() -> int:
         subject_refs=(restricted_evidence_subject,),
         policy_config_ref=policy_configuration.concrete_ref,
         processing_zone="local_synthetic_test",
-        profile_refs=("CPKS-SPEC-MEM@0.2",),
+        profile_refs=(),
+        profile_applicability=profile_applicability,
         policy_anchor_ids=("PA-RESTRICTED-EVIDENCE",),
         requested_at="2026-08-09T00:00:00+02:00",
         context_valid_at="2026-08-09T00:00:00+02:00",
@@ -710,6 +714,10 @@ def main() -> int:
                 "policy_evaluation_ref": claim_read_evaluation.policy_evaluation_ref,
                 "requested_operation": claim_read_evaluation.requested_operation,
                 "policy_config_ref": claim_read_evaluation.policy_config_ref,
+                "profile_refs": claim_read_evaluation.profile_refs,
+                "profile_applicability_status": (
+                    claim_read_evaluation.profile_applicability.resolution_status
+                ),
                 "policy_anchor_ids": claim_read_evaluation.policy_anchor_ids,
                 "subject_refs": [
                     {
@@ -727,6 +735,10 @@ def main() -> int:
                 "policy_evaluation_ref": evidence_evaluation.policy_evaluation_ref,
                 "requested_operation": evidence_evaluation.requested_operation,
                 "policy_config_ref": evidence_evaluation.policy_config_ref,
+                "profile_refs": evidence_evaluation.profile_refs,
+                "profile_applicability_status": (
+                    evidence_evaluation.profile_applicability.resolution_status
+                ),
                 "policy_anchor_ids": evidence_evaluation.policy_anchor_ids,
                 "subject_refs": [
                     {

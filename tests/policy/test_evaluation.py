@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from cp_knowledge_tools.policy import (
@@ -8,10 +10,13 @@ from cp_knowledge_tools.policy import (
     PolicyEvaluator,
     PolicyRule,
     PolicySubject,
+    ProfileApplicability,
+    ProfileReferenceResolution,
 )
 
 CONSUMER = "consumer-test"
 PURPOSE = "retrieve-status"
+PROFILE_REF = "test.profile.delivery@1.0"
 KO = PolicySubject("knowledge_object", "KO-TEST", "0.1", "Semantic Core")
 EVIDENCE = PolicySubject(
     "evidence_address",
@@ -19,6 +24,38 @@ EVIDENCE = PolicySubject(
     "0.1",
     "Source and Evidence",
 )
+RESOLVED_EMPTY_PROFILES = ProfileApplicability(resolution_status="resolved")
+
+
+def _profile_resolution(
+    concrete_ref: str = PROFILE_REF,
+    *,
+    artifact_type: str = "profile_manifest",
+    lifecycle_status: str = "active",
+    applicable: bool = True,
+    compatible: bool = True,
+) -> ProfileReferenceResolution:
+    return ProfileReferenceResolution(
+        concrete_ref=concrete_ref,
+        artifact_type=artifact_type,
+        lifecycle_status=lifecycle_status,
+        applicable=applicable,
+        compatible=compatible,
+    )
+
+
+def _profile_context(
+    *resolutions: ProfileReferenceResolution,
+    resolution_status: str = "resolved",
+    required_profile_refs: tuple[str, ...] = (),
+    conflicting_profile_refs: tuple[str, ...] = (),
+) -> ProfileApplicability:
+    return ProfileApplicability(
+        resolution_status=resolution_status,
+        reference_resolutions=resolutions,
+        required_profile_refs=required_profile_refs,
+        conflicting_profile_refs=conflicting_profile_refs,
+    )
 
 
 def _configuration(*, status: str = "active") -> PolicyConfiguration:
@@ -57,6 +94,8 @@ def _evaluation(
     anchors: tuple[str, ...],
     *,
     policy_config_ref: str = "TEST-POLICY@0.1",
+    profile_refs: tuple[str, ...] = (),
+    profile_applicability: ProfileApplicability = RESOLVED_EMPTY_PROFILES,
 ) -> PolicyEvaluationInput:
     return PolicyEvaluationInput(
         policy_evaluation_ref=f"PEVAL-{operation}",
@@ -66,14 +105,15 @@ def _evaluation(
         subject_refs=(subject,),
         policy_config_ref=policy_config_ref,
         processing_zone="local_test",
-        profile_refs=("PROFILE@0.1",),
+        profile_refs=profile_refs,
+        profile_applicability=profile_applicability,
         policy_anchor_ids=anchors,
         requested_at="2026-08-09T00:00:00+02:00",
         context_valid_at="2026-08-09T00:00:00+02:00",
     )
 
 
-def test_claim_read_and_evidence_resolution_are_independent() -> None:
+def test_resolved_empty_profile_set_keeps_policy_operations_independent() -> None:
     evaluator = PolicyEvaluator()
     configuration = _configuration()
 
@@ -96,6 +136,134 @@ def test_claim_read_and_evidence_resolution_are_independent() -> None:
     assert evidence_decision.result == "deny"
     assert evidence_decision.authorized_actions == ()
     assert evidence_decision.authorized_subject_refs == ()
+
+
+def test_resolved_applicable_profile_is_accepted_but_does_not_decide() -> None:
+    evaluation = _evaluation(
+        "claim_read",
+        KO,
+        ("PA-KO",),
+        profile_refs=(PROFILE_REF,),
+        profile_applicability=_profile_context(_profile_resolution()),
+    )
+
+    decision = PolicyEvaluator().evaluate(evaluation, _configuration())
+
+    assert decision.result == "permit"
+    assert decision.decision_reasons == ("claim_read_allowed",)
+
+
+@pytest.mark.parametrize(
+    ("evaluation", "reason"),
+    [
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_applicability=_profile_context(
+                    resolution_status="unresolved"
+                ),
+            ),
+            "policy_profile_reference_unresolved",
+        ),
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_applicability=_profile_context(_profile_resolution()),
+            ),
+            "policy_applicable_profile_missing",
+        ),
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_refs=("CPKS-SPEC-MEM@0.3",),
+                profile_applicability=_profile_context(
+                    _profile_resolution(
+                        "CPKS-SPEC-MEM@0.3",
+                        artifact_type="specification",
+                    )
+                ),
+            ),
+            "policy_profile_reference_type_invalid",
+        ),
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_refs=(PROFILE_REF,),
+                profile_applicability=_profile_context(
+                    _profile_resolution(compatible=False)
+                ),
+            ),
+            "policy_profile_not_applicable",
+        ),
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_refs=(PROFILE_REF,),
+                profile_applicability=_profile_context(
+                    _profile_resolution(lifecycle_status="withdrawn")
+                ),
+            ),
+            "policy_profile_not_applicable",
+        ),
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_refs=(PROFILE_REF,),
+                profile_applicability=_profile_context(
+                    _profile_resolution(applicable=False)
+                ),
+            ),
+            "policy_profile_not_applicable",
+        ),
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_refs=("test.profile.delivery",),
+                profile_applicability=_profile_context(
+                    _profile_resolution("test.profile.delivery")
+                ),
+            ),
+            "policy_profile_reference_unresolved",
+        ),
+        (
+            _evaluation(
+                "claim_read",
+                KO,
+                ("PA-KO",),
+                profile_refs=(PROFILE_REF,),
+                profile_applicability=_profile_context(
+                    _profile_resolution(),
+                    conflicting_profile_refs=(PROFILE_REF,),
+                ),
+            ),
+            "policy_profile_conflict",
+        ),
+    ],
+)
+def test_profile_context_failures_deny(
+    evaluation: PolicyEvaluationInput,
+    reason: str,
+) -> None:
+    decision = PolicyEvaluator().evaluate(evaluation, _configuration())
+
+    assert decision.result == "deny"
+    assert decision.authorized_actions == ()
+    assert decision.authorized_subject_refs == ()
+    assert decision.decision_reasons == (reason,)
 
 
 @pytest.mark.parametrize(
@@ -183,18 +351,9 @@ def test_partial_subject_policy_does_not_authorize_broader_scope() -> None:
         "Semantic Core",
     )
     evaluation = _evaluation("claim_read", KO, ("PA-KO",))
-    evaluation = PolicyEvaluationInput(
-        policy_evaluation_ref=evaluation.policy_evaluation_ref,
-        actor_or_consumer_ref=evaluation.actor_or_consumer_ref,
-        purpose=evaluation.purpose,
-        requested_operation=evaluation.requested_operation,
+    evaluation = replace(
+        evaluation,
         subject_refs=(KO, other_subject),
-        policy_config_ref=evaluation.policy_config_ref,
-        processing_zone=evaluation.processing_zone,
-        profile_refs=evaluation.profile_refs,
-        policy_anchor_ids=evaluation.policy_anchor_ids,
-        requested_at=evaluation.requested_at,
-        context_valid_at=evaluation.context_valid_at,
     )
 
     decision = PolicyEvaluator().evaluate(evaluation, _configuration())

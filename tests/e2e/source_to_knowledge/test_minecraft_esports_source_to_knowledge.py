@@ -212,8 +212,20 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         == policy_expected["restricted_evidence_resolution"]["expected"]
     )
     assert policy["claim_read_decision"]["authorized_actions"] == ["claim_read"]
+    assert policy["claim_read_evaluation"]["profile_refs"] == []
+    assert (
+        policy["claim_read_evaluation"]["profile_applicability_status"]
+        == "resolved"
+    )
     assert policy["claim_read_evaluation"]["policy_anchor_ids"] == ["PA-KO"]
     assert policy["evidence_resolution_decision"]["authorized_actions"] == []
+    assert policy["evidence_resolution_evaluation"]["profile_refs"] == []
+    assert (
+        policy["evidence_resolution_evaluation"][
+            "profile_applicability_status"
+        ]
+        == "resolved"
+    )
     assert policy["evidence_resolution_evaluation"]["policy_anchor_ids"] == [
         "PA-RESTRICTED-EVIDENCE"
     ]

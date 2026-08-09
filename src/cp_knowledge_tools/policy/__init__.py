@@ -5,6 +5,8 @@ from .evaluation import (
     PolicyEvaluator,
     PolicyRule,
     PolicySubject,
+    ProfileApplicability,
+    ProfileReferenceResolution,
 )
 
 __all__ = [
@@ -14,4 +16,6 @@ __all__ = [
     "PolicyEvaluator",
     "PolicyRule",
     "PolicySubject",
+    "ProfileApplicability",
+    "ProfileReferenceResolution",
 ]

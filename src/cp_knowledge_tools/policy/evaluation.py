@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass
 from typing import Literal
 
@@ -7,8 +8,10 @@ from cp_knowledge_tools.platform.hashing import canonical_json_hash
 
 PolicyEffect = Literal["permit", "deny"]
 PolicyOperation = Literal["claim_read", "evidence_resolution"]
+ProfileResolutionStatus = Literal["resolved", "unresolved"]
 
 SUPPORTED_OPERATIONS = frozenset({"claim_read", "evidence_resolution"})
+PROFILE_VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+(?:\.[0-9]+)?$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,6 +20,27 @@ class PolicySubject:
     stable_id: str
     version: str
     authority_context: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileReferenceResolution:
+    """A caller-supplied result of concrete Profile Manifest checks."""
+
+    concrete_ref: str
+    artifact_type: str
+    lifecycle_status: str
+    applicable: bool
+    compatible: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileApplicability:
+    """Resolved applicable Profile set; this context grants no authority."""
+
+    resolution_status: ProfileResolutionStatus
+    reference_resolutions: tuple[ProfileReferenceResolution, ...] = ()
+    required_profile_refs: tuple[str, ...] = ()
+    conflicting_profile_refs: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,6 +53,7 @@ class PolicyEvaluationInput:
     policy_config_ref: str
     processing_zone: str
     profile_refs: tuple[str, ...]
+    profile_applicability: ProfileApplicability
     policy_anchor_ids: tuple[str, ...]
     requested_at: str
     context_valid_at: str
@@ -82,7 +107,8 @@ class PolicyEvaluator:
 
     This is deliberately an exact-match evaluator, not a general policy engine.
     A permit exists only when one active, concrete configuration contains an
-    applicable permit rule and no applicable deny or unresolved conflict.
+    applicable permit rule, the Profile context is complete, and no applicable
+    deny or unresolved conflict exists.
     """
 
     def evaluate(
@@ -153,8 +179,9 @@ class PolicyEvaluator:
             return "policy_subject_missing"
         if not evaluation.processing_zone:
             return "processing_zone_unknown"
-        if not evaluation.profile_refs:
-            return "policy_profile_missing"
+        profile_failure = self._profile_failure(evaluation)
+        if profile_failure is not None:
+            return profile_failure
         if configuration is None:
             return "policy_configuration_missing"
         if configuration.status != "active":
@@ -164,6 +191,59 @@ class PolicyEvaluator:
         if evaluation.policy_config_ref != configuration.concrete_ref:
             return "policy_configuration_not_applicable"
         return None
+
+    def _profile_failure(self, evaluation: PolicyEvaluationInput) -> str | None:
+        context = evaluation.profile_applicability
+        if context.resolution_status != "resolved":
+            return "policy_profile_reference_unresolved"
+
+        resolutions: dict[str, ProfileReferenceResolution] = {}
+        for resolution in context.reference_resolutions:
+            if resolution.concrete_ref in resolutions:
+                return "policy_profile_conflict"
+            resolutions[resolution.concrete_ref] = resolution
+
+        supplied_refs = set(evaluation.profile_refs)
+        if len(supplied_refs) != len(evaluation.profile_refs):
+            return "policy_profile_conflict"
+
+        required_refs = set(context.required_profile_refs)
+        expected_refs = required_refs | {
+            resolution.concrete_ref
+            for resolution in context.reference_resolutions
+            if resolution.applicable
+            and resolution.artifact_type == "profile_manifest"
+        }
+
+        for concrete_ref in supplied_refs | expected_refs:
+            resolution = resolutions.get(concrete_ref)
+            if resolution is None or not self._is_concrete_profile_ref(concrete_ref):
+                return "policy_profile_reference_unresolved"
+            if resolution.artifact_type != "profile_manifest":
+                return "policy_profile_reference_type_invalid"
+            if (
+                resolution.lifecycle_status != "active"
+                or not resolution.applicable
+                or not resolution.compatible
+            ):
+                return "policy_profile_not_applicable"
+
+        if context.conflicting_profile_refs:
+            return "policy_profile_conflict"
+        if expected_refs - supplied_refs:
+            return "policy_applicable_profile_missing"
+        if supplied_refs - expected_refs:
+            return "policy_profile_not_applicable"
+        return None
+
+    @staticmethod
+    def _is_concrete_profile_ref(value: str) -> bool:
+        profile_ref, separator, profile_version = value.rpartition("@")
+        return bool(
+            profile_ref
+            and separator
+            and PROFILE_VERSION_PATTERN.fullmatch(profile_version)
+        )
 
     def _applies(
         self,
