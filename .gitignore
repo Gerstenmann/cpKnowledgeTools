@@ -44,6 +44,5 @@ dist/
 artifacts/
 Diffs/
 
-# Generated outputs
-artifacts/
-Diffs/
+# One-off local work scripts
+/scripts/
