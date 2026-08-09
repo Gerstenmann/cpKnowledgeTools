@@ -42,9 +42,12 @@ class DerivedRetrievalBuilder:
             manifest["conflict_sets"], key=lambda item: item["conflict_set_id"]
         )
         projection = {
+            "projection_schema_version": "0.1",
             "knowledge_object_ref": {
+                "subject_type": "knowledge_object",
                 "stable_id": manifest["knowledge_object_id"],
                 "version": manifest["knowledge_object_version"],
+                "authority_context": "Semantic Core",
             },
             "claim_index": claims,
             "event_index": events,
@@ -56,7 +59,9 @@ class DerivedRetrievalBuilder:
             "conflict_index": conflicts,
             "policy_index": manifest["policy_anchors"],
         }
-        projection["semantic_hash"] = canonical_json_hash(projection)
+        semantic_hash = canonical_json_hash(projection)
+        projection["projection_ref"] = f"DRP-{semantic_hash[:24].upper()}"
+        projection["semantic_hash"] = semantic_hash
         return projection
 
     def write(self, projection: dict[str, Any], path: Path) -> None:

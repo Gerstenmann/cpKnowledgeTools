@@ -211,6 +211,14 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         policy["restricted_evidence_resolution"]
         == policy_expected["restricted_evidence_resolution"]["expected"]
     )
+    assert policy["claim_read_decision"]["authorized_actions"] == ["claim_read"]
+    assert policy["claim_read_evaluation"]["policy_anchor_ids"] == ["PA-KO"]
+    assert policy["evidence_resolution_decision"]["authorized_actions"] == []
+    assert policy["evidence_resolution_evaluation"]["policy_anchor_ids"] == [
+        "PA-RESTRICTED-EVIDENCE"
+    ]
+    assert policy["restricted_evidence_loader_called"] is False
+    assert policy["consumer_visible_output"]["evidence_content"] is None
     consumer_view = json.dumps(policy["consumer_visible_output"], ensure_ascii=False)
     for literal in policy_expected["forbidden_leak_literals"]:
         assert literal not in consumer_view
@@ -241,6 +249,29 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         actual = retrieval_index.get(expected["query_key"])
         assert actual is not None, f"Missing retrieval case {expected['query_key']}"
         rendered = actual["rendered_answer"]
+        expected_claims = set(
+            expected.get("required_current_claim_gt_ids", ())
+        ) | set(expected.get("required_claim_gt_ids", ()))
+        assert set(actual["claim_keys"]) == expected_claims
+        assert actual["actual_claim_refs"]
+        assert actual["publication_unit_ref"] == {
+            "subject_type": "knowledge_object",
+            "stable_id": publication_expected["knowledge_object_id"],
+            "version": publication_expected["knowledge_object_version"],
+            "authority_context": "Semantic Core",
+        }
+        assert actual["projection_ref"].startswith("DRP-")
+        structured = actual["structured_result"]
+        assert structured["outcome"] == "results"
+        assert structured["policy_decision_ref"] == policy[
+            "claim_read_decision"
+        ]["policy_decision_ref"]
+        assert structured["evidence_content_resolved"] is False
+        for item in structured["claim_items"]:
+            assert item["subject_ref"]["stable_id"] in actual[
+                "actual_claim_refs"
+            ]
+            assert item["evidence_content_resolved"] is False
 
         for text in expected.get("must_contain", []):
             assert text in rendered
@@ -261,5 +292,9 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
     assert rebuild["derived_state_deleted"] is True
     assert rebuild["rebuild_success"] is True
     assert rebuild["semantic_equivalent"] is True
+    assert (
+        rebuild["retrieval_result_signatures_before"]
+        == rebuild["retrieval_result_signatures_after"]
+    )
     for key in rebuild_expected["must_preserve"]:
         assert rebuild["preserved"][key] is True

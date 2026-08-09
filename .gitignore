@@ -43,6 +43,3 @@ dist/
 # Generated outputs
 artifacts/
 Diffs/
-
-# One-off local work scripts
-/scripts/

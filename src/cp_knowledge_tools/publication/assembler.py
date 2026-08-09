@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 
+
 def _ref(subject_type: str, stable_id: str, authority_context: str = "Semantic Core") -> dict[str, Any]:
     return {
         "subject_type": subject_type,
@@ -54,7 +55,9 @@ class PublicationUnitAssembler:
         output_path: Path,
         pilot_entity_rule_keys: list[str],
         restricted_evidence_rule_key: str,
+        policy_refs: list[str] | None = None,
     ) -> dict[str, Any]:
+        policy_refs = list(policy_refs or [])
         entity_by_key = {item["rule_key"]: item for item in semantic["entities"]}
         evidence_rule_by_ref = {
             item.evidence_address_ref: rule_key for rule_key, item in evidence.items()
@@ -193,7 +196,7 @@ class PublicationUnitAssembler:
             {
                 "policy_anchor_id": "PA-KO",
                 "subject_refs": [ko_ref],
-                "policy_refs": [],
+                "policy_refs": policy_refs,
                 "policy_decision_refs": [],
                 "dimensions": [
                     "discoverability",
@@ -218,7 +221,7 @@ class PublicationUnitAssembler:
                         "Source and Evidence",
                     )
                 ],
-                "policy_refs": [],
+                "policy_refs": policy_refs,
                 "policy_decision_refs": [],
                 "dimensions": ["evidence_resolution", "quotation", "export"],
                 "narrative_anchor": "restricted-evidence-policy",
