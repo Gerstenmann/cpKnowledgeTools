@@ -558,6 +558,32 @@ def iter_candidate_paths(vault: Path) -> Iterable[Path]:
             seen.add(resolved)
             yield path
 
+
+def iter_resolution_paths(vault: Path) -> Iterable[Path]:
+    """Yield the managed-artifact lifecycle universe used for resolution.
+
+    Validation profiles intentionally cover only ``iter_candidate_paths()``.
+    Concrete references, however, may target historical versions elsewhere in
+    the canonical lifecycle trees.
+    """
+    roots = [
+        vault / "Systems",
+        vault / "Development",
+        vault / "Templates",
+        vault / "Processes",
+    ]
+    seen: set[Path] = set()
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in root.rglob("*.md"):
+            resolved = path.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            yield path
+
+
 def load_document(vault: Path, path: Path) -> Document:
     relative = path.relative_to(vault).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -2114,6 +2140,7 @@ def validate_global(
     documents: list[Document],
     findings: list[Finding],
     aliases: AliasIndex,
+    resolution_documents: list[Document],
 ) -> None:
     managed = [
         doc for doc in documents if doc.scope_class == "managed" and not doc.parse_error
@@ -2170,7 +2197,7 @@ def validate_global(
 
     validate_version_sequences(documents, findings, aliases)
 
-    exact, active = build_resolution_indexes(documents, aliases)
+    exact, active = build_resolution_indexes(resolution_documents, aliases)
     for doc in documents:
         if doc.parse_error or doc.scope_class not in {"managed", "support"}:
             continue
@@ -2216,9 +2243,17 @@ def validate_vault(
     documents = [load_document(vault, path) for path in iter_candidate_paths(vault)]
     findings: list[Finding] = []
     aliases = build_alias_index(documents, findings)
+    documents_by_path = {document.path.resolve(): document for document in documents}
+    resolution_documents = list(documents)
+    for path in iter_resolution_paths(vault):
+        if path.resolve() in documents_by_path:
+            continue
+        document = load_document(vault, path)
+        if document.scope_class == "managed" and not document.parse_error:
+            resolution_documents.append(document)
     for document in documents:
         validate_document(document, findings, aliases)
-    validate_global(documents, findings, aliases)
+    validate_global(documents, findings, aliases, resolution_documents)
     findings, acknowledgement_stats = apply_acknowledgements(documents, findings)
     return documents, findings, aliases, acknowledgement_stats
 
@@ -2938,6 +2973,124 @@ def run_self_tests() -> dict[str, Any]:
                     f"Expected diagnostic not produced: {required_code}"
                 )
 
+        # Resolution-universe regression: historical targets outside the
+        # current validation roots must resolve without being validated as
+        # current artifacts. Missing and duplicate exact targets remain errors.
+        resolution_vault = Path(temp) / "resolution-universe"
+        resolution_consumer_path = Path(
+            "Systems/cpKnowledgeSystem/Governance/Policies/"
+            "TEST-REFERENCE-CONSUMER Resolution Consumer.md"
+        )
+        historical_target_path = Path(
+            "Systems/cpKnowledgeTools/Archive/Specifications/"
+            "TEST-HISTORY@0.1 Historical Specification.md"
+        )
+        duplicate_target_paths = (
+            Path(
+                "Systems/cpKnowledgeTools/Archive/Specifications/A/"
+                "TEST-DUP@0.1 Duplicate Specification.md"
+            ),
+            Path(
+                "Systems/cpKnowledgeTools/Archive/Specifications/B/"
+                "TEST-DUP@0.1 Duplicate Specification.md"
+            ),
+        )
+        write_fixture(
+            resolution_vault / resolution_consumer_path,
+            managed_note(
+                document_type="policy",
+                id_field="policy_id",
+                artifact_id="TEST-REFERENCE-CONSUMER",
+                title="Resolution Consumer",
+                version="0.1",
+                status="active",
+                canonical_path=resolution_consumer_path.as_posix(),
+                extra=(
+                    "validated_against:\n"
+                    "  - TEST-HISTORY@0.1\n"
+                    "  - TEST-HISTORY@9.9\n"
+                    "  - TEST-DUP@0.1\n"
+                ),
+            ),
+        )
+        write_fixture(
+            resolution_vault / historical_target_path,
+            managed_note(
+                document_type="specification",
+                id_field="specification_id",
+                artifact_id="TEST-HISTORY",
+                title="Historical Specification",
+                version="0.1",
+                status="superseded",
+                canonical_path=historical_target_path.as_posix(),
+            ),
+        )
+        for path in duplicate_target_paths:
+            write_fixture(
+                resolution_vault / path,
+                managed_note(
+                    document_type="specification",
+                    id_field="specification_id",
+                    artifact_id="TEST-DUP",
+                    title="Duplicate Specification",
+                    version="0.1",
+                    status="superseded",
+                    canonical_path=path.as_posix(),
+                ),
+            )
+
+        resolution_documents, resolution_findings, _, _ = validate_vault(
+            resolution_vault
+        )
+        validation_paths = {doc.relative_path for doc in resolution_documents}
+        if historical_target_path.as_posix() in validation_paths or any(
+            path.as_posix() in validation_paths for path in duplicate_target_paths
+        ):
+            raise SelfTestFailure(
+                "Resolution-only historical targets entered the validation scope."
+            )
+        resolution_paths = {
+            path.relative_to(resolution_vault).as_posix()
+            for path in iter_resolution_paths(resolution_vault)
+        }
+        if historical_target_path.as_posix() not in resolution_paths:
+            raise SelfTestFailure(
+                "Historical target was not discovered in the resolution universe."
+            )
+        consumer_findings = [
+            finding
+            for finding in resolution_findings
+            if finding.path == resolution_consumer_path.as_posix()
+        ]
+        if any(
+            finding.code == "unresolved_versioned_reference"
+            and finding.actual == "TEST-HISTORY@0.1"
+            for finding in consumer_findings
+        ):
+            raise SelfTestFailure(
+                "Existing historical version did not resolve from the "
+                "resolution universe."
+            )
+        if not any(
+            finding.code == "unresolved_versioned_reference"
+            and finding.actual == "TEST-HISTORY@9.9"
+            and finding.severity == "error"
+            for finding in consumer_findings
+        ):
+            raise SelfTestFailure(
+                "Missing historical version did not produce an "
+                "unresolved-reference error."
+            )
+        if not any(
+            finding.code == "parallel_canonical_version"
+            and finding.actual == "TEST-DUP@0.1"
+            and finding.severity == "error"
+            for finding in consumer_findings
+        ):
+            raise SelfTestFailure(
+                "Duplicate exact targets did not produce an integrity error."
+            )
+
         # Negative guardrails: invalid YAML, duplicate version, invalid target,
         # current legacy relation and filename mismatch must all be detected.
         negative = Path(temp) / "negative"
@@ -3147,6 +3300,12 @@ def run_self_tests() -> dict[str, Any]:
             "alias_mappings": aliases.aliases,
             "acknowledgement_stats": asdict(acknowledgement_stats),
             "filename_cases": len(filename_cases),
+            "resolution_regression": {
+                "historical_target_resolved": True,
+                "historical_target_outside_validation_scope": True,
+                "missing_target_rejected": True,
+                "duplicate_target_rejected": True,
+            },
         }
 
 
