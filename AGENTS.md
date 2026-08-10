@@ -116,6 +116,18 @@ Local repository write access does not authorize:
 
 Do not perform those actions unless the current task explicitly authorizes them and all applicable governance is resolved.
 
+Before repository work, determine the current shared development branch.
+
+Use that branch by default.
+
+Create a separate branch/worktree only for a concrete isolation need.
+After isolated work, integrate it back into the shared development branch
+before integrating into main.
+
+Do not use main as a parallel development line. 
+
+
+
 ## Validation
 
 For Python changes, run the narrowest relevant tests first, then broaden when useful. Typical commands are:
