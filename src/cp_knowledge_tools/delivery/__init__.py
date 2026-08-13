@@ -10,6 +10,7 @@ from .continuation import (
     ContinuationResult,
     ContinuationServices,
     PolicyContext,
+    derive_lesson_learned_required_gap_refs,
 )
 from .experience import (
     ExperienceRetrievalRequest,
@@ -37,6 +38,7 @@ __all__ = [
     "ContinuationRequest",
     "ContinuationResult",
     "ContinuationServices",
+    "derive_lesson_learned_required_gap_refs",
     "EvidenceResolutionRequest",
     "EvidenceResolutionResult",
     "EvidenceResolver",

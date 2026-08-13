@@ -1,0 +1,190 @@
+{
+  "scenario_ref": "GT-S2K-CONTINUATION-01",
+  "scenario_version": "0.2",
+  "scenario_role": "frontier",
+  "previous_scenario_ref": "GT-S2K-CONTINUATION-01@0.1",
+  "previous_scenario_sha256": "74fafb8f55be8e5f7aca6880c15d541310ce325311f892d2e247aef527c76230",
+  "change_rationale": [
+    "Scenario 0.1 passed machine validation.",
+    "Owner/Human Review identified epistemically too-strong gap closure.",
+    "Approval of a second cycle does not prove that repetition occurred or became institutionalized.",
+    "The correction is controlled scenario evolution and must not be fitted into the preserved 0.1 output."
+  ],
+  "capability_ref": "HR-004",
+  "purpose": "similar_experience_retrieval",
+  "parent_regression_scenario_ref": "GT-S2K-MINI-DOSSIER-01",
+  "parent_regression_scenario_version": "1.2",
+  "work_package_ref": "CPKS-WP-002@0.1",
+  "sensitivity": "synthetic_non_sensitive",
+  "golden_as_of": "2024-09-06T15:30:00+02:00",
+  "preserve": {
+    "scenario_sha256": "9b0aff713d9f8af576573eb6fc10bafa542b4959b283fc0bdc69ae66c866645c",
+    "experience_ref": "EXP-GT-ME-ESPORTS-PILOT-RMIS-2024",
+    "knowledge_object_ref": "KO-GT-ME-ESPORTS-PILOT@0.1",
+    "experience_projection_hash": "9c25be04caebc0e7a8e5b7ac46029f22d36ec5c2ce86417f3c5536889b3cca49",
+    "continuation_requirement_ref": "EXP-CONT-01",
+    "gap_refs": [
+      "EXP-GAP-PILOT-EXECUTION",
+      "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+      "EXP-GAP-PILOT-EVALUATION-RESULT",
+      "EXP-GAP-PILOT-OUTCOME",
+      "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP",
+      "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP",
+      "EXP-GAP-PILOT-REPETITION"
+    ],
+    "lesson_learned_required_gap_refs": [
+      "EXP-GAP-PILOT-EXECUTION",
+      "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+      "EXP-GAP-PILOT-EVALUATION-RESULT",
+      "EXP-GAP-PILOT-OUTCOME"
+    ],
+    "follow_up_gap_questions": {
+      "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP": "Was classroom integration later introduced or rejected?",
+      "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP": "Was external competition later approved or rejected?",
+      "EXP-GAP-PILOT-REPETITION": "Was the pilot repeated or institutionalized?"
+    },
+    "critical_gap_refs": [
+      "EXP-GAP-PILOT-EXECUTION",
+      "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+      "EXP-GAP-PILOT-EVALUATION-RESULT",
+      "EXP-GAP-PILOT-OUTCOME",
+      "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP"
+    ]
+  },
+  "candidate_sources": [
+    {
+      "source_ref": "DOC-04",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/04-pilot-evaluation-summary.html",
+      "sha256": "1c65b3e9a7f580beaeb93379ea15b92cfaa4568349297bce46ffad416dbab116",
+      "role": "evaluation_and_outcome"
+    },
+    {
+      "source_ref": "DOC-05",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/05-spring-follow-up-decisions.html",
+      "sha256": "884f481547017e34de9af83a6097e46056f8514e168875f0cf501edf6067745a",
+      "role": "follow_up_decisions"
+    },
+    {
+      "source_ref": "DOC-06",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/06-workshop-room-note.html",
+      "sha256": "32e1ac8465e95a7a4a3c7dec96ba65482b4888368004c77fe30878fe8af4697d",
+      "role": "decoy"
+    }
+  ],
+  "budget_profiles": {
+    "standard": {
+      "max_candidate_sources": 3,
+      "max_search_rounds": 2,
+      "max_metadata_reads": 3,
+      "max_content_reads": 2,
+      "max_branches": 1,
+      "max_depth": 1
+    },
+    "tight": {
+      "max_candidate_sources": 3,
+      "max_search_rounds": 1,
+      "max_metadata_reads": 3,
+      "max_content_reads": 1,
+      "max_branches": 0,
+      "max_depth": 1
+    }
+  },
+  "golden_truth": {
+    "DOC-04": {
+      "resolved_gap_refs": [
+        "EXP-GAP-PILOT-EXECUTION",
+        "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+        "EXP-GAP-PILOT-EVALUATION-RESULT",
+        "EXP-GAP-PILOT-OUTCOME"
+      ],
+      "informed_gap_refs": [
+        "EXP-GAP-PILOT-EXECUTION",
+        "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+        "EXP-GAP-PILOT-EVALUATION-RESULT",
+        "EXP-GAP-PILOT-OUTCOME"
+      ],
+      "facts": {
+        "engagement_and_teamwork": "strong",
+        "coding_progression": "mixed",
+        "technical_operation": "stable_after_first_session",
+        "overall_assessment": "promising_after_school_not_ready_for_classroom"
+      }
+    },
+    "DOC-05": {
+      "resolved_gap_refs": [],
+      "informed_gap_refs": [
+        "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP",
+        "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP",
+        "EXP-GAP-PILOT-REPETITION"
+      ],
+      "facts": {
+        "second_after_school_cycle": "approved",
+        "classroom_2024_25": "not_introduced",
+        "classroom_long_term": "not_permanently_rejected",
+        "external_competition_2024_25": "not_planned",
+        "external_competition_long_term": "not_permanently_excluded"
+      }
+    },
+    "DOC-06": {
+      "resolved_gap_refs": [],
+      "informed_gap_refs": [],
+      "facts": {}
+    }
+  },
+  "cases": {
+    "standard": {
+      "expected_outcome": "partial",
+      "expected_stop_reason": "candidate_scope_exhausted",
+      "expected_content_reads": ["DOC-04", "DOC-05"],
+      "expected_resolved_gap_count": 4,
+      "expected_unresolved_gap_refs": [
+        "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP",
+        "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP",
+        "EXP-GAP-PILOT-REPETITION"
+      ],
+      "expected_evidence_refs": ["CE-DOC-04", "CE-DOC-05"],
+      "expected_lesson_learned_eligibility": "eligible"
+    },
+    "tight_budget": {
+      "expected_outcome": "partial",
+      "expected_stop_reason": "budget_exhausted",
+      "expected_content_read_count": 1,
+      "expected_resolved_gap_count": 4,
+      "expected_unresolved_gap_refs": [
+        "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP",
+        "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP",
+        "EXP-GAP-PILOT-REPETITION"
+      ],
+      "expected_lesson_learned_eligibility": "eligible"
+    },
+    "no_discovery_authorization": {
+      "expected_outcome": "denied",
+      "expected_stop_reason": "discover_not_authorized",
+      "expected_sources_discovered": []
+    },
+    "metadata_allowed_content_denied": {
+      "expected_outcome": "partial",
+      "expected_stop_reason": "content_not_authorized",
+      "expected_content_read_count": 0,
+      "expected_resolved_gap_count": 0
+    },
+    "decoy": {
+      "expected_outcome": "no_results",
+      "expected_stop_reason": "no_relevant_candidates",
+      "expected_content_read_count": 0,
+      "expected_resolved_gap_count": 0
+    },
+    "no_silent_write": {
+      "preserve_inputs_unchanged": true,
+      "result_state_only": true
+    }
+  },
+  "human_review": {
+    "required": true,
+    "implementing_agent_may_approve": false,
+    "effectiveness_question": "Wir planen etwas Ähnliches für eine andere Schule. Was haben wir aus dem damaligen Pilot gelernt?",
+    "must_not_infer_universal_transferability": true,
+    "review_finding_ref": "HR004-F001",
+    "review_finding": "Approval is informative future intent, not evidence that repetition occurred or became institutionalized."
+  }
+}

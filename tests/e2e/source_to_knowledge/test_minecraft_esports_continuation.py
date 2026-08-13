@@ -19,12 +19,20 @@ from cp_knowledge_tools.delivery.continuation import (
     ContinuationRequest,
     ContinuationServices,
     PolicyContext,
+    derive_lesson_learned_required_gap_refs,
 )
 
 ROOT = Path(__file__).parents[3]
 SCENARIO_PATH = ROOT / (
     "tests/golden/source_to_knowledge/minecraft_esports/continuation/"
+    "expected/scenario.v0.2.json"
+)
+PREVIOUS_SCENARIO_PATH = ROOT / (
+    "tests/golden/source_to_knowledge/minecraft_esports/continuation/"
     "expected/scenario.v0.1.json"
+)
+PREVIOUS_SCENARIO_SHA256 = (
+    "74fafb8f55be8e5f7aca6880c15d541310ce325311f892d2e247aef527c76230"
 )
 BASELINE_SCENARIO_PATH = ROOT / (
     "tests/golden/source_to_knowledge/minecraft_esports/expected/scenario.v1.json"
@@ -53,12 +61,51 @@ def _scenario() -> dict[str, Any]:
     return json.loads(SCENARIO_PATH.read_text(encoding="utf-8"))
 
 
+def _experience_projection() -> dict[str, Any]:
+    return json.loads(BASELINE_EXPERIENCE_PATH.read_text(encoding="utf-8"))
+
+
 def test_scenario_fixture_hashes_are_fixed() -> None:
     scenario = _scenario()
 
     for candidate in scenario["candidate_sources"]:
         payload = (ROOT / candidate["path"]).read_bytes()
         assert hashlib.sha256(payload).hexdigest() == candidate["sha256"]
+
+
+def test_previous_scenario_is_preserved_byte_for_byte() -> None:
+    assert (
+        hashlib.sha256(PREVIOUS_SCENARIO_PATH.read_bytes()).hexdigest()
+        == PREVIOUS_SCENARIO_SHA256
+    )
+
+
+def test_lesson_required_gaps_follow_preserved_projection_phase_semantics() -> None:
+    scenario = _scenario()
+    derived = derive_lesson_learned_required_gap_refs(
+        _experience_projection(), tuple(scenario["preserve"]["gap_refs"])
+    )
+
+    assert list(derived) == scenario["preserve"][
+        "lesson_learned_required_gap_refs"
+    ]
+
+
+def test_follow_up_questions_are_preserved_from_the_parent_projection() -> None:
+    scenario = _scenario()
+    questions = {
+        gap["gap_ref"]: gap["question"]
+        for gap in _experience_projection()["gaps"]
+        if gap["phase_ref"] == "follow_up"
+    }
+
+    assert questions == scenario["preserve"]["follow_up_gap_questions"]
+    assert questions["EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP"] == (
+        "Was classroom integration later introduced or rejected?"
+    )
+    assert questions["EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP"] == (
+        "Was external competition later approved or rejected?"
+    )
 
 
 def test_golden_expectations_are_not_pipeline_inputs() -> None:
@@ -80,8 +127,8 @@ def test_golden_expectations_are_not_pipeline_inputs() -> None:
         _authorizer(calls),
     )
 
-    assert result.outcome == "complete"
-    assert len(result.resolved_gaps) == 7
+    assert result.outcome == "partial"
+    assert len(result.resolved_gaps) == 4
 
 
 class ScenarioRepository:
@@ -147,31 +194,49 @@ class ScenarioRepository:
             for node in soup.select("[data-fact][data-value]")
         )
         fact_names = {name for name, _ in facts}
-        coverage_by_fact = {
+        resolution_by_fact = {
             "pilot_execution": ("PILOT-EXECUTION",),
             "pilot_evaluation_occurrence": ("PILOT-EVALUATION-OCCURRENCE",),
             "coding_progression": ("PILOT-EVALUATION-RESULT",),
             "overall_assessment": ("PILOT-OUTCOME",),
+        }
+        information_by_fact = {
+            **resolution_by_fact,
             "second_after_school_cycle": ("PILOT-REPETITION",),
             "classroom_2024_25": ("CLASSROOM-INTEGRATION-FOLLOWUP",),
+            "classroom_long_term": ("CLASSROOM-INTEGRATION-FOLLOWUP",),
             "external_competition_2024_25": (
                 "EXTERNAL-COMPETITION-FOLLOWUP",
             ),
+            "external_competition_long_term": (
+                "EXTERNAL-COMPETITION-FOLLOWUP",
+            ),
         }
-        covered_suffixes = {
+        resolved_suffixes = {
             suffix
             for fact_name in fact_names
-            for suffix in coverage_by_fact.get(fact_name, ())
+            for suffix in resolution_by_fact.get(fact_name, ())
+        }
+        informed_suffixes = {
+            suffix
+            for fact_name in fact_names
+            for suffix in information_by_fact.get(fact_name, ())
         }
         resolved = tuple(
             gap_ref
             for gap_ref in gap_refs
-            if any(gap_ref.endswith(suffix) for suffix in covered_suffixes)
+            if any(gap_ref.endswith(suffix) for suffix in resolved_suffixes)
+        )
+        informed = tuple(
+            gap_ref
+            for gap_ref in gap_refs
+            if any(gap_ref.endswith(suffix) for suffix in informed_suffixes)
         )
         return CandidateEvidence(
             evidence_ref=f"CE-{metadata.candidate_ref}",
             source_ref=metadata.candidate_ref,
             resolved_gap_refs=resolved,
+            informed_gap_refs=informed,
             facts=facts,
         )
 
@@ -198,6 +263,9 @@ def _request(
             "continuation_requirement_ref"
         ],
         gap_refs=tuple(scenario["preserve"]["gap_refs"]),
+        lesson_learned_required_gap_refs=derive_lesson_learned_required_gap_refs(
+            _experience_projection(), tuple(scenario["preserve"]["gap_refs"])
+        ),
         search_after=scenario["golden_as_of"],
         candidate_scope=CandidateScope("MINECRAFT-CONTINUATION", sources),
         budget=ContinuationBudget(**budget),
@@ -255,10 +323,25 @@ def test_standard() -> None:
     assert result.stop_reason == expected["expected_stop_reason"]
     assert list(result.content_reads) == expected["expected_content_reads"]
     assert len(result.resolved_gaps) == expected["expected_resolved_gap_count"]
-    assert result.unresolved_gaps == ()
+    assert list(result.unresolved_gaps) == expected[
+        "expected_unresolved_gap_refs"
+    ]
+    assert list(result.evidence_refs) == expected["expected_evidence_refs"]
     assert result.lesson_learned_eligibility == expected[
         "expected_lesson_learned_eligibility"
     ]
+    doc_05 = next(
+        item for item in result.evidence if item.source_ref == "DOC-05"
+    )
+    assert doc_05.resolved_gap_refs == ()
+    assert set(doc_05.informed_gap_refs) == set(result.unresolved_gaps)
+    assert dict(doc_05.facts) == {
+        "second_after_school_cycle": "approved",
+        "classroom_2024_25": "not_introduced",
+        "classroom_long_term": "not_permanently_rejected",
+        "external_competition_2024_25": "not_planned",
+        "external_competition_long_term": "not_permanently_excluded",
+    }
     assert "DOC-06" not in result.content_reads
     assert result.budget_usage.candidate_sources == 3
     assert result.budget_usage.search_rounds == 1
@@ -266,7 +349,25 @@ def test_standard() -> None:
     assert result.budget_usage.content_reads == 2
     assert result.budget_usage.branches == 0
     assert result.budget_usage.depth == 1
+    budget = scenario["budget_profiles"]["standard"]
+    assert result.budget_usage.search_rounds <= budget["max_search_rounds"]
+    assert result.budget_usage.branches <= budget["max_branches"]
+    assert result.budget_usage.depth <= budget["max_depth"]
     assert len(result.policy_decision_refs) == 6
+
+
+def test_approval_does_not_invent_pilot_repetition() -> None:
+    _, result, _ = _run()
+    repetition_gap = "EXP-GAP-PILOT-REPETITION"
+    doc_05 = next(
+        item for item in result.evidence if item.source_ref == "DOC-05"
+    )
+
+    assert dict(doc_05.facts)["second_after_school_cycle"] == "approved"
+    assert repetition_gap in doc_05.informed_gap_refs
+    assert repetition_gap not in doc_05.resolved_gap_refs
+    assert repetition_gap not in result.resolved_gaps
+    assert repetition_gap in result.unresolved_gaps
 
 
 def test_tight_budget() -> None:
@@ -277,9 +378,17 @@ def test_tight_budget() -> None:
     assert result.stop_reason == expected["expected_stop_reason"]
     assert len(result.content_reads) == expected["expected_content_read_count"]
     assert len(result.resolved_gaps) == expected["expected_resolved_gap_count"]
-    assert result.unresolved_gaps
+    assert list(result.unresolved_gaps) == expected[
+        "expected_unresolved_gap_refs"
+    ]
+    assert result.lesson_learned_eligibility == expected[
+        "expected_lesson_learned_eligibility"
+    ]
     assert result.budget_usage.content_reads == 1
     assert result.budget_usage.content_reads <= result.budget_usage.metadata_reads
+    assert result.budget_usage.search_rounds == 1
+    assert result.budget_usage.branches == 0
+    assert result.budget_usage.depth == 1
 
 
 def test_no_discovery_authorization() -> None:
@@ -330,7 +439,7 @@ def test_no_silent_write() -> None:
 
     _, result, _ = _run()
 
-    assert result.outcome == "complete"
+    assert result.outcome == "partial"
     assert BASELINE_SCENARIO_PATH.read_bytes() == baseline_scenario
     assert BASELINE_EXPERIENCE_PATH.read_bytes() == baseline_experience
     assert BASELINE_KO_PATH.read_bytes() == baseline_ko

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Literal
@@ -56,6 +56,30 @@ class PolicyContext:
     policy_anchor_ids: tuple[str, ...]
 
 
+def derive_lesson_learned_required_gap_refs(
+    experience_projection: Mapping[str, Any],
+    gap_refs: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Map requested gaps to phases required by the experience projection."""
+    required_phases = {
+        str(phase.get("phase_ref"))
+        for phase in experience_projection.get("phases", ())
+        if isinstance(phase, Mapping)
+        and phase.get("required_for_lesson_learned") is True
+        and phase.get("phase_ref")
+    }
+    phase_by_gap = {
+        str(gap.get("gap_ref")): str(gap.get("phase_ref"))
+        for gap in experience_projection.get("gaps", ())
+        if isinstance(gap, Mapping) and gap.get("gap_ref") and gap.get("phase_ref")
+    }
+    return tuple(
+        gap_ref
+        for gap_ref in gap_refs
+        if phase_by_gap.get(gap_ref) in required_phases
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class ContinuationRequest:
     continuation_request_ref: str
@@ -64,11 +88,19 @@ class ContinuationRequest:
     experience_ref: str
     continuation_requirement_ref: str
     gap_refs: tuple[str, ...]
+    lesson_learned_required_gap_refs: tuple[str, ...]
     search_after: str
     candidate_scope: CandidateScope
     budget: ContinuationBudget
     policy_context: PolicyContext
     requested_at: str
+
+    def __post_init__(self) -> None:
+        requested = set(self.gap_refs)
+        if not set(self.lesson_learned_required_gap_refs).issubset(requested):
+            raise ValueError(
+                "lesson_learned_required_gap_refs must be a subset of gap_refs"
+            )
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -93,6 +125,7 @@ class CandidateEvidence:
     evidence_ref: str
     source_ref: str
     resolved_gap_refs: tuple[str, ...]
+    informed_gap_refs: tuple[str, ...]
     facts: tuple[tuple[str, str], ...]
 
 
@@ -314,16 +347,26 @@ class ContinuationExecutor:
             if interpreted.source_ref != metadata.candidate_ref:
                 continue
             permitted_gaps = tuple(
-                gap_ref
-                for gap_ref in interpreted.resolved_gap_refs
-                if gap_ref in request.gap_refs
+                dict.fromkeys(
+                    gap_ref
+                    for gap_ref in interpreted.resolved_gap_refs
+                    if gap_ref in request.gap_refs
+                )
             )
-            if not permitted_gaps:
+            permitted_informed_gaps = tuple(
+                dict.fromkeys(
+                    gap_ref
+                    for gap_ref in interpreted.informed_gap_refs
+                    if gap_ref in request.gap_refs
+                )
+            )
+            if not permitted_gaps and not permitted_informed_gaps:
                 continue
             normalized = CandidateEvidence(
                 evidence_ref=interpreted.evidence_ref,
                 source_ref=interpreted.source_ref,
                 resolved_gap_refs=permitted_gaps,
+                informed_gap_refs=permitted_informed_gaps,
                 facts=interpreted.facts,
             )
             evidence.append(normalized)
@@ -399,6 +442,7 @@ class ContinuationExecutor:
         )
         evidence_tuple = tuple(evidence)
         policy_tuple = tuple(dict.fromkeys(policy_refs))
+        lesson_required = set(request.lesson_learned_required_gap_refs)
         usage = BudgetUsage(
             candidate_sources=len(discovered),
             search_rounds=search_rounds,
@@ -434,7 +478,9 @@ class ContinuationExecutor:
             budget_usage=usage,
             stop_reason=stop_reason,
             lesson_learned_eligibility=(
-                "eligible" if not unresolved else "insufficient_evidence"
+                "eligible"
+                if lesson_required and lesson_required.issubset(resolved)
+                else "insufficient_evidence"
             ),
             policy_decision_refs=policy_tuple,
             diagnostics=(stop_reason,),

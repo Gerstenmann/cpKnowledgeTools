@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 
 from cp_knowledge_tools.delivery.continuation import (
     AuthorizationDecision,
@@ -15,14 +16,18 @@ from cp_knowledge_tools.delivery.continuation import (
 )
 
 
-def _request() -> ContinuationRequest:
+def _request(
+    gap_refs: tuple[str, ...] = ("GAP-1",),
+    lesson_required: tuple[str, ...] = ("GAP-1",),
+) -> ContinuationRequest:
     return ContinuationRequest(
         continuation_request_ref="CREQ-POLICY",
         consumer_ref="consumer-test",
         purpose="similar_experience_retrieval",
         experience_ref="EXP-TEST",
         continuation_requirement_ref="CONT-TEST",
-        gap_refs=("GAP-1",),
+        gap_refs=gap_refs,
+        lesson_learned_required_gap_refs=lesson_required,
         search_after="2024-01-01T00:00:00Z",
         candidate_scope=CandidateScope("SCOPE-TEST", ("SOURCE-A",)),
         budget=ContinuationBudget(1, 1, 1, 1, 0, 1),
@@ -56,7 +61,13 @@ def _services(calls: list[str]) -> ContinuationServices:
         gap_refs: tuple[str, ...],
     ) -> CandidateEvidence:
         calls.append(f"interpret:{metadata.candidate_ref}")
-        return CandidateEvidence("EVIDENCE-A", metadata.candidate_ref, ("GAP-1",), ())
+        return CandidateEvidence(
+            evidence_ref="EVIDENCE-A",
+            source_ref=metadata.candidate_ref,
+            resolved_gap_refs=("GAP-1",),
+            informed_gap_refs=("GAP-1",),
+            facts=(),
+        )
 
     return ContinuationServices(
         discover=discover,
@@ -117,6 +128,9 @@ def test_authorization_precedes_metadata_ranking_and_content_load() -> None:
         "interpret:SOURCE-A",
     ]
     assert result.resolved_gaps == ("GAP-1",)
+    assert result.budget_usage.search_rounds == 1
+    assert result.budget_usage.branches == 0
+    assert result.budget_usage.depth == 1
 
 
 def test_metadata_denial_prevents_loader_and_unauthorized_ranking() -> None:
@@ -172,3 +186,66 @@ def test_candidate_at_or_before_search_boundary_is_not_ranked_or_read() -> None:
     assert "rank:SOURCE-A" not in calls
     assert "read_content:SOURCE-A" not in calls
     assert result.stop_reason == "no_relevant_candidates"
+
+
+def test_informative_evidence_is_retained_without_closing_optional_gap() -> None:
+    calls: list[str] = []
+    services = _services(calls)
+
+    def interpret(
+        metadata: CandidateMetadata,
+        content: str,
+        gap_refs: tuple[str, ...],
+    ) -> CandidateEvidence:
+        calls.append(f"interpret:{metadata.candidate_ref}")
+        return CandidateEvidence(
+            evidence_ref="EVIDENCE-A",
+            source_ref=metadata.candidate_ref,
+            resolved_gap_refs=("GAP-REQUIRED",),
+            informed_gap_refs=("GAP-REQUIRED", "GAP-OPTIONAL"),
+            facts=(("optional_status", "approved_not_completed"),),
+        )
+
+    services = ContinuationServices(
+        discover=services.discover,
+        read_metadata=services.read_metadata,
+        rank=services.rank,
+        read_content=services.read_content,
+        interpret=interpret,
+    )
+    result = ContinuationExecutor().execute(
+        _request(
+            gap_refs=("GAP-REQUIRED", "GAP-OPTIONAL"),
+            lesson_required=("GAP-REQUIRED",),
+        ),
+        services,
+        _authorizer(calls),
+    )
+
+    assert result.outcome == "partial"
+    assert result.resolved_gaps == ("GAP-REQUIRED",)
+    assert result.unresolved_gaps == ("GAP-OPTIONAL",)
+    assert result.evidence_refs == ("EVIDENCE-A",)
+    assert result.evidence[0].informed_gap_refs == (
+        "GAP-REQUIRED",
+        "GAP-OPTIONAL",
+    )
+    assert result.lesson_learned_eligibility == "eligible"
+
+
+def test_zero_search_round_budget_stops_without_authorization_or_branch() -> None:
+    calls: list[str] = []
+    request = replace(
+        _request(),
+        budget=ContinuationBudget(1, 0, 1, 1, 0, 1),
+    )
+
+    result = ContinuationExecutor().execute(
+        request, _services(calls), _authorizer(calls)
+    )
+
+    assert calls == []
+    assert result.stop_reason == "budget_exhausted"
+    assert result.budget_usage.search_rounds == 0
+    assert result.budget_usage.branches == 0
+    assert result.budget_usage.depth == 0
