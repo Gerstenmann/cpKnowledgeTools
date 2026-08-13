@@ -14,6 +14,7 @@ from cp_knowledge_tools.publication.codec import (
 )
 
 from .models import CoreDiagnostic, RuleOutcome
+from .profiles import CORE_VOCABULARIES, ProfileComposition
 
 RuleHandler = Callable[["RuleContext"], RuleOutcome]
 
@@ -57,39 +58,9 @@ _RELATIONSHIP_CLASSES = {
     "event_participation",
     "structural_relationship",
 }
-_RELATIONSHIP_PREDICATES = {
-    "is_a",
-    "part_of",
-    "depends_on",
-    "causes",
-    "enables",
-    "precedes",
-    "follows",
-    "equivalent_to",
-    "contradicts",
-    "qualifies",
-    "supersedes",
-    "invalidates",
-    "is_alternative_to",
-    "contains",
-    "has_evidence",
-    "previous_version",
-    "derived_from",
-    "references",
-}
-_PARTICIPATION_ROLES = {
-    "initiator",
-    "actor",
-    "subject",
-    "participant",
-    "organizer",
-    "recipient",
-    "beneficiary",
-    "affected_party",
-    "observer",
-    "location",
-    "instrument",
-}
+_RELATIONSHIP_PREDICATES = set(
+    CORE_VOCABULARIES["relationship_predicate"]["terms"]
+)
 _CONFLICT_DIMENSIONS = {
     "factual",
     "temporal",
@@ -129,6 +100,7 @@ class RuleContext:
     input_value: dict[str, Any]
     rule_definition: dict[str, Any]
     profile_payload: dict[str, Any]
+    profile_composition: ProfileComposition | None = None
 
     def diagnostic(
         self,
@@ -146,6 +118,25 @@ class RuleContext:
             validator_rule_ref=self.rule_definition["validator_rule_ref"],
             rule_sources=tuple(self.rule_definition.get("rule_sources", [])),
         )
+
+
+def _profile_term_diagnostic(
+    context: RuleContext,
+    rule: dict[str, Any] | None,
+    *,
+    path: str,
+    message: str,
+) -> CoreDiagnostic:
+    if rule is None:
+        return context.diagnostic(path=path, message=message)
+    return CoreDiagnostic(
+        severity=rule["severity"],
+        code=rule["diagnostic_code"],
+        path=path,
+        message=message,
+        validator_rule_ref=rule["validator_rule_ref"],
+        rule_sources=tuple(rule["rule_sources"]),
+    )
 
 
 def _manifest(input_value: dict[str, Any]) -> dict[str, Any] | None:
@@ -464,9 +455,48 @@ def _rule_event(context: RuleContext) -> RuleOutcome:
     if manifest is None:
         return outcome
     events = {
-        _reference_key(event.get("event_ref"))
+        _reference_key(event.get("event_ref")): event
         for event in manifest.get("events", [])
+        if isinstance(event, dict)
     }
+    composition = context.profile_composition
+    core_roles = set(CORE_VOCABULARIES["event_participation_role"]["terms"])
+    profile_roles = composition.profile_role_terms if composition else {}
+    event_type_terms = composition.profile_event_type_terms if composition else {}
+    event_type_namespaces = (
+        composition.profile_event_type_namespaces if composition else ()
+    )
+    for index, event in enumerate(manifest.get("events", [])):
+        if not isinstance(event, dict):
+            continue
+        event_type = event.get("event_type_ref")
+        matching_namespace = next(
+            (
+                namespace
+                for namespace in event_type_namespaces
+                if isinstance(event_type, str)
+                and event_type.startswith(f"{namespace}.")
+            ),
+            None,
+        )
+        if matching_namespace is not None and event_type not in event_type_terms:
+            known = next(
+                (
+                    item
+                    for item in event_type_terms.values()
+                    if item["namespace"] == matching_namespace
+                ),
+                None,
+            )
+            rule = known.get("validator_rule") if known else None
+            outcome.diagnostics.append(
+                _profile_term_diagnostic(
+                    context,
+                    rule,
+                    path=f"/events/{index}/event_type_ref",
+                    message="event type is outside the effective Profile Vocabulary",
+                )
+            )
     for index, participation in enumerate(manifest.get("event_participations", [])):
         role = participation.get("role")
         if not role:
@@ -476,11 +506,14 @@ def _rule_event(context: RuleContext) -> RuleOutcome:
                     message="event participation has no controlled role",
                 )
             )
-        elif role not in _PARTICIPATION_ROLES:
+        elif role not in core_roles and role not in profile_roles:
             outcome.diagnostics.append(
                 context.diagnostic(
                     path=f"/event_participations/{index}/role",
-                    message="event participation role is outside the Core Vocabulary",
+                    message=(
+                        "event participation role is outside the effective controlled "
+                        "Vocabulary"
+                    ),
                 )
             )
         elif (
@@ -495,6 +528,27 @@ def _rule_event(context: RuleContext) -> RuleOutcome:
                     ),
                 )
             )
+        elif role in profile_roles:
+            role_term = profile_roles[role]
+            allowed = role_term.get("allowed_event_types")
+            event = events[_reference_key(participation.get("event_ref"))]
+            event_type = event.get("event_type_ref")
+            event_term = event_type_terms.get(event_type, {})
+            event_code = event_term.get("code")
+            if isinstance(allowed, list) and event_type not in allowed and (
+                event_code not in allowed
+            ):
+                outcome.diagnostics.append(
+                    _profile_term_diagnostic(
+                        context,
+                        role_term.get("validator_rule"),
+                        path=f"/event_participations/{index}/role",
+                        message=(
+                            "Profile event participation role is not allowed for "
+                            f"event type {event_type!r}"
+                        ),
+                    )
+                )
     return outcome
 
 

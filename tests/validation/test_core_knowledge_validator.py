@@ -62,6 +62,9 @@ ROUND_TRIP_FIELDS = [
     "body_sha256",
 ]
 
+ORGANIZATIONAL_PROFILE = ("cpks.profile.organizational-context", "0.1")
+ORGANIZATIONAL_NAMESPACE = "cpks.vocab.profile.organizational-context"
+
 
 def _ref(subject_type: str, stable_id: str) -> dict[str, str]:
     return {
@@ -205,6 +208,140 @@ def _profile_manifest(
     }
 
 
+def _applicable_profile_manifest(
+    identity: tuple[str, str] = ORGANIZATIONAL_PROFILE,
+    *,
+    namespace: str = ORGANIZATIONAL_NAMESPACE,
+    event_types: tuple[str, ...] = (
+        "proposal",
+        "decision",
+        "confirmation",
+        "communication",
+    ),
+    role_constraints: tuple[tuple[str, str], ...] = (
+        ("decision_maker", "decision"),
+        ("confirmer", "confirmation"),
+    ),
+) -> dict[str, object]:
+    event_namespace = f"{namespace}.event_type"
+    role_namespace = f"{namespace}.event_participation_role"
+    controlled_vocabularies: dict[str, object] = {
+        "event_type": {
+            "vocabulary_ref": event_namespace,
+            "vocabulary_version": identity[1],
+            "namespace": event_namespace,
+            "field_bindings": ["event_state.event_type_ref"],
+            "terms": [
+                {
+                    "term_ref": f"{event_namespace}.{code}",
+                    "code": code,
+                }
+                for code in event_types
+            ],
+        }
+    }
+    extension_points: list[dict[str, object]] = [
+        {
+            "extension_point_ref": "SYNTHETIC-EVENT-TYPE",
+            "target_path_or_role": "event_state.event_type_ref",
+            "namespace": event_namespace,
+        }
+    ]
+    validator_rules: list[dict[str, object]] = [
+        {
+            "validator_rule_ref": "SYNTHETIC-ACT-001",
+            "target": "event_state.event_type_ref",
+            "severity": "error",
+            "diagnostic_code": "synthetic_event_type_unknown",
+            "rule_source": f"{identity[0]}@{identity[1]}",
+        }
+    ]
+    if role_constraints:
+        controlled_vocabularies["event_participation_role"] = {
+            "vocabulary_ref": role_namespace,
+            "vocabulary_version": identity[1],
+            "namespace": role_namespace,
+            "field_bindings": ["event_participation.role"],
+            "extends": "cpks.vocab.core.event_participation_role@0.1",
+            "terms": [
+                {
+                    "term_ref": f"{role_namespace}.{code}",
+                    "code": code,
+                    "allowed_event_types": [event_type],
+                }
+                for code, event_type in role_constraints
+            ],
+        }
+        extension_points.append(
+            {
+                "extension_point_ref": "SYNTHETIC-EVENT-ROLE",
+                "target_path_or_role": "event_participation_role",
+                "namespace": role_namespace,
+            }
+        )
+        validator_rules.append(
+            {
+                "validator_rule_ref": "SYNTHETIC-EVT-001",
+                "target": "event_participation",
+                "severity": "error",
+                "diagnostic_code": "synthetic_event_role_scope_mismatch",
+                "rule_source": f"{identity[0]}@{identity[1]}",
+            }
+        )
+    payload = {
+        "profile_ref": identity[0],
+        "profile_version": identity[1],
+        "compatible_core_versions": [
+            {"rule_source": source, "compatibility_mode": "exact"}
+            for source in (
+                "CPKS-SPEC-KM@0.20",
+                "CPKS-SPEC-KM-PU@0.1",
+                "CPKS-SPEC-KM-VOC@0.1",
+            )
+        ],
+        "controlled_vocabularies": controlled_vocabularies,
+        "extension_points": extension_points,
+        "validator_rules": validator_rules,
+    }
+    return _profile_manifest(identity, payload)
+
+
+def _event_document(
+    *,
+    profile_refs: list[str],
+    event_type: str,
+    role: str,
+) -> PublicationUnitDocument:
+    document = _document()
+    event_ref = _ref("event", "EVT-ARBITRARY-DELTA")
+    document.manifest["profile_refs"] = profile_refs
+    document.manifest["events"] = [
+        {
+            "event_ref": event_ref,
+            "event_type_ref": event_type,
+            "label": "Arbitrary event",
+            "time": [],
+            "evidence_link_ids": [],
+            "policy_anchor_ids": [],
+        }
+    ]
+    document.manifest["event_participations"] = [
+        {
+            "participation_ref": _ref(
+                "event_participation", "PART-ARBITRARY-IOTA"
+            ),
+            "event_ref": event_ref,
+            "entity_ref": _ref("entity", "ENT-ARBITRARY-KAPPA"),
+            "role": role,
+            "time": [],
+            "claim_refs": [],
+            "evidence_link_ids": [],
+            "policy_anchor_ids": [],
+        }
+    ]
+    return document
+
+
 def _raw_inputs() -> tuple[dict[str, object], ...]:
     document = _document()
     cases = [
@@ -306,13 +443,16 @@ def _raw_inputs() -> tuple[dict[str, object], ...]:
     )
 
 
-def _prepared():
+def _prepared(
+    applicable_profile_manifests: list[dict[str, object]] | None = None,
+):
     core, corpus, payload, contract, canonical = _raw_inputs()
     return prepare_core_inputs(
         profile_manifest=core,
         corpus_manifest=corpus,
         corpus_payload=payload,
         required_profile_manifests=[contract, canonical],
+        applicable_profile_manifests=applicable_profile_manifests,
     )
 
 
@@ -696,6 +836,284 @@ def test_publication_report_marks_applicable_rules_and_uses_caller_path(
     assert "CK-POL-001" in report["not_applicable_rule_refs"]
     assert report["output_fingerprint"] == repeated["output_fingerprint"]
     assert output.is_file()
+
+
+def test_core_role_passes_without_an_applicable_profile() -> None:
+    document = _event_document(
+        profile_refs=[],
+        event_type="cpkt.test.event_type.arbitrary",
+        role="organizer",
+    )
+
+    report = CoreKnowledgeValidator(_prepared()).validate_publication_unit(document)
+
+    assert report["conformance_status"] == "pass"
+    assert report["applicable_profile_resolution"]["status"] == "resolved"
+    assert report["applicable_profiles"] == []
+
+
+@pytest.mark.parametrize(
+    ("event_type", "role"),
+    [
+        ("decision", "decision_maker"),
+        ("confirmation", "confirmer"),
+    ],
+)
+def test_applicable_profile_roles_pass_through_effective_vocabulary(
+    event_type: str, role: str
+) -> None:
+    profile = _applicable_profile_manifest()
+    profile_ref = f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
+    document = _event_document(
+        profile_refs=[profile_ref],
+        event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.{event_type}",
+        role=f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.{role}",
+    )
+
+    report = CoreKnowledgeValidator(_prepared([profile])).validate_publication_unit(
+        document
+    )
+
+    assert report["conformance_status"] == "pass"
+    assert report["applicable_profile_resolution"] == {
+        "status": "resolved",
+        "declared_profile_refs": [profile_ref],
+        "supplied_profile_refs": [profile_ref],
+        "exact_match": True,
+    }
+    assert report["applicable_profiles"][0]["included_in_effective_context"]
+    accepted = report["effective_vocabularies"]["event_participation_role"][
+        "accepted_values"
+    ]
+    assert "organizer" in accepted
+    assert (
+        f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.{role}" in accepted
+    )
+
+
+def test_cli_accepts_an_explicit_applicable_profile_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    core, corpus, payload, contract, canonical = _raw_inputs()
+    applicable = _applicable_profile_manifest()
+    profile_ref = f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
+    document = _event_document(
+        profile_refs=[profile_ref],
+        event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.decision",
+        role=(
+            f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"
+        ),
+    )
+    paths: dict[str, Path] = {}
+    for name, manifest in (
+        ("core", core),
+        ("corpus", corpus),
+        ("contract", contract),
+        ("canonical", canonical),
+        ("applicable", applicable),
+    ):
+        path = tmp_path / f"{name}.md"
+        path.write_text(
+            render_publication_unit(PublicationUnitDocument(manifest, "")),
+            encoding="utf-8",
+        )
+        paths[name] = path
+    payload_path = tmp_path / "corpus.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf-8")
+    publication_path = tmp_path / "publication.md"
+    publication_path.write_text(render_publication_unit(document), encoding="utf-8")
+    report_path = tmp_path / "corpus-report.json"
+    publication_report_path = tmp_path / "publication-report.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_core_knowledge_conformance.py",
+            "--profile-manifest",
+            str(paths["core"]),
+            "--corpus-manifest",
+            str(paths["corpus"]),
+            "--corpus-payload",
+            str(payload_path),
+            "--required-profile-manifest",
+            str(paths["contract"]),
+            "--required-profile-manifest",
+            str(paths["canonical"]),
+            "--applicable-profile-manifest",
+            str(paths["applicable"]),
+            "--report",
+            str(report_path),
+            "--publication-unit",
+            str(publication_path),
+            "--publication-report",
+            str(publication_report_path),
+        ],
+    )
+
+    exit_code = run_core_knowledge_conformance.main()
+    corpus_report = json.loads(report_path.read_text(encoding="utf-8"))
+    publication_report = json.loads(
+        publication_report_path.read_text(encoding="utf-8")
+    )
+
+    assert exit_code == 0
+    assert corpus_report["cases_passed_exactly"] == 16
+    assert publication_report["conformance_status"] == "pass"
+    assert publication_report["applicable_profile_resolution"]["status"] == (
+        "resolved"
+    )
+
+
+def test_applicable_profile_composition_is_independent_of_caller_input_order() -> None:
+    organizational = _applicable_profile_manifest()
+    secondary_identity = ("cpks.profile.example-context", "2.0")
+    secondary = _applicable_profile_manifest(
+        secondary_identity,
+        namespace="cpks.vocab.profile.example-context",
+        event_types=("review",),
+        role_constraints=(),
+    )
+    profile_refs = sorted(
+        [
+            f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}",
+            f"{secondary_identity[0]}@{secondary_identity[1]}",
+        ]
+    )
+    document = _event_document(
+        profile_refs=profile_refs,
+        event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.decision",
+        role=(
+            f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"
+        ),
+    )
+
+    first = CoreKnowledgeValidator(
+        _prepared([organizational, secondary])
+    ).validate_publication_unit(document)
+    second = CoreKnowledgeValidator(
+        _prepared([secondary, organizational])
+    ).validate_publication_unit(document)
+
+    assert first["conformance_status"] == second["conformance_status"] == "pass"
+    assert first["applicable_profiles"] == second["applicable_profiles"]
+    assert first["effective_vocabularies"] == second["effective_vocabularies"]
+    assert first["output_fingerprint"] == second["output_fingerprint"]
+
+
+@pytest.mark.parametrize(
+    ("event_type", "role", "expected_code"),
+    [
+        (
+            "communication",
+            "decision_maker",
+            "synthetic_event_role_scope_mismatch",
+        ),
+        ("decision", "confirmer", "synthetic_event_role_scope_mismatch"),
+        ("decision", "super_decider", "event_participation_role_missing"),
+    ],
+)
+def test_profile_role_constraints_and_unknown_role_fail_closed(
+    event_type: str, role: str, expected_code: str
+) -> None:
+    profile = _applicable_profile_manifest()
+    document = _event_document(
+        profile_refs=[
+            f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
+        ],
+        event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.{event_type}",
+        role=f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.{role}",
+    )
+
+    report = CoreKnowledgeValidator(_prepared([profile])).validate_publication_unit(
+        document
+    )
+
+    assert report["conformance_status"] == "fail"
+    assert expected_code in _codes(report)
+
+
+def test_unknown_event_type_in_applicable_profile_namespace_fails_closed() -> None:
+    profile = _applicable_profile_manifest()
+    document = _event_document(
+        profile_refs=[
+            f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
+        ],
+        event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.super_event",
+        role="organizer",
+    )
+
+    report = CoreKnowledgeValidator(_prepared([profile])).validate_publication_unit(
+        document
+    )
+
+    assert report["conformance_status"] == "fail"
+    assert _codes(report) == {"synthetic_event_type_unknown"}
+
+
+def test_profile_role_without_supplied_profile_fails_closed() -> None:
+    document = _event_document(
+        profile_refs=[],
+        event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.decision",
+        role=(
+            f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"
+        ),
+    )
+
+    report = CoreKnowledgeValidator(_prepared()).validate_publication_unit(document)
+
+    assert report["conformance_status"] == "fail"
+    assert _codes(report) == {"event_participation_role_missing"}
+
+
+@pytest.mark.parametrize(
+    "mode", ["referenced_but_missing", "supplied_but_unreferenced"]
+)
+def test_applicable_profile_set_must_exactly_match_publication_refs(mode: str) -> None:
+    profile = _applicable_profile_manifest()
+    profile_ref = f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
+    document = _event_document(
+        profile_refs=[profile_ref] if mode == "referenced_but_missing" else [],
+        event_type="cpkt.test.event_type.arbitrary",
+        role="organizer",
+    )
+    supplied = [] if mode == "referenced_but_missing" else [profile]
+
+    report = CoreKnowledgeValidator(_prepared(supplied)).validate_publication_unit(
+        document
+    )
+
+    assert report["conformance_status"] == "fail"
+    assert report["applicable_profile_resolution"]["status"] == "failed"
+    assert "core_knowledge_profile_resolution_failed" in _codes(report)
+
+
+def test_applicable_profile_namespace_collision_fails_closed() -> None:
+    profile = _applicable_profile_manifest(
+        namespace="cpks.vocab.core",
+    )
+    profile_ref = f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
+    document = _event_document(
+        profile_refs=[profile_ref],
+        event_type="cpkt.test.event_type.arbitrary",
+        role="organizer",
+    )
+
+    report = CoreKnowledgeValidator(_prepared([profile])).validate_publication_unit(
+        document
+    )
+
+    assert report["conformance_status"] == "fail"
+    assert "core_vocabulary_namespace_collision" in _codes(report)
+
+
+def test_applicable_profile_hash_is_verified_before_composition() -> None:
+    profile = _applicable_profile_manifest()
+    profile["content_hash"]["value"] = "0" * 64
+
+    with pytest.raises(CoreValidationInputError) as failure:
+        _prepared([profile])
+
+    assert failure.value.code == "core_knowledge_profile_integrity_failed"
 
 
 def test_production_code_has_no_golden_or_scenario_dispatch() -> None:

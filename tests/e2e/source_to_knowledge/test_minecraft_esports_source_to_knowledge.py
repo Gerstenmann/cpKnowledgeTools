@@ -51,7 +51,7 @@ def test_fixture_bindings_are_frozen() -> None:
     scenario = _load_json(SCENARIO_PATH)
 
     assert scenario["scenario_ref"] == "GT-S2K-MINI-DOSSIER-01"
-    assert scenario["scenario_version"] == "1.0"
+    assert scenario["scenario_version"] == "1.2"
     assert scenario["sensitivity"] == "synthetic_non_sensitive"
 
     for fixture in scenario["fixture_bindings"]:
@@ -115,6 +115,7 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
     ]
     assert result["scenario_ref"] == scenario["scenario_ref"]
     assert result["scenario_version"] == scenario["scenario_version"]
+    assert result["golden_as_of"] == scenario["golden_as_of"]
     assert result["outcome"] == "pass"
 
     counts = scenario["expected_counts"]
@@ -190,6 +191,9 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
 
     claim_index = _index(semantic["claims"])
     assert len(claim_index) >= counts["fixed_claims_min"]
+    assert sum(item["relationship"] for item in semantic["claims"]) >= counts[
+        "relational_claims_min"
+    ]
     for expected in scenario["claims"]:
         actual = claim_index.get(expected["gt_id"])
         assert actual is not None, f"Missing Claim {expected['gt_id']}"
@@ -197,12 +201,19 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         assert set(expected["source_keys"]).issubset(set(actual["source_keys"]))
         if "value" in expected:
             assert actual["value"] == expected["value"]
+        if "predicate_ref" in expected:
+            assert actual["predicate_ref"] == expected["predicate_ref"]
         if "time_modality" in expected:
             assert actual["time_modality"] == expected["time_modality"]
         if expected.get("historical_state_must_survive"):
             assert actual["preserved"] is True
         if expected.get("must_not_be_confirmed_without_independent_evidence"):
             assert actual["epistemic_status"] != "confirmed"
+        if expected.get("relationship"):
+            assert actual["relationship"] is True
+            assert actual["subject_gt_id"] == expected["subject_gt_id"]
+            assert actual["predicate_ref"] == expected["predicate_ref"]
+            assert actual["object_gt_id"] == expected["object_gt_id"]
 
     # Pattern-based benefit statement must remain reported.
     pattern = scenario["pattern_rules"][0]
@@ -227,13 +238,32 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
 
     event_index = _index(semantic["events"])
     assert len(event_index) >= counts["events_min"]
+    action_event_types = {
+        item["event_type_ref"]
+        for item in semantic["events"]
+        if item["event_type_ref"].startswith(
+            "cpks.vocab.profile.organizational-context.event_type."
+        )
+    }
+    assert len(action_event_types) >= counts["organizational_action_events_min"]
     for expected in scenario["events"]:
         actual = event_index.get(expected["gt_id"])
         assert actual is not None, f"Missing Event {expected['gt_id']}"
         for key in ("event_time", "time_precision", "time_modality"):
             assert actual[key] == expected[key]
+        if "event_type_ref" in expected:
+            assert actual["event_type_ref"] == expected["event_type_ref"]
         if expected.get("must_not_be_actual_without_occurrence_evidence"):
             assert actual["time_modality"] != "actual"
+
+    participation_index = _index(semantic["participations"])
+    assert len(participation_index) >= counts["event_participations_min"]
+    for expected in scenario["event_participations"]:
+        actual = participation_index.get(expected["gt_id"])
+        assert actual is not None, f"Missing Participation {expected['gt_id']}"
+        assert actual["event_gt_id"] == expected["event_gt_id"]
+        assert actual["entity_gt_id"] == expected["entity_gt_id"]
+        assert actual["role"] == expected["role"]
 
     conflict_index = _index(semantic["conflict_sets"])
     assert len(conflict_index) >= counts["conflict_sets_min"]
@@ -256,14 +286,18 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         == policy_expected["restricted_evidence_resolution"]["expected"]
     )
     assert policy["claim_read_decision"]["authorized_actions"] == ["claim_read"]
-    assert policy["claim_read_evaluation"]["profile_refs"] == []
+    assert policy["claim_read_evaluation"]["profile_refs"] == scenario[
+        "profile_refs"
+    ]
     assert (
         policy["claim_read_evaluation"]["profile_applicability_status"]
         == "resolved"
     )
     assert policy["claim_read_evaluation"]["policy_anchor_ids"] == ["PA-KO"]
     assert policy["evidence_resolution_decision"]["authorized_actions"] == []
-    assert policy["evidence_resolution_evaluation"]["profile_refs"] == []
+    assert policy["evidence_resolution_evaluation"]["profile_refs"] == scenario[
+        "profile_refs"
+    ]
     assert (
         policy["evidence_resolution_evaluation"][
             "profile_applicability_status"
@@ -298,6 +332,7 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         "cross_view_validation",
     ):
         assert publication[key] == publication_expected[key]
+    assert publication["profile_refs"] == publication_expected["profile_refs"]
 
     # Retrieval
     retrieval_index = _index(result["retrieval"], key="query_key")
@@ -305,11 +340,19 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         actual = retrieval_index.get(expected["query_key"])
         assert actual is not None, f"Missing retrieval case {expected['query_key']}"
         rendered = actual["rendered_answer"]
+        expected_outcome = expected.get("expected_outcome", "results")
         expected_claims = set(
             expected.get("required_current_claim_gt_ids", ())
         ) | set(expected.get("required_claim_gt_ids", ()))
         assert set(actual["claim_keys"]) == expected_claims
-        assert actual["actual_claim_refs"]
+        assert set(expected.get("required_event_gt_ids", ())).issubset(
+            actual["event_keys"]
+        )
+        assert set(expected.get("required_participation_gt_ids", ())).issubset(
+            actual["participation_keys"]
+        )
+        if expected_claims:
+            assert actual["actual_claim_refs"]
         assert actual["publication_unit_ref"] == {
             "subject_type": "knowledge_object",
             "stable_id": publication_expected["knowledge_object_id"],
@@ -318,7 +361,22 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         }
         assert actual["projection_ref"].startswith("DRP-")
         structured = actual["structured_result"]
-        assert structured["outcome"] == "results"
+        assert structured["outcome"] == expected_outcome
+        assert structured["profile_refs"] == scenario["profile_refs"]
+        assert structured["knowledge_valid_time"] == [
+            {
+                "role": "valid_time",
+                "value_kind": "instant",
+                "precision": "minute",
+                "modality": "actual",
+                "start": scenario["golden_as_of"],
+                "end": None,
+                "timezone": "+02:00",
+                "approximate": False,
+                "uncertainty": None,
+                "source_ref": None,
+            }
+        ]
         assert structured["policy_decision_ref"] == policy[
             "claim_read_decision"
         ]["policy_decision_ref"]
@@ -327,6 +385,11 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
             assert item["subject_ref"]["stable_id"] in actual[
                 "actual_claim_refs"
             ]
+            assert item["evidence_content_resolved"] is False
+        for item in (
+            *structured["event_items"],
+            *structured["participation_items"],
+        ):
             assert item["evidence_content_resolved"] is False
 
         for text in expected.get("must_contain", []):
@@ -342,6 +405,193 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
         if expected.get("must_not_claim_actual_occurrence"):
             assert actual.get("claims_actual_occurrence", False) is False
 
+    relationship_claims = [
+        item for item in semantic["claims"] if item["relationship"]
+    ]
+    assert {item["gt_id"] for item in relationship_claims} == {
+        item["gt_id"]
+        for item in scenario["claims"]
+        if item.get("relationship")
+    }
+    assert all(
+        item["predicate_ref"].startswith(
+            "cpks.vocab.profile.organizational-context.relationship_predicate."
+        )
+        for item in relationship_claims
+    )
+    predicates = {item["predicate_ref"] for item in semantic["claims"]}
+    assert not any(predicate.endswith(".employed_by") for predicate in predicates)
+    assert not any(predicate.endswith(".represents") for predicate in predicates)
+    assert not any(
+        predicate.endswith((".legal_liability", ".financial_liability"))
+        for predicate in predicates
+    )
+    decision_makers = [
+        item
+        for item in semantic["participations"]
+        if item["role"].endswith(".decision_maker")
+    ]
+    assert [item["entity_gt_id"] for item in decision_makers] == ["ENT-RMIS"]
+    action_events = {
+        item["gt_id"]: item for item in semantic["events"]
+    }
+    assert action_events["EVT-PILOT-DECISION"]["actual_event_ref"] != (
+        action_events["EVT-PILOT-STATUS-CONFIRMATION"]["actual_event_ref"]
+    )
+    assert action_events["EVT-PILOT-STATUS-CONFIRMATION"][
+        "actual_event_ref"
+    ] != action_events["EVT-PILOT-STATUS-COMMUNICATION"]["actual_event_ref"]
+    assert not any(
+        item["event_type_ref"].endswith(".coordination")
+        and item["time_modality"] == "actual"
+        for item in semantic["events"]
+    )
+    relationship_refs = {
+        item["actual_claim_ref"] for item in relationship_claims
+    }
+    authorized_subjects = {
+        item["stable_id"]
+        for item in policy["claim_read_decision"]["authorized_subject_refs"]
+    }
+    assert relationship_refs.isdisjoint(authorized_subjects)
+    assert policy["evidence_resolution_decision"]["authorized_subject_refs"] == []
+
+    # HR-003 Experience (#46-60)
+    experience_expected = scenario["experience"]
+    experience = result["experience"]
+    assert experience["experience_ref"] == experience_expected["experience_ref"]
+    assert experience["projection_count"] == counts[
+        "experience_projections_exact"
+    ]
+    assert experience["focus_knowledge_object_ref"] == experience_expected[
+        "focus_knowledge_object_ref"
+    ]
+    assert experience["as_of"] == experience_expected["as_of"]
+    assert experience["completeness"] == experience_expected[
+        "experience_completeness"
+    ]
+    assert experience["projection_ref"].startswith("EXPP-")
+    assert experience["semantic_hash"]
+    assert experience["artifact_path"] == "derived/experience_projection.json"
+    experience_artifact = tmp_path / experience["artifact_path"]
+    assert experience_artifact.is_file()
+    assert "experience" not in _load_json(
+        tmp_path / "derived/retrieval_projection.json"
+    )
+    publication_text = (tmp_path / publication["artifact_path"]).read_text(
+        encoding="utf-8"
+    )
+    publication_frontmatter = publication_text.split("\n---\n", 1)[0]
+    assert "\nexperience:" not in publication_frontmatter
+
+    phase_index = _index(experience["phases"], key="phase_ref")
+    assert {
+        phase_ref: phase["status"] for phase_ref, phase in phase_index.items()
+    } == {
+        phase["phase_ref"]: phase["status"]
+        for phase in experience_expected["phases"]
+    }
+    assert all(
+        phase_index[phase_ref]["semantic_basis_refs"]
+        and phase_index[phase_ref]["evidence_refs"]
+        for phase_ref in ("context", "intent", "proposal", "decision", "scope")
+    )
+    assert phase_index["execution"]["status"] == "unresolved"
+    internal_pilot = event_index["EVT-INTERNAL-PILOT"]
+    assert internal_pilot["time_modality"] == "planned"
+    assert not any(
+        item["event_type_ref"] == "cpkt.test.event_type.pilot_evaluation"
+        and item["time_modality"] == "actual"
+        for item in semantic["events"]
+    )
+
+    experience_threads = _index(experience["threads"], key="thread_ref")
+    for expected in experience_expected["threads"]:
+        assert experience_threads[expected["thread_ref"]][
+            "semantic_gt_refs"
+        ] == expected["semantic_gt_refs"]
+    scope_thread = experience_threads["scope_evaluation"]["semantic_gt_refs"]
+    assert scope_thread == [
+        "CLM-SCOPE-OPEN",
+        "CLM-SCOPE-AFTERSCHOOL",
+        "CLM-ACADEMIC-DEFERRED",
+        "CLM-CLASSROOM-INTEGRATION-DEPENDS-ON-PILOT-EVALUATION",
+    ]
+
+    gap_index = _index(experience["gaps"], key="gap_ref")
+    assert len(gap_index) >= counts["experience_gaps_min"]
+    for expected in experience_expected["gaps"]:
+        actual = gap_index[expected["gap_ref"]]
+        assert actual["status"] == expected["status"] == "unresolved"
+        assert actual["phase_ref"] == expected["phase_ref"]
+        assert actual["semantic_basis_refs"]
+        assert actual["semantic_basis_gt_refs"]
+    assert not any(
+        "success" in item["question"].lower()
+        and item["status"] != "unresolved"
+        for item in experience["gaps"]
+    )
+
+    assert experience["reuse_context"] == experience_expected["reuse_context"]
+    assert len(experience["continuation_requirements"]) >= counts[
+        "continuation_retrieval_requirements_min"
+    ]
+    continuation = experience["continuation_requirements"][0]
+    continuation_expected = experience_expected["continuation_requirement"]
+    assert continuation["continuation_ref"] == continuation_expected[
+        "continuation_ref"
+    ]
+    assert continuation["status"] == continuation_expected["status"]
+    assert continuation["critical_gap_refs"] == continuation_expected[
+        "critical_gap_refs"
+    ]
+    assert continuation["search_after"] == continuation_expected["search_after"]
+    assert set(continuation["trigger_purposes"]) == set(
+        continuation_expected["trigger_purposes"]
+    )
+    assert experience["lesson_learned_eligibility"] == (
+        experience_expected["lesson_learned_eligibility"]
+    )
+    assert len(experience["lesson_learned_candidates"]) == counts[
+        "lesson_learned_candidates_exact"
+    ]
+    assert publication["primary_kind"] == "event_summary"
+
+    experience_retrieval = _index(
+        result["experience_retrieval"], key="query_key"
+    )
+    assert set(experience_retrieval) == set(
+        experience_expected["retrieval_cases"]
+    )
+    assert all(
+        item["outcome"] == "results"
+        and item["policy_decision_ref"]
+        == policy["claim_read_decision"]["policy_decision_ref"]
+        and item["evidence_content_resolved"] is False
+        for item in experience_retrieval.values()
+    )
+    assert experience_retrieval["pilot_evaluation"]["items"] == [
+        phase_index["evaluation"]
+    ]
+    assert experience_retrieval["pilot_outcome"]["items"] == [
+        phase_index["outcome"]
+    ]
+    assert experience_retrieval["classroom_integration_followup"]["items"] == [
+        gap_index["EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP"]
+    ]
+    lesson_result = experience_retrieval["lesson_learned"]["items"][0]
+    assert lesson_result["lesson_learned_eligibility"] == (
+        "insufficient_evidence"
+    )
+    assert lesson_result["lesson_learned_candidates"] == []
+    similar = experience_retrieval["similar_experience"]["items"][0]
+    assert similar["experience_ref"] == experience["experience_ref"]
+    assert similar["experience_completeness"] == "partial"
+    assert any(
+        phase["phase_ref"] == "outcome" and phase["status"] == "unresolved"
+        for phase in similar["phases"]
+    )
+
     # Rebuild
     rebuild_expected = scenario["rebuild"]
     rebuild = result["rebuild"]
@@ -351,6 +601,13 @@ def test_source_to_knowledge_minecraft_esports_golden_case(tmp_path: Path) -> No
     assert (
         rebuild["retrieval_result_signatures_before"]
         == rebuild["retrieval_result_signatures_after"]
+    )
+    assert rebuild["experience_projection_hash_before"] == rebuild[
+        "experience_projection_hash_after"
+    ]
+    assert (
+        rebuild["experience_retrieval_result_signatures_before"]
+        == rebuild["experience_retrieval_result_signatures_after"]
     )
     for key in rebuild_expected["must_preserve"]:
         assert rebuild["preserved"][key] is True

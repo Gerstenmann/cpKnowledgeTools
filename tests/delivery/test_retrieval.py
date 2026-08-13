@@ -63,8 +63,45 @@ def _projection() -> dict[str, Any]:
             "authority_context": KO.authority_context,
         },
         "claim_index": [old, current],
-        "event_index": [],
-        "participation_index": [],
+        "event_index": [
+            {
+                "event_ref": _ref("event", "EVT-DECISION"),
+                "event_type_ref": "test.event_type.decision",
+                "label": "Deployment decision",
+                "time": [
+                    {
+                        "role": "event_time",
+                        "value_kind": "unknown",
+                        "precision": "unknown",
+                        "modality": "actual",
+                        "start": None,
+                        "end": None,
+                        "timezone": None,
+                        "approximate": False,
+                        "uncertainty": None,
+                        "source_ref": None,
+                    }
+                ],
+                "evidence_link_ids": ["EL-EVT-DECISION"],
+                "policy_anchor_ids": ["PA-KO"],
+                "narrative_anchor": "event-decision",
+            }
+        ],
+        "participation_index": [
+            {
+                "participation_ref": _ref(
+                    "event_participation", "PART-TEAM-DECISION"
+                ),
+                "event_ref": _ref("event", "EVT-DECISION"),
+                "entity_ref": _ref("entity", "ENT-OPERATIONS-TEAM"),
+                "role": "test.role.decision_maker",
+                "time": [],
+                "claim_refs": [],
+                "evidence_link_ids": ["EL-PART-DECISION"],
+                "policy_anchor_ids": ["PA-KO"],
+                "narrative_anchor": "participation-team-decision",
+            }
+        ],
         "evidence_index": [
             {
                 "evidence_link_id": "EL-CLM-OLD",
@@ -77,6 +114,17 @@ def _projection() -> dict[str, Any]:
                 "evidence_link_id": "EL-CLM-CURRENT",
                 "subject_ref": current["claim_ref"],
                 "evidence_address_ref": _ref("evidence_address", "EA-CURRENT"),
+                "role": "supports",
+                "policy_anchor_ids": ["PA-KO"],
+            },
+            {
+                "evidence_link_id": "EL-PART-DECISION",
+                "subject_ref": _ref(
+                    "event_participation", "PART-TEAM-DECISION"
+                ),
+                "evidence_address_ref": _ref(
+                    "evidence_address", "EA-PART-DECISION"
+                ),
                 "role": "supports",
                 "policy_anchor_ids": ["PA-KO"],
             },
@@ -162,6 +210,85 @@ def test_history_query_preserves_current_and_historical_claims() -> None:
     }
     assert states == {"CLM-OLD": "historical", "CLM-CURRENT": "current"}
     assert result.conflict_items[0]["conflict_set_id"] == "CF-TRAINING"
+
+
+def test_relational_claim_query_returns_reference_object() -> None:
+    projection = _projection()
+    projection["claim_index"].append(
+        {
+            **_claim("CLM-RELATIONSHIP", "unused", "confirmed"),
+            "statement": {
+                "subject_ref": _ref("entity", "ENT-PERSON"),
+                "predicate_ref": "test.relationship.affiliated_with",
+                "object": {
+                    "kind": "reference",
+                    "reference": _ref("entity", "ENT-ORGANIZATION"),
+                    "value": None,
+                    "datatype": None,
+                    "language": None,
+                },
+            },
+        }
+    )
+    request = RetrievalRequest(
+        retrieval_request_ref="RREQ-RELATIONSHIP",
+        consumer_ref=CONSUMER,
+        purpose=PURPOSE,
+        knowledge_object_ref=KO,
+        semantic_subject_refs=("ENT-PERSON",),
+        claim_predicate_refs=("test.relationship.affiliated_with",),
+    )
+
+    result = KnowledgeRetriever().retrieve(projection, request, _decision())
+
+    assert result.outcome == "results"
+    assert result.claim_items[0]["statement"]["object"]["reference"][
+        "stable_id"
+    ] == "ENT-ORGANIZATION"
+
+
+def test_participation_query_filters_by_role_and_event_type() -> None:
+    request = RetrievalRequest(
+        retrieval_request_ref="RREQ-DECISION-MAKER",
+        consumer_ref=CONSUMER,
+        purpose=PURPOSE,
+        knowledge_object_ref=KO,
+        semantic_subject_refs=(),
+        event_type_refs=("test.event_type.decision",),
+        participant_entity_refs=("ENT-OPERATIONS-TEAM",),
+        participation_role_refs=("test.role.decision_maker",),
+    )
+
+    result = KnowledgeRetriever().retrieve(_projection(), request, _decision())
+
+    assert result.outcome == "results"
+    assert result.event_items == ()
+    assert result.participation_items[0]["entity_ref"]["stable_id"] == (
+        "ENT-OPERATIONS-TEAM"
+    )
+    assert result.participation_items[0]["event_type_ref"] == (
+        "test.event_type.decision"
+    )
+    assert result.participation_items[0]["evidence_refs"][0]["stable_id"] == (
+        "EA-PART-DECISION"
+    )
+
+
+def test_participation_role_abstains_when_projection_has_no_match() -> None:
+    request = RetrievalRequest(
+        retrieval_request_ref="RREQ-NO-REPRESENTATIVE",
+        consumer_ref=CONSUMER,
+        purpose=PURPOSE,
+        knowledge_object_ref=KO,
+        semantic_subject_refs=(),
+        event_type_refs=("test.event_type.decision",),
+        participation_role_refs=("test.role.representative",),
+    )
+
+    result = KnowledgeRetriever().retrieve(_projection(), request, _decision())
+
+    assert result.outcome == "no_available_results"
+    assert result.participation_items == ()
 
 
 class _ForbiddenProjection(Mapping[str, Any]):

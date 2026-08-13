@@ -7,7 +7,14 @@ from typing import Any
 from cp_knowledge_tools.platform.hashing import canonical_json_hash
 from cp_knowledge_tools.publication.codec import PublicationUnitDocument
 
-from .models import CoreValidationInputError, PreparedCoreInputs, RuleOutcome
+from .models import (
+    SEVERITY_RANK,
+    CoreDiagnostic,
+    CoreValidationInputError,
+    PreparedCoreInputs,
+    RuleOutcome,
+)
+from .profiles import ProfileComposition, compose_applicable_profiles
 from .rules import RULE_REGISTRY, RuleContext
 
 VALIDATOR_REF = "cpkt.validator.core-knowledge"
@@ -38,6 +45,8 @@ class CoreKnowledgeValidator:
         self,
         input_value: dict[str, Any],
         rule_refs: list[str] | tuple[str, ...],
+        *,
+        profile_composition: ProfileComposition | None = None,
     ) -> dict[str, Any]:
         diagnostics = []
         artifacts: dict[str, Any] = {}
@@ -55,6 +64,7 @@ class CoreKnowledgeValidator:
                 input_value=input_value,
                 rule_definition=definition,
                 profile_payload=self.inputs.profile_payload,
+                profile_composition=profile_composition,
             )
             try:
                 outcome = handler(context)
@@ -102,6 +112,7 @@ class CoreKnowledgeValidator:
             "CK-CONFLICT-001",
             "CK-EPI-001",
             "CK-EVT-001",
+            "CK-PROFILE-001",
             "CK-RB-001",
             "CK-RT-001",
             "CK-SCH-001",
@@ -133,8 +144,43 @@ class CoreKnowledgeValidator:
         }
         if execution_context is not None:
             input_value["execution_context"] = deepcopy(execution_context)
+        composition = compose_applicable_profiles(input_value["manifest"], self.inputs)
         before = canonical_json_hash(input_value)
-        validation = self.validate_input(input_value, applicable)
+        validation = self.validate_input(
+            input_value,
+            applicable,
+            profile_composition=composition,
+        )
+        profile_definition = self.rule_definitions["CK-PROFILE-001"]
+        composition_diagnostics = [
+            CoreDiagnostic(
+                severity=issue.severity,
+                code=issue.code,
+                path=issue.path,
+                message=issue.message,
+                validator_rule_ref="CK-PROFILE-001",
+                rule_sources=tuple(profile_definition.get("rule_sources", [])),
+            ).to_dict()
+            for issue in composition.issues
+        ]
+        validation["diagnostics"].extend(composition_diagnostics)
+        validation["diagnostics"].sort(
+            key=lambda item: (
+                SEVERITY_RANK[item["severity"]],
+                item["code"],
+                item["path"],
+                item["message"],
+            )
+        )
+        for outcome in validation["rule_outcomes"]:
+            if outcome["validator_rule_ref"] == "CK-PROFILE-001":
+                outcome["diagnostic_count"] += len(composition_diagnostics)
+                break
+        if any(
+            item["severity"] in {"fatal", "error"}
+            for item in validation["diagnostics"]
+        ):
+            validation["conformance_status"] = "fail"
         after = canonical_json_hash(input_value)
         mutation_detected = before != after
         if mutation_detected:
@@ -177,6 +223,9 @@ class CoreKnowledgeValidator:
             ),
             "required_profile_resolution": "resolved",
             "required_profiles": required_profiles,
+            "applicable_profile_resolution": composition.resolution,
+            "applicable_profiles": list(composition.applicable_profiles),
+            "effective_vocabularies": composition.effective_vocabularies,
             "contract_conformance_corpus_execution": (
                 "not_in_scope_for_this_slice"
             ),

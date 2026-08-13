@@ -5,7 +5,10 @@ from pathlib import Path
 import pytest
 
 from cp_knowledge_tools.platform.hashing import sha256_text
-from cp_knowledge_tools.semantics import RuleBasedSemanticInterpreter
+from cp_knowledge_tools.semantics import (
+    RuleBasedSemanticInterpreter,
+    SemanticStateMaterializer,
+)
 from cp_knowledge_tools.sources.models import EvidenceAddress, SourceRecord
 
 
@@ -282,3 +285,184 @@ def test_candidate_payload_has_no_lifecycle_or_authorization_state() -> None:
         "policy_permit",
     }
     assert forbidden.isdisjoint(payload)
+
+
+def _organizational_rules() -> dict:
+    profile_ref = "cpks.profile.organizational-context@0.1"
+    return {
+        "entities": [
+            {
+                "rule_key": "person",
+                "entity_class": "person",
+                "evidence_keys": ["relationship"],
+                "extraction": {
+                    "evidence_key": "relationship",
+                    "pattern": r"(?P<value>Alex Example) works with",
+                    "parser": "entity_mention",
+                },
+            },
+            {
+                "rule_key": "organization",
+                "entity_class": "organization",
+                "evidence_keys": ["relationship"],
+                "extraction": {
+                    "evidence_key": "relationship",
+                    "pattern": r"works with (?P<value>Example Org)",
+                    "parser": "entity_mention",
+                },
+            },
+        ],
+        "relationships": [
+            {
+                "rule_key": "person_affiliation",
+                "subject_key": "person",
+                "predicate_ref": (
+                    "cpks.vocab.profile.organizational-context."
+                    "relationship_predicate.affiliated_with"
+                ),
+                "object_key": "organization",
+                "evidence_keys": ["relationship"],
+                "extraction": {
+                    "evidence_key": "relationship",
+                    "pattern": r"(?P<value>Alex Example works with Example Org)",
+                    "parser": "text",
+                },
+                "epistemic_status": "reported",
+                "epistemic_classification_basis": "direct_test_statement",
+                "profile_refs": [profile_ref],
+            }
+        ],
+        "events": [
+            {
+                "rule_key": "communication",
+                "event_type_ref": (
+                    "cpks.vocab.profile.organizational-context."
+                    "event_type.communication"
+                ),
+                "label": "Example communication",
+                "time_precision": "minute",
+                "time_modality": "actual",
+                "event_time_from_source": True,
+                "evidence_keys": ["communication"],
+                "profile_refs": [profile_ref],
+            }
+        ],
+        "participations": [
+            {
+                "rule_key": "communication_actor",
+                "entity_key": "person",
+                "event_key": "communication",
+                "role": "actor",
+                "evidence_keys": ["communication"],
+                "profile_refs": [profile_ref],
+            }
+        ],
+        "evidence_links": [
+            {
+                "rule_key": "relationship_report",
+                "subject_key": "person_affiliation",
+                "evidence_key": "relationship",
+                "role": "reports_statement",
+            },
+            {
+                "rule_key": "communication_support",
+                "subject_key": "communication",
+                "evidence_key": "communication",
+                "role": "supports",
+            },
+            {
+                "rule_key": "actor_support",
+                "subject_key": "communication_actor",
+                "evidence_key": "communication",
+                "role": "supports",
+            },
+        ],
+    }
+
+
+def test_relationship_candidate_and_generic_evidence_subjects_materialize() -> None:
+    evidence = {
+        "relationship": _evidence(
+            "relationship", "Alex Example works with Example Org"
+        ),
+        "communication": _evidence(
+            "communication", "Alex Example communicated the status"
+        ),
+    }
+    interpretation = RuleBasedSemanticInterpreter().interpret(
+        {"status": _record()},
+        evidence,
+        _organizational_rules(),
+    )
+
+    relationship_candidate = next(
+        item
+        for item in interpretation.candidate_payloads
+        if item.proposed_relationship is not None
+    )
+    assert relationship_candidate.profile_refs == (
+        "cpks.profile.organizational-context@0.1",
+    )
+    assert relationship_candidate.epistemic_context is not None
+    assert relationship_candidate.epistemic_context.status == "reported"
+    assert relationship_candidate.time[0].value == _record().source_time
+    forbidden = {
+        "candidate_id",
+        "review_state",
+        "publication_state",
+        "policy_decision",
+    }
+    assert forbidden.isdisjoint(relationship_candidate.to_dict())
+
+    semantic = SemanticStateMaterializer().materialize(
+        interpretation,
+        {
+            "claim_states": {
+                "person_affiliation": {"current": True, "preserved": True}
+            }
+        },
+    )
+    claim = semantic["claims"][0]
+    assert claim["relationship"] is True
+    assert claim["object_ref"] is not None
+    assert claim["epistemic_status"] == "reported"
+    assert claim["current"] is True
+    assert claim["preserved"] is True
+
+    subjects = {
+        (item["subject_type"], item["subject_ref"])
+        for item in semantic["evidence_links"]
+    }
+    assert ("claim", claim["claim_ref"]) in subjects
+    assert ("event", semantic["events"][0]["event_ref"]) in subjects
+    assert (
+        "event_participation",
+        semantic["participations"][0]["participation_ref"],
+    ) in subjects
+    assert semantic["events"][0]["event_time"] == _record().source_time
+
+
+def test_missing_relationship_extraction_emits_gap_without_stale_candidate() -> None:
+    rules = _organizational_rules()
+    result = RuleBasedSemanticInterpreter().interpret(
+        {"status": _record()},
+        {
+            "relationship": _evidence(
+                "relationship", "Alex Example and Example Org were mentioned"
+            ),
+            "communication": _evidence(
+                "communication", "Alex Example communicated the status"
+            ),
+        },
+        rules,
+    )
+
+    assert not any(
+        item.proposed_relationship is not None
+        for item in result.candidate_payloads
+    )
+    assert any(
+        gap.interpretation_rule_ref == "person_affiliation"
+        and gap.gap_code == "extraction_no_match"
+        for gap in result.known_gaps
+    )

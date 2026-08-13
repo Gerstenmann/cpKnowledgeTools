@@ -31,13 +31,21 @@ class SemanticStateMaterializer:
             curation.get("claim_states", {}),
         )
         claim_by_key = {item["rule_key"]: item for item in claims}
-        evidence_links = self._evidence_links(candidates, claim_by_key)
         events = self._events(candidates)
         event_by_key = {item["rule_key"]: item for item in events}
         participations = self._participations(
             candidates,
             entity_by_key,
             event_by_key,
+        )
+        participation_by_key = {
+            item["rule_key"]: item for item in participations
+        }
+        evidence_links = self._evidence_links(
+            candidates,
+            claim_by_key,
+            event_by_key,
+            participation_by_key,
         )
         conflict_sets = self._conflicts(
             claim_by_key,
@@ -87,6 +95,47 @@ class SemanticStateMaterializer:
         pattern_claims = []
         for candidate in candidates:
             proposal = candidate.proposed_claim
+            relationship = candidate.proposed_relationship
+            if relationship is not None:
+                if relationship.relationship_key not in claim_states:
+                    raise ValueError(
+                        "Downstream curation lacks explicit Claim state for "
+                        f"{relationship.relationship_key}"
+                    )
+                state = claim_states[relationship.relationship_key]
+                subject = entity_by_key[relationship.subject_key]
+                object_entity = entity_by_key[relationship.object_key]
+                claim_ref = stable_token(
+                    "CLM",
+                    subject["entity_ref"],
+                    relationship.predicate_ref,
+                    object_entity["entity_ref"],
+                    None,
+                )
+                assert candidate.epistemic_context is not None
+                claims.append(
+                    {
+                        "rule_key": relationship.relationship_key,
+                        "claim_ref": claim_ref,
+                        "subject_ref": subject["entity_ref"],
+                        "predicate_ref": relationship.predicate_ref,
+                        "value": None,
+                        "object_ref": object_entity["entity_ref"],
+                        "epistemic_status": candidate.epistemic_context.status,
+                        "source_keys": self._source_keys(candidate),
+                        "evidence_keys": [
+                            link.evidence_link_key
+                            for link in candidate.evidence_links
+                        ],
+                        "time": self._time(candidate),
+                        "time_modality": None,
+                        "current": state["current"],
+                        "preserved": state["preserved"],
+                        "value_qualifier": None,
+                        "relationship": True,
+                    }
+                )
+                continue
             if proposal is None:
                 continue
             if proposal.subject_entity_key is None or proposal.predicate_ref is None:
@@ -136,10 +185,12 @@ class SemanticStateMaterializer:
                     "evidence_keys": [
                         link.evidence_link_key for link in candidate.evidence_links
                     ],
+                    "time": self._time(candidate),
                     "time_modality": proposal.time_modality,
                     "current": state["current"],
                     "preserved": state["preserved"],
                     "value_qualifier": proposal.value_qualifier,
+                    "relationship": False,
                 }
             )
         return claims, pattern_claims
@@ -148,28 +199,54 @@ class SemanticStateMaterializer:
         self,
         candidates: tuple[SemanticCandidatePayload, ...],
         claim_by_key: dict[str, dict[str, Any]],
+        event_by_key: dict[str, dict[str, Any]],
+        participation_by_key: dict[str, dict[str, Any]],
     ) -> list[dict[str, Any]]:
         result = []
         for candidate in candidates:
-            proposal = candidate.proposed_claim
-            if (
-                proposal is None
-                or proposal.claim_key not in claim_by_key
-                or proposal.subject_entity_key is None
-            ):
+            subject_type: str | None = None
+            subject_ref: str | None = None
+            claim_ref: str | None = None
+            if candidate.proposed_claim is not None:
+                proposal = candidate.proposed_claim
+                if (
+                    proposal.claim_key in claim_by_key
+                    and proposal.subject_entity_key is not None
+                ):
+                    subject_type = "claim"
+                    subject_ref = claim_by_key[proposal.claim_key]["claim_ref"]
+                    claim_ref = subject_ref
+            elif candidate.proposed_relationship is not None:
+                proposal = candidate.proposed_relationship
+                subject_type = "claim"
+                subject_ref = claim_by_key[proposal.relationship_key]["claim_ref"]
+                claim_ref = subject_ref
+            elif candidate.proposed_event is not None:
+                proposal = candidate.proposed_event
+                subject_type = "event"
+                subject_ref = event_by_key[proposal.event_key]["event_ref"]
+            elif candidate.proposed_participation is not None:
+                proposal = candidate.proposed_participation
+                subject_type = "event_participation"
+                subject_ref = participation_by_key[
+                    proposal.participation_key
+                ]["participation_ref"]
+            if subject_type is None or subject_ref is None:
                 continue
-            claim = claim_by_key[proposal.claim_key]
             for link in candidate.evidence_links:
                 result.append(
                     {
                         "rule_key": link.evidence_link_key,
                         "evidence_link_ref": stable_token(
                             "EL",
-                            claim["claim_ref"],
+                            subject_type,
+                            subject_ref,
                             link.evidence_address_ref,
                             link.role,
                         ),
-                        "claim_ref": claim["claim_ref"],
+                        "subject_type": subject_type,
+                        "subject_ref": subject_ref,
+                        "claim_ref": claim_ref,
                         "evidence_address_ref": link.evidence_address_ref,
                         "role": link.role,
                     }
@@ -200,6 +277,9 @@ class SemanticStateMaterializer:
                     "time_modality": proposal.time_modality,
                     "source_keys": self._source_keys(candidate),
                     "evidence_keys": [
+                        item.evidence_link_key for item in candidate.evidence_links
+                    ],
+                    "evidence_address_refs": [
                         item.evidence_address_ref
                         for item in candidate.producer_provenance.evidence
                     ],
@@ -233,6 +313,9 @@ class SemanticStateMaterializer:
                     "event_ref": event["event_ref"],
                     "role": proposal.role,
                     "source_keys": self._source_keys(candidate),
+                    "evidence_keys": [
+                        item.evidence_link_key for item in candidate.evidence_links
+                    ],
                 }
             )
         return result
@@ -270,3 +353,14 @@ class SemanticStateMaterializer:
                 item.source_key for item in candidate.producer_provenance.evidence
             )
         )
+
+    def _time(self, candidate: SemanticCandidatePayload) -> list[dict[str, Any]]:
+        return [
+            {
+                "role": item.role,
+                "value": item.value,
+                "precision": item.precision,
+                "modality": item.modality,
+            }
+            for item in candidate.time
+        ]

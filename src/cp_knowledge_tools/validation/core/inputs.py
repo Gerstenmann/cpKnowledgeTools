@@ -173,11 +173,24 @@ def _content_hash(
 
 def _validate_profile_manifest(
     manifest: dict[str, Any],
-    expected_identity: tuple[str, str],
-) -> str:
-    profile_ref, version = expected_identity
+    expected_identity: tuple[str, str] | None = None,
+) -> tuple[tuple[str, str], str]:
     identity = (manifest.get("profile_ref"), manifest.get("profile_version"))
-    if identity != expected_identity or manifest.get("status") != "active":
+    if not all(isinstance(item, str) and item for item in identity):
+        _raise(
+            "core_knowledge_profile_resolution_failed",
+            "active Profile identity is missing or invalid",
+        )
+    if expected_identity is not None and identity != expected_identity:
+        _raise(
+            "core_knowledge_profile_resolution_failed",
+            (
+                "required active profile "
+                f"{expected_identity[0]}@{expected_identity[1]} was not supplied"
+            ),
+        )
+    profile_ref, version = identity
+    if manifest.get("status") != "active":
         _raise(
             "core_knowledge_profile_resolution_failed",
             f"required active profile {profile_ref}@{version} was not supplied",
@@ -191,7 +204,7 @@ def _validate_profile_manifest(
     payload = manifest.get("payload")
     if not isinstance(payload, dict) or (
         payload.get("profile_ref"), payload.get("profile_version")
-    ) != expected_identity:
+    ) != identity:
         _raise(
             "core_knowledge_profile_integrity_failed",
             f"profile payload identity does not match {profile_ref}@{version}",
@@ -216,7 +229,7 @@ def _validate_profile_manifest(
             f"profile hash mismatch: expected {expected_hash}, got {actual_hash}",
             "/content_hash/value",
         )
-    return actual_hash
+    return identity, actual_hash
 
 
 def prepare_core_inputs(
@@ -225,18 +238,27 @@ def prepare_core_inputs(
     corpus_manifest: dict[str, Any],
     corpus_payload: dict[str, Any],
     required_profile_manifests: list[dict[str, Any]],
+    applicable_profile_manifests: list[dict[str, Any]] | None = None,
 ) -> PreparedCoreInputs:
     """Resolve and verify the exact externally supplied active validation set."""
     profile_manifest = deepcopy(profile_manifest)
     corpus_manifest = deepcopy(corpus_manifest)
     corpus_payload = deepcopy(corpus_payload)
     required_profile_manifests = deepcopy(required_profile_manifests)
+    applicable_profile_manifests = deepcopy(applicable_profile_manifests or [])
 
-    core_hash = _validate_profile_manifest(profile_manifest, CORE_PROFILE)
-    supplied = {
-        (item.get("profile_ref"), item.get("profile_version")): item
-        for item in required_profile_manifests
-    }
+    _core_identity, core_hash = _validate_profile_manifest(
+        profile_manifest, CORE_PROFILE
+    )
+    supplied: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in required_profile_manifests:
+        identity = (item.get("profile_ref"), item.get("profile_version"))
+        if identity in supplied:
+            _raise(
+                "core_knowledge_profile_resolution_failed",
+                f"required Profile {identity[0]}@{identity[1]} was supplied twice",
+            )
+        supplied[identity] = item
     required_hashes: dict[str, str] = {}
     for identity in (CONTRACT_PROFILE, CANONICALIZATION_PROFILE):
         manifest = supplied.get(identity)
@@ -245,8 +267,33 @@ def prepare_core_inputs(
                 "core_knowledge_profile_resolution_failed",
                 f"required active profile {identity[0]}@{identity[1]} is missing",
             )
-        digest = _validate_profile_manifest(manifest, identity)
+        _resolved_identity, digest = _validate_profile_manifest(manifest, identity)
         required_hashes[f"{identity[0]}@{identity[1]}"] = digest
+
+    applicable_hashes: dict[str, str] = {}
+    applicable_identities: set[tuple[str, str]] = set()
+    infrastructure_profiles = {
+        CORE_PROFILE,
+        CONTRACT_PROFILE,
+        CANONICALIZATION_PROFILE,
+    }
+    for manifest in applicable_profile_manifests:
+        identity, digest = _validate_profile_manifest(manifest)
+        if identity in infrastructure_profiles:
+            _raise(
+                "core_knowledge_profile_resolution_failed",
+                (
+                    f"Validator infrastructure Profile {identity[0]}@{identity[1]} "
+                    "cannot be supplied as an applicable runtime Profile"
+                ),
+            )
+        if identity in applicable_identities:
+            _raise(
+                "core_knowledge_profile_resolution_failed",
+                f"applicable Profile {identity[0]}@{identity[1]} was supplied twice",
+            )
+        applicable_identities.add(identity)
+        applicable_hashes[f"{identity[0]}@{identity[1]}"] = digest
 
     declared_required = profile_manifest["payload"].get("required_profiles", [])
     declared_identities = {
@@ -404,7 +451,9 @@ def prepare_core_inputs(
         corpus_manifest=corpus_manifest,
         corpus_payload=corpus_payload,
         required_profile_manifests=tuple(required_profile_manifests),
+        applicable_profile_manifests=tuple(applicable_profile_manifests),
         profile_hash=core_hash,
         corpus_hash=actual_corpus_hash,
         required_profile_hashes=required_hashes,
+        applicable_profile_hashes=applicable_hashes,
     )

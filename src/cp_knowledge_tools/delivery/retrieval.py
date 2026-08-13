@@ -20,6 +20,9 @@ class RetrievalRequest:
     semantic_subject_refs: tuple[str, ...]
     claim_predicate_refs: tuple[str, ...] = ()
     event_type_refs: tuple[str, ...] = ()
+    participant_entity_refs: tuple[str, ...] = ()
+    participation_role_refs: tuple[str, ...] = ()
+    profile_refs: tuple[str, ...] = ()
     state_selection: StateSelection = "current"
 
 
@@ -34,8 +37,11 @@ class RetrievalResult:
     publication_unit_ref: dict[str, str]
     projection_ref: str
     projection_semantic_hash: str
+    profile_refs: tuple[str, ...]
+    knowledge_valid_time: tuple[dict[str, Any], ...]
     claim_items: tuple[dict[str, Any], ...]
     event_items: tuple[dict[str, Any], ...]
+    participation_items: tuple[dict[str, Any], ...]
     conflict_items: tuple[dict[str, Any], ...]
     evidence_content_resolved: bool
     evidence_resolution_status: str
@@ -94,9 +100,18 @@ class KnowledgeRetriever:
                 decision,
                 "request_failed",
             )
+        projection_profile_refs = tuple(projection.get("profile_refs", ()))
+        if not set(request.profile_refs).issubset(projection_profile_refs):
+            return self._empty_result(
+                projection,
+                request,
+                decision,
+                "request_failed",
+            )
 
         claims = self._select_claims(projection, request)
         events = self._select_events(projection, request)
+        participations = self._select_participations(projection, request)
         selected_claim_refs = {
             item["claim_ref"]["stable_id"] for item in claims
         }
@@ -121,14 +136,25 @@ class KnowledgeRetriever:
             )
             for item in claims
         )
-        event_items = tuple(self._event_result_item(item) for item in events)
-        outcome = "results" if claim_items or event_items else "no_available_results"
+        event_items = tuple(
+            self._event_result_item(item, projection) for item in events
+        )
+        participation_items = tuple(
+            self._participation_result_item(item, projection)
+            for item in participations
+        )
+        outcome = (
+            "results"
+            if claim_items or event_items or participation_items
+            else "no_available_results"
+        )
         payload = {
             "request_ref": request.retrieval_request_ref,
             "policy_decision_ref": decision.policy_decision_ref,
             "projection_ref": projection["projection_ref"],
             "claim_items": claim_items,
             "event_items": event_items,
+            "participation_items": participation_items,
             "conflict_items": conflicts,
         }
         return RetrievalResult(
@@ -141,8 +167,13 @@ class KnowledgeRetriever:
             publication_unit_ref=publication_ref,
             projection_ref=projection["projection_ref"],
             projection_semantic_hash=projection["semantic_hash"],
+            profile_refs=projection_profile_refs,
+            knowledge_valid_time=tuple(
+                projection.get("applicability", {}).get("valid_time", ())
+            ),
             claim_items=claim_items,
             event_items=event_items,
+            participation_items=participation_items,
             conflict_items=conflicts,
             evidence_content_resolved=False,
             evidence_resolution_status="citation_only",
@@ -205,11 +236,39 @@ class KnowledgeRetriever:
         projection: Mapping[str, Any],
         request: RetrievalRequest,
     ) -> tuple[dict[str, Any], ...]:
+        if request.participant_entity_refs or request.participation_role_refs:
+            return ()
         event_types = set(request.event_type_refs)
         return tuple(
             item
             for item in projection["event_index"]
             if item["event_type_ref"] in event_types
+        )
+
+    def _select_participations(
+        self,
+        projection: Mapping[str, Any],
+        request: RetrievalRequest,
+    ) -> tuple[dict[str, Any], ...]:
+        participant_refs = set(request.participant_entity_refs)
+        role_refs = set(request.participation_role_refs)
+        if not participant_refs and not role_refs:
+            return ()
+        event_types = set(request.event_type_refs)
+        matching_event_refs = {
+            item["event_ref"]["stable_id"]
+            for item in projection["event_index"]
+            if not event_types or item["event_type_ref"] in event_types
+        }
+        return tuple(
+            item
+            for item in projection["participation_index"]
+            if item["event_ref"]["stable_id"] in matching_event_refs
+            and (
+                not participant_refs
+                or item["entity_ref"]["stable_id"] in participant_refs
+            )
+            and (not role_refs or item["role"] in role_refs)
         )
 
     def _claim_result_item(
@@ -248,13 +307,59 @@ class KnowledgeRetriever:
             "evidence_content_resolved": False,
         }
 
-    def _event_result_item(self, event: dict[str, Any]) -> dict[str, Any]:
+    def _event_result_item(
+        self,
+        event: dict[str, Any],
+        projection: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        event_id = event["event_ref"]["stable_id"]
+        evidence_links = tuple(
+            item
+            for item in projection["evidence_index"]
+            if item["subject_ref"]["stable_id"] == event_id
+        )
         return {
             "subject_ref": event["event_ref"],
             "event_type_ref": event["event_type_ref"],
             "label": event["label"],
             "time": event["time"],
             "evidence_link_ids": tuple(event["evidence_link_ids"]),
+            "evidence_refs": tuple(
+                item["evidence_address_ref"] for item in evidence_links
+            ),
+            "evidence_links": evidence_links,
+            "evidence_content_resolved": False,
+        }
+
+    def _participation_result_item(
+        self,
+        participation: dict[str, Any],
+        projection: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        event_id = participation["event_ref"]["stable_id"]
+        event = next(
+            item
+            for item in projection["event_index"]
+            if item["event_ref"]["stable_id"] == event_id
+        )
+        evidence_links = tuple(
+            item
+            for item in projection["evidence_index"]
+            if item["subject_ref"]["stable_id"]
+            == participation["participation_ref"]["stable_id"]
+        )
+        return {
+            "subject_ref": participation["participation_ref"],
+            "entity_ref": participation["entity_ref"],
+            "event_ref": participation["event_ref"],
+            "role": participation["role"],
+            "event_type_ref": event["event_type_ref"],
+            "event_label": event["label"],
+            "event_time": event["time"],
+            "evidence_refs": tuple(
+                item["evidence_address_ref"] for item in evidence_links
+            ),
+            "evidence_links": evidence_links,
             "evidence_content_resolved": False,
         }
 
@@ -290,8 +395,17 @@ class KnowledgeRetriever:
             publication_unit_ref=publication_ref,
             projection_ref=projection_ref,
             projection_semantic_hash=projection_hash,
+            profile_refs=tuple(projection.get("profile_refs", ()))
+            if outcome != "request_denied"
+            else (),
+            knowledge_valid_time=tuple(
+                projection.get("applicability", {}).get("valid_time", ())
+            )
+            if outcome != "request_denied"
+            else (),
             claim_items=(),
             event_items=(),
+            participation_items=(),
             conflict_items=(),
             evidence_content_resolved=False,
             evidence_resolution_status="not_authorized",
@@ -345,6 +459,10 @@ class RetrievalRenderer:
         labels = reference_labels or {}
         lines = [self._render_claim(item, labels) for item in result.claim_items]
         lines.extend(self._render_event(item) for item in result.event_items)
+        lines.extend(
+            self._render_participation(item, labels)
+            for item in result.participation_items
+        )
         current_values = [
             self._object_value(item["statement"]["object"], labels)
             for item in result.claim_items
@@ -362,6 +480,7 @@ class RetrievalRenderer:
             "epistemic_status": epistemic.pop() if len(epistemic) == 1 else "mixed",
             "claims_actual_occurrence": "actual" in event_modalities,
             "evidence_resolution": result.evidence_resolution_status,
+            "profile_refs": result.profile_refs,
         }
 
     def _render_claim(
@@ -384,6 +503,23 @@ class RetrievalRenderer:
                 f"{time_value['modality']} {self._humanize_literal(value)}"
             )
         return f"Event {item['label']}: {', '.join(rendered_times)}."
+
+    def _render_participation(
+        self,
+        item: dict[str, Any],
+        labels: Mapping[str, str],
+    ) -> str:
+        entity_id = item["entity_ref"]["stable_id"]
+        entity_label = labels.get(entity_id, entity_id)
+        role = item["role"].rsplit(".", 1)[-1].replace("_", " ")
+        modalities = list(
+            dict.fromkeys(value["modality"] for value in item["event_time"])
+        )
+        event_state = f"{' / '.join(modalities)} " if modalities else ""
+        return (
+            f"{entity_label} participated as {role} in "
+            f"{event_state}{item['event_label']}."
+        )
 
     def _object_value(
         self,

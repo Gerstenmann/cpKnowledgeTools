@@ -29,6 +29,12 @@ def _parser() -> argparse.ArgumentParser:
         action="append",
         required=True,
     )
+    parser.add_argument(
+        "--applicable-profile-manifest",
+        type=Path,
+        action="append",
+        default=[],
+    )
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--publication-unit", type=Path)
     parser.add_argument("--publication-report", type=Path)
@@ -44,6 +50,9 @@ def main() -> int:
             corpus_payload=load_json_object(args.corpus_payload),
             required_profile_manifests=[
                 load_manifest(path) for path in args.required_profile_manifest
+            ],
+            applicable_profile_manifests=[
+                load_manifest(path) for path in args.applicable_profile_manifest
             ],
         )
         validator = CoreKnowledgeValidator(inputs)

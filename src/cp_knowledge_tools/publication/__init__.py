@@ -1,4 +1,8 @@
-from .assembler import PublicationUnitAssembler, load_publication_manifest
+from .assembler import (
+    PublicationAssemblyError,
+    PublicationUnitAssembler,
+    load_publication_manifest,
+)
 from .codec import (
     PublicationUnitCodecError,
     PublicationUnitDocument,
@@ -6,8 +10,29 @@ from .codec import (
     parse_publication_unit,
     render_publication_unit,
 )
+from .models import (
+    PublicationApplicability,
+    PublicationAssemblyPlan,
+    PublicationInterpretationProvenance,
+    PublicationPolicyAnchor,
+    PublicationPolicyBinding,
+    PublicationRepresentation,
+    PublicationRepresentationItem,
+    PublicationRepresentationSection,
+    PublicationSemanticReference,
+)
 
 __all__ = [
+    "PublicationApplicability",
+    "PublicationAssemblyError",
+    "PublicationAssemblyPlan",
+    "PublicationInterpretationProvenance",
+    "PublicationPolicyAnchor",
+    "PublicationPolicyBinding",
+    "PublicationRepresentation",
+    "PublicationRepresentationItem",
+    "PublicationRepresentationSection",
+    "PublicationSemanticReference",
     "PublicationUnitAssembler",
     "PublicationUnitCodecError",
     "PublicationUnitDocument",

@@ -49,6 +49,8 @@ class DerivedRetrievalBuilder:
                 "version": manifest["knowledge_object_version"],
                 "authority_context": "Semantic Core",
             },
+            "profile_refs": list(manifest.get("profile_refs", [])),
+            "applicability": manifest.get("applicability", {}),
             "claim_index": claims,
             "event_index": events,
             "participation_index": sorted(

@@ -56,9 +56,11 @@ class PreparedCoreInputs:
     corpus_manifest: dict[str, Any]
     corpus_payload: dict[str, Any]
     required_profile_manifests: tuple[dict[str, Any], ...]
+    applicable_profile_manifests: tuple[dict[str, Any], ...]
     profile_hash: str
     corpus_hash: str
     required_profile_hashes: dict[str, str]
+    applicable_profile_hashes: dict[str, str]
 
     @property
     def profile_payload(self) -> dict[str, Any]:

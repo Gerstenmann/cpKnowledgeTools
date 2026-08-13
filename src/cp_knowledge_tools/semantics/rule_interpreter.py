@@ -16,6 +16,7 @@ from .candidates import (
     ProposedEvent,
     ProposedEvidenceLink,
     ProposedParticipation,
+    ProposedRelationship,
     ProposedTime,
     SemanticCandidatePayload,
     SemanticInterpretationResult,
@@ -34,7 +35,7 @@ class RuleBasedSemanticInterpreter:
     """
 
     producer_ref = "CPKT-RULE-INTERPRETER"
-    producer_version = "0.2"
+    producer_version = "0.3"
 
     def __init__(
         self,
@@ -65,12 +66,31 @@ class RuleBasedSemanticInterpreter:
             )
             self._collect(candidate, gap, candidates, gaps)
 
+        for rule in rules.get("relationships", []):
+            candidate, gap = self._relationship_candidate(
+                records,
+                evidence,
+                rule,
+                link_rules,
+            )
+            self._collect(candidate, gap, candidates, gaps)
+
         for rule in rules.get("events", []):
-            candidate, gap = self._event_candidate(records, evidence, rule)
+            candidate, gap = self._event_candidate(
+                records,
+                evidence,
+                rule,
+                link_rules,
+            )
             self._collect(candidate, gap, candidates, gaps)
 
         for rule in rules.get("participations", []):
-            candidate = self._participation_candidate(records, evidence, rule)
+            candidate = self._participation_candidate(
+                records,
+                evidence,
+                rule,
+                link_rules,
+            )
             candidates.append(candidate)
 
         for rule in rules.get("pattern_claims", []):
@@ -208,6 +228,7 @@ class RuleBasedSemanticInterpreter:
         records: dict[str, SourceRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
+        link_rules: list[dict[str, Any]],
     ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
         addresses = self._addresses(records, evidence, rule)
         extraction = None
@@ -218,14 +239,34 @@ class RuleBasedSemanticInterpreter:
                 return None, gap
             assert extraction is not None
             event_time = str(extraction.value)
+        elif rule.get("event_time_from_source"):
+            source_times = {
+                records[address.source_key].source_time for address in addresses
+            }
+            if len(source_times) != 1:
+                raise ValueError(
+                    "Event source-time derivation requires one unique source time: "
+                    f"{rule['rule_key']}"
+                )
+            event_time = source_times.pop()
+        candidate_links = self._candidate_evidence_links(
+            evidence,
+            rule["rule_key"],
+            link_rules,
+        )
+        mapping_fields = [
+            "event_type_ref",
+            "label",
+            "time_precision",
+            "time_modality",
+        ]
+        if rule.get("event_time_from_source"):
+            mapping_fields.append("event_time_from_source")
+        if candidate_links:
+            mapping_fields.append("evidence_links.role")
         mapping = self._mapping_provenance(
             rule,
-            configured_fields=(
-                "event_type_ref",
-                "label",
-                "time_precision",
-                "time_modality",
-            ),
+            configured_fields=tuple(mapping_fields),
         )
         time = (
             ProposedTime(
@@ -247,6 +288,7 @@ class RuleBasedSemanticInterpreter:
                     time_precision=rule.get("time_precision", "unknown"),
                     time_modality=rule.get("time_modality", "planned"),
                 ),
+                evidence_links=candidate_links,
                 time=time,
                 applicability=self._applicability(rule),
                 profile_refs=tuple(rule.get("profile_refs", ())),
@@ -264,6 +306,7 @@ class RuleBasedSemanticInterpreter:
         records: dict[str, SourceRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
+        link_rules: list[dict[str, Any]],
     ) -> SemanticCandidatePayload:
         addresses = self._addresses(records, evidence, rule)
         role = rule["role"]
@@ -271,7 +314,12 @@ class RuleBasedSemanticInterpreter:
             raise ValueError("Event Participation role is mandatory")
         mapping = self._mapping_provenance(
             rule,
-            configured_fields=("entity_key", "event_key", "role"),
+            configured_fields=(
+                "entity_key",
+                "event_key",
+                "role",
+                "evidence_links.role",
+            ),
         )
         return SemanticCandidatePayload(
             candidate_payload_kind="implementation_local.proposed_participation",
@@ -282,9 +330,83 @@ class RuleBasedSemanticInterpreter:
                 event_key=rule["event_key"],
                 role=role,
             ),
+            evidence_links=self._candidate_evidence_links(
+                evidence,
+                rule["rule_key"],
+                link_rules,
+            ),
             applicability=self._applicability(rule),
             profile_refs=tuple(rule.get("profile_refs", ())),
             producer_provenance=self._producer(addresses, None, mapping),
+        )
+
+    def _relationship_candidate(
+        self,
+        records: dict[str, SourceRecord],
+        evidence: dict[str, EvidenceAddress],
+        rule: dict[str, Any],
+        link_rules: list[dict[str, Any]],
+    ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
+        addresses = self._addresses(records, evidence, rule)
+        extraction, gap = self._extract(rule, evidence, addresses)
+        if gap is not None:
+            return None, gap
+        assert extraction is not None
+        candidate_links = self._candidate_evidence_links(
+            evidence,
+            rule["rule_key"],
+            link_rules,
+        )
+        time = tuple(
+            ProposedTime(
+                role="source_time",
+                value=records[address.source_key].source_time,
+                precision="minute",
+                modality="actual",
+            )
+            for address in addresses
+        )
+        mapping = self._mapping_provenance(
+            rule,
+            configured_fields=(
+                "subject_key",
+                "predicate_ref",
+                "object_key",
+                "epistemic_status",
+                "epistemic_classification_basis",
+                "evidence_links.role",
+                "time.source_time",
+            ),
+        )
+        return (
+            SemanticCandidatePayload(
+                candidate_payload_kind=(
+                    "implementation_local.proposed_relationship"
+                ),
+                interpretation_rule_ref=rule["rule_key"],
+                proposed_relationship=ProposedRelationship(
+                    relationship_key=rule["rule_key"],
+                    subject_key=rule["subject_key"],
+                    predicate_ref=rule["predicate_ref"],
+                    object_key=rule["object_key"],
+                ),
+                evidence_links=candidate_links,
+                time=time,
+                epistemic_context=EpistemicContext(
+                    status=rule["epistemic_status"],
+                    classification_basis=rule[
+                        "epistemic_classification_basis"
+                    ],
+                ),
+                applicability=self._applicability(rule),
+                profile_refs=tuple(rule.get("profile_refs", ())),
+                producer_provenance=self._producer(
+                    addresses,
+                    extraction,
+                    mapping,
+                ),
+            ),
+            None,
         )
 
     def _pattern_claim_candidate(
@@ -433,12 +555,13 @@ class RuleBasedSemanticInterpreter:
     def _candidate_evidence_links(
         self,
         evidence: dict[str, EvidenceAddress],
-        claim_key: str,
+        subject_key: str,
         link_rules: list[dict[str, Any]],
     ) -> tuple[ProposedEvidenceLink, ...]:
         result = []
         for rule in link_rules:
-            if rule["claim_key"] != claim_key:
+            configured_subject_key = rule.get("subject_key", rule.get("claim_key"))
+            if configured_subject_key != subject_key:
                 continue
             address = evidence[rule["evidence_key"]]
             result.append(

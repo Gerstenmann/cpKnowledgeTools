@@ -1,10 +1,10 @@
 {
   "scenario_ref": "GT-S2K-MINI-DOSSIER-01",
-  "scenario_version": "1.0",
+  "scenario_version": "1.2",
   "title": "Minecraft Education Esports Mini-Dossier",
-  "decision_ref": "CPKS-DEC-028@1.0",
-  "architecture_ref": "CPKT-SPEC-ARCH@1.2",
-  "golden_truth_source": "Projects/Internal/Kommunikations-Wissen verarbeiten und bereitstellen/Golden-Truth-Matrix.md",
+  "decision_ref": "CPKS-DEC-028@1.1",
+  "architecture_ref": "CPKT-SPEC-ARCH@1.5",
+  "golden_truth_source": "Projects/Internal/Kommunikations-Wissen verarbeiten und bereitstellen/Golden-Truth-Matrix – Source-to-Knowledge Core MVP Mini-Dossier.md",
   "sensitivity": "synthetic_non_sensitive",
   "test_harness_contract": {
     "result_format_version": "0.1",
@@ -13,17 +13,23 @@
   },
   "rule_sources": [
     "CPKS-FWK-ARCH@0.1",
-    "CPKS-DEC-028@1.0",
+    "CPKS-DEC-028@1.1",
     "CPKS-SPEC-SRC@0.2",
     "CPKS-SPEC-KM@0.20",
     "CPKS-SPEC-KM-VOC@0.1",
     "CPKS-SPEC-KM-PU@0.1",
     "CPKS-SPEC-KPR@0.2",
-    "CPKS-SPEC-SEC@0.2",
-    "CPKS-SPEC-MEM@0.2",
+    "CPKS-SPEC-SEC@0.3",
+    "CPKS-SPEC-MEM@0.3",
     "CPKS-SPEC-VAL@0.2",
-    "CPKT-SPEC-ARCH@1.2"
+    "cpks.profile.organizational-context@0.1",
+    "CPKS-SPEC-TST@0.1",
+    "CPKT-SPEC-ARCH@1.5"
   ],
+  "profile_refs": [
+    "cpks.profile.organizational-context@0.1"
+  ],
+  "golden_as_of": "2024-09-06T15:30:00+02:00",
   "fixture_bindings": [
     {
       "source_key": "DOC-01",
@@ -54,11 +60,18 @@
   ],
   "expected_counts": {
     "entities_exact": 7,
-    "fixed_claims_min": 14,
-    "events_min": 3,
+    "fixed_claims_min": 21,
+    "relational_claims_min": 5,
+    "events_min": 7,
+    "organizational_action_events_min": 4,
+    "event_participations_min": 6,
     "conflict_sets_min": 3,
-    "fixed_evidence_addresses_min": 16,
-    "fixed_evidence_links_min": 17
+    "fixed_evidence_addresses_min": 26,
+    "fixed_evidence_links_min": 38,
+    "experience_projections_exact": 1,
+    "experience_gaps_min": 7,
+    "continuation_retrieval_requirements_min": 1,
+    "lesson_learned_candidates_exact": 0
   },
   "entities": [
     {
@@ -199,6 +212,16 @@
       "value": "deferred"
     },
     {
+      "gt_id": "CLM-CLASSROOM-INTEGRATION-DEPENDS-ON-PILOT-EVALUATION",
+      "predicate_ref": "cpkt.test.minecraft.classroom_integration_dependency",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "requires_pilot_evaluation"
+    },
+    {
       "gt_id": "CLM-EXT-COMP-LATER-POSSIBLE",
       "final_epistemic_status": "reported",
       "current": true,
@@ -219,6 +242,16 @@
       "value": "not_approved"
     },
     {
+      "gt_id": "CLM-EXT-COMP-DECISION-DEPENDS-ON-PILOT-EVALUATION",
+      "predicate_ref": "cpkt.test.minecraft.external_competition_decision_dependency",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ],
+      "value": "depends_on_internal_pilot_evaluation"
+    },
+    {
       "gt_id": "CLM-PREVIOUS-MC-SUCCESS-REPORTED",
       "final_epistemic_status": "reported",
       "current": true,
@@ -237,6 +270,70 @@
       ],
       "value": "approved internal budget",
       "restricted_detail_evidence": "EA-16-RESTRICTED"
+    },
+    {
+      "gt_id": "CLM-REL-CHRIS-CODELAB-AFFILIATED",
+      "relationship": true,
+      "subject_gt_id": "ENT-CHRIS-BERGER",
+      "predicate_ref": "cpks.vocab.profile.organizational-context.relationship_predicate.affiliated_with",
+      "object_gt_id": "ENT-CODELAB",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-01",
+        "DOC-03"
+      ]
+    },
+    {
+      "gt_id": "CLM-REL-VERA-RMIS-AFFILIATED",
+      "relationship": true,
+      "subject_gt_id": "ENT-VERA-ANDERS",
+      "predicate_ref": "cpks.vocab.profile.organizational-context.relationship_predicate.affiliated_with",
+      "object_gt_id": "ENT-RMIS",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-01",
+        "DOC-03"
+      ]
+    },
+    {
+      "gt_id": "CLM-REL-CHRIS-RMIS-PROVIDES-SERVICES",
+      "relationship": true,
+      "subject_gt_id": "ENT-CHRIS-BERGER",
+      "predicate_ref": "cpks.vocab.profile.organizational-context.relationship_predicate.provides_services_at",
+      "object_gt_id": "ENT-RMIS",
+      "final_epistemic_status": "reported",
+      "current": true,
+      "source_keys": [
+        "DOC-01",
+        "DOC-02"
+      ],
+      "must_not_be_confirmed_without_independent_evidence": true
+    },
+    {
+      "gt_id": "CLM-REL-JAMES-PILOT-ASSIGNED",
+      "relationship": true,
+      "subject_gt_id": "ENT-JAMES-STONE",
+      "predicate_ref": "cpks.vocab.profile.organizational-context.relationship_predicate.assigned_to",
+      "object_gt_id": "ENT-ME-ESPORTS-PILOT",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ]
+    },
+    {
+      "gt_id": "CLM-REL-JAMES-PILOT-RESPONSIBLE",
+      "relationship": true,
+      "subject_gt_id": "ENT-JAMES-STONE",
+      "predicate_ref": "cpks.vocab.profile.organizational-context.relationship_predicate.responsible_for",
+      "object_gt_id": "ENT-ME-ESPORTS-PILOT",
+      "final_epistemic_status": "confirmed",
+      "current": true,
+      "source_keys": [
+        "DOC-03"
+      ]
     }
   ],
   "pattern_rules": [
@@ -437,6 +534,126 @@
         ]
       },
       "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-17",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "From",
+          "Chris Berger, CodeLab Rhine-Main"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-18",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "To",
+          "Chris Berger, CodeLab Rhine-Main"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-19",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "To",
+          "Vera Anders, Rhein-Main International School"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-20",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "From",
+          "Vera Anders, Rhein-Main International School"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-21",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "coding and robotics activities at the school for several years",
+          "teach two Minecraft coding courses"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-22",
+      "source_key": "DOC-02",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "You mentioned that you teach at the school"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-23",
+      "source_key": "DOC-01",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "I would like to propose a small Minecraft Education esports pilot."
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-24",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "We completed our internal discussion and can now confirm a limited first pilot."
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-25",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "Confirmed pilot decisions",
+          "Confirmed status"
+        ]
+      },
+      "must_remain_resolvable": true
+    },
+    {
+      "gt_id": "EA-26",
+      "source_key": "DOC-03",
+      "fixture_locator": {
+        "strategy": "text_fragments",
+        "required_fragments": [
+          "From",
+          "To",
+          "Cc",
+          "Date",
+          "Confirmed scope for Minecraft Education pilot"
+        ]
+      },
+      "must_remain_resolvable": true
     }
   ],
   "evidence_links": [
@@ -541,6 +758,151 @@
       "claim_gt_id": "CLM-BUDGET-APPROVED",
       "evidence_gt_id": "EA-15",
       "role": "supports"
+    },
+    {
+      "gt_id": "EL-18",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-CHRIS-CODELAB-AFFILIATED",
+      "evidence_gt_id": "EA-17",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-19",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-CHRIS-CODELAB-AFFILIATED",
+      "evidence_gt_id": "EA-18",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-20",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-VERA-RMIS-AFFILIATED",
+      "evidence_gt_id": "EA-19",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-21",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-VERA-RMIS-AFFILIATED",
+      "evidence_gt_id": "EA-20",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-22",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-CHRIS-RMIS-PROVIDES-SERVICES",
+      "evidence_gt_id": "EA-21",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-23",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-CHRIS-RMIS-PROVIDES-SERVICES",
+      "evidence_gt_id": "EA-22",
+      "role": "reports_statement"
+    },
+    {
+      "gt_id": "EL-24",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-JAMES-PILOT-ASSIGNED",
+      "evidence_gt_id": "EA-08",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-25",
+      "subject_type": "claim",
+      "subject_gt_id": "CLM-REL-JAMES-PILOT-RESPONSIBLE",
+      "evidence_gt_id": "EA-08",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-26",
+      "subject_type": "event",
+      "subject_gt_id": "EVT-PILOT-PROPOSAL",
+      "evidence_gt_id": "EA-23",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-27",
+      "subject_type": "event",
+      "subject_gt_id": "EVT-PILOT-DECISION",
+      "evidence_gt_id": "EA-24",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-28",
+      "subject_type": "event",
+      "subject_gt_id": "EVT-PILOT-DECISION",
+      "evidence_gt_id": "EA-25",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-29",
+      "subject_type": "event",
+      "subject_gt_id": "EVT-PILOT-STATUS-CONFIRMATION",
+      "evidence_gt_id": "EA-24",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-30",
+      "subject_type": "event",
+      "subject_gt_id": "EVT-PILOT-STATUS-COMMUNICATION",
+      "evidence_gt_id": "EA-26",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-31",
+      "subject_type": "event_participation",
+      "subject_gt_id": "PART-CHRIS-PROPOSAL-INITIATOR",
+      "evidence_gt_id": "EA-23",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-32",
+      "subject_type": "event_participation",
+      "subject_gt_id": "PART-RMIS-PILOT-DECISION-MAKER",
+      "evidence_gt_id": "EA-24",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-33",
+      "subject_type": "event_participation",
+      "subject_gt_id": "PART-RMIS-PILOT-CONFIRMER",
+      "evidence_gt_id": "EA-24",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-34",
+      "subject_type": "event_participation",
+      "subject_gt_id": "PART-VERA-STATUS-COMM-ACTOR",
+      "evidence_gt_id": "EA-26",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-35",
+      "subject_type": "event_participation",
+      "subject_gt_id": "PART-CHRIS-STATUS-COMM-RECIPIENT",
+      "evidence_gt_id": "EA-26",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-36",
+      "subject_type": "event_participation",
+      "subject_gt_id": "PART-JAMES-INTERNAL-PILOT-ORGANIZER",
+      "evidence_gt_id": "EA-08",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-37",
+      "claim_gt_id": "CLM-CLASSROOM-INTEGRATION-DEPENDS-ON-PILOT-EVALUATION",
+      "evidence_gt_id": "EA-11",
+      "role": "supports"
+    },
+    {
+      "gt_id": "EL-38",
+      "claim_gt_id": "CLM-EXT-COMP-DECISION-DEPENDS-ON-PILOT-EVALUATION",
+      "evidence_gt_id": "EA-13",
+      "role": "supports"
     }
   ],
   "events": [
@@ -580,6 +942,88 @@
       "source_keys": [
         "DOC-03"
       ]
+    },
+    {
+      "gt_id": "EVT-PILOT-PROPOSAL",
+      "label": "Pilot proposal",
+      "event_type_ref": "cpks.vocab.profile.organizational-context.event_type.proposal",
+      "event_time": "2024-08-30T17:01:00+02:00",
+      "time_precision": "minute",
+      "time_modality": "actual",
+      "source_keys": [
+        "DOC-01"
+      ]
+    },
+    {
+      "gt_id": "EVT-PILOT-DECISION",
+      "label": "Pilot decision",
+      "event_type_ref": "cpks.vocab.profile.organizational-context.event_type.decision",
+      "event_time": null,
+      "time_precision": "unknown",
+      "time_modality": "actual",
+      "source_keys": [
+        "DOC-03"
+      ]
+    },
+    {
+      "gt_id": "EVT-PILOT-STATUS-CONFIRMATION",
+      "label": "Pilot status confirmation",
+      "event_type_ref": "cpks.vocab.profile.organizational-context.event_type.confirmation",
+      "event_time": "2024-09-06T15:30:00+02:00",
+      "time_precision": "minute",
+      "time_modality": "actual",
+      "source_keys": [
+        "DOC-03"
+      ]
+    },
+    {
+      "gt_id": "EVT-PILOT-STATUS-COMMUNICATION",
+      "label": "Confirmed pilot status communication",
+      "event_type_ref": "cpks.vocab.profile.organizational-context.event_type.communication",
+      "event_time": "2024-09-06T15:30:00+02:00",
+      "time_precision": "minute",
+      "time_modality": "actual",
+      "source_keys": [
+        "DOC-03"
+      ]
+    }
+  ],
+  "event_participations": [
+    {
+      "gt_id": "PART-CHRIS-PROPOSAL-INITIATOR",
+      "event_gt_id": "EVT-PILOT-PROPOSAL",
+      "entity_gt_id": "ENT-CHRIS-BERGER",
+      "role": "initiator"
+    },
+    {
+      "gt_id": "PART-RMIS-PILOT-DECISION-MAKER",
+      "event_gt_id": "EVT-PILOT-DECISION",
+      "entity_gt_id": "ENT-RMIS",
+      "role": "cpks.vocab.profile.organizational-context.event_participation_role.decision_maker"
+    },
+    {
+      "gt_id": "PART-RMIS-PILOT-CONFIRMER",
+      "event_gt_id": "EVT-PILOT-STATUS-CONFIRMATION",
+      "entity_gt_id": "ENT-RMIS",
+      "role": "cpks.vocab.profile.organizational-context.event_participation_role.confirmer"
+    },
+    {
+      "gt_id": "PART-VERA-STATUS-COMM-ACTOR",
+      "event_gt_id": "EVT-PILOT-STATUS-COMMUNICATION",
+      "entity_gt_id": "ENT-VERA-ANDERS",
+      "role": "actor"
+    },
+    {
+      "gt_id": "PART-CHRIS-STATUS-COMM-RECIPIENT",
+      "event_gt_id": "EVT-PILOT-STATUS-COMMUNICATION",
+      "entity_gt_id": "ENT-CHRIS-BERGER",
+      "role": "recipient"
+    },
+    {
+      "gt_id": "PART-JAMES-INTERNAL-PILOT-ORGANIZER",
+      "event_gt_id": "EVT-INTERNAL-PILOT",
+      "entity_gt_id": "ENT-JAMES-STONE",
+      "role": "organizer"
     }
   ],
   "conflict_sets": [
@@ -641,11 +1085,17 @@
     "schema_ref": "CPKS-SPEC-KM-PU@0.1",
     "semantic_model_ref": "CPKS-SPEC-KM@0.20",
     "vocabulary_set_ref": "CPKS-SPEC-KM-VOC@0.1",
-    "cross_view_validation": "pass"
+    "cross_view_validation": "pass",
+    "profile_refs": [
+      "cpks.profile.organizational-context@0.1"
+    ]
   },
   "policy_case": {
     "consumer": "CONSUMER-CLAIM-READ-NO-BUDGET-EVIDENCE",
     "purpose": "retrieve_pilot_status",
+    "profile_refs": [
+      "cpks.profile.organizational-context@0.1"
+    ],
     "claim_read": {
       "claim_gt_id": "CLM-BUDGET-APPROVED",
       "expected": "permit",
@@ -760,8 +1210,298 @@
         "3200"
       ],
       "evidence_resolution": "not_authorized"
+    },
+    {
+      "query_key": "chris_organization_affiliation",
+      "required_current_claim_gt_ids": [
+        "CLM-REL-CHRIS-CODELAB-AFFILIATED"
+      ],
+      "must_contain": [
+        "CodeLab Rhine-Main"
+      ]
+    },
+    {
+      "query_key": "vera_organization_affiliation",
+      "required_current_claim_gt_ids": [
+        "CLM-REL-VERA-RMIS-AFFILIATED"
+      ],
+      "must_contain": [
+        "Rhein-Main International School"
+      ]
+    },
+    {
+      "query_key": "chris_services_at_school",
+      "required_current_claim_gt_ids": [
+        "CLM-REL-CHRIS-RMIS-PROVIDES-SERVICES"
+      ],
+      "must_contain": [
+        "Rhein-Main International School"
+      ],
+      "must_preserve_reported_status": true
+    },
+    {
+      "query_key": "james_pilot_assignment",
+      "required_current_claim_gt_ids": [
+        "CLM-REL-JAMES-PILOT-ASSIGNED"
+      ],
+      "must_contain": [
+        "Minecraft Education esports pilot"
+      ]
+    },
+    {
+      "query_key": "james_pilot_responsibility",
+      "required_current_claim_gt_ids": [
+        "CLM-REL-JAMES-PILOT-RESPONSIBLE"
+      ],
+      "must_contain": [
+        "Minecraft Education esports pilot"
+      ],
+      "must_not_contain": [
+        "authorized",
+        "legal liability",
+        "financial liability"
+      ]
+    },
+    {
+      "query_key": "pilot_proposal_participation",
+      "required_event_gt_ids": [
+        "EVT-PILOT-PROPOSAL"
+      ],
+      "required_participation_gt_ids": [
+        "PART-CHRIS-PROPOSAL-INITIATOR"
+      ],
+      "must_contain": [
+        "Chris Berger",
+        "initiator"
+      ]
+    },
+    {
+      "query_key": "pilot_decision_participation",
+      "required_event_gt_ids": [
+        "EVT-PILOT-DECISION"
+      ],
+      "required_participation_gt_ids": [
+        "PART-RMIS-PILOT-DECISION-MAKER"
+      ],
+      "must_contain": [
+        "Rhein-Main International School",
+        "decision maker"
+      ],
+      "must_not_contain": [
+        "Vera Anders"
+      ]
+    },
+    {
+      "query_key": "pilot_confirmation_participation",
+      "required_event_gt_ids": [
+        "EVT-PILOT-STATUS-CONFIRMATION"
+      ],
+      "required_participation_gt_ids": [
+        "PART-RMIS-PILOT-CONFIRMER"
+      ],
+      "must_contain": [
+        "Rhein-Main International School",
+        "confirmer"
+      ]
+    },
+    {
+      "query_key": "pilot_communication_participation",
+      "required_event_gt_ids": [
+        "EVT-PILOT-STATUS-COMMUNICATION"
+      ],
+      "required_participation_gt_ids": [
+        "PART-VERA-STATUS-COMM-ACTOR",
+        "PART-CHRIS-STATUS-COMM-RECIPIENT"
+      ],
+      "must_contain": [
+        "Vera Anders",
+        "actor",
+        "Chris Berger",
+        "recipient"
+      ]
+    },
+    {
+      "query_key": "internal_pilot_organizer",
+      "required_event_gt_ids": [
+        "EVT-INTERNAL-PILOT"
+      ],
+      "required_participation_gt_ids": [
+        "PART-JAMES-INTERNAL-PILOT-ORGANIZER"
+      ],
+      "must_contain": [
+        "James Stone",
+        "organizer",
+        "planned"
+      ],
+      "must_not_contain": [
+        "completed"
+      ]
+    },
+    {
+      "query_key": "representation_abstention",
+      "expected_outcome": "no_available_results",
+      "must_not_contain": [
+        "represents"
+      ]
+    },
+    {
+      "query_key": "employment_abstention",
+      "expected_outcome": "no_available_results",
+      "must_not_contain": [
+        "employed by"
+      ]
     }
   ],
+  "experience": {
+    "experience_ref": "EXP-GT-ME-ESPORTS-PILOT-RMIS-2024",
+    "focus_knowledge_object_ref": "KO-GT-ME-ESPORTS-PILOT@0.1",
+    "as_of": "2024-09-06T15:30:00+02:00",
+    "experience_completeness": "partial",
+    "phases": [
+      {
+        "phase_ref": "context",
+        "status": "supported"
+      },
+      {
+        "phase_ref": "intent",
+        "status": "supported"
+      },
+      {
+        "phase_ref": "proposal",
+        "status": "supported"
+      },
+      {
+        "phase_ref": "decision",
+        "status": "supported"
+      },
+      {
+        "phase_ref": "scope",
+        "status": "supported"
+      },
+      {
+        "phase_ref": "execution",
+        "status": "unresolved"
+      },
+      {
+        "phase_ref": "evaluation",
+        "status": "unresolved"
+      },
+      {
+        "phase_ref": "outcome",
+        "status": "unresolved"
+      },
+      {
+        "phase_ref": "follow_up",
+        "status": "unresolved"
+      }
+    ],
+    "threads": [
+      {
+        "thread_ref": "scope_evaluation",
+        "semantic_gt_refs": [
+          "CLM-SCOPE-OPEN",
+          "CLM-SCOPE-AFTERSCHOOL",
+          "CLM-ACADEMIC-DEFERRED",
+          "CLM-CLASSROOM-INTEGRATION-DEPENDS-ON-PILOT-EVALUATION"
+        ]
+      },
+      {
+        "thread_ref": "external_competition",
+        "semantic_gt_refs": [
+          "CLM-EXT-COMP-LATER-POSSIBLE",
+          "CLM-EXT-COMP-NOT-APPROVED",
+          "CLM-EXT-COMP-DECISION-DEPENDS-ON-PILOT-EVALUATION"
+        ]
+      }
+    ],
+    "gaps": [
+      {
+        "gap_ref": "EXP-GAP-PILOT-EXECUTION",
+        "phase_ref": "execution",
+        "status": "unresolved"
+      },
+      {
+        "gap_ref": "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+        "phase_ref": "evaluation",
+        "status": "unresolved"
+      },
+      {
+        "gap_ref": "EXP-GAP-PILOT-EVALUATION-RESULT",
+        "phase_ref": "evaluation",
+        "status": "unresolved"
+      },
+      {
+        "gap_ref": "EXP-GAP-PILOT-OUTCOME",
+        "phase_ref": "outcome",
+        "status": "unresolved"
+      },
+      {
+        "gap_ref": "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP",
+        "phase_ref": "follow_up",
+        "status": "unresolved"
+      },
+      {
+        "gap_ref": "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP",
+        "phase_ref": "follow_up",
+        "status": "unresolved"
+      },
+      {
+        "gap_ref": "EXP-GAP-PILOT-REPETITION",
+        "phase_ref": "follow_up",
+        "status": "unresolved"
+      }
+    ],
+    "reuse_context": {
+      "domain_terms": [
+        "education",
+        "school",
+        "pilot"
+      ],
+      "topic_terms": [
+        "minecraft_education",
+        "esports",
+        "after_school",
+        "classroom_integration",
+        "pilot_evaluation",
+        "external_competition"
+      ],
+      "purpose_terms": [
+        "proposal_planning",
+        "similar_experience_retrieval",
+        "experience_reuse",
+        "lesson_learned_discovery"
+      ]
+    },
+    "continuation_requirement": {
+      "continuation_ref": "EXP-CONT-01",
+      "status": "required_for_reusable_experience",
+      "critical_gap_refs": [
+        "EXP-GAP-PILOT-EXECUTION",
+        "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+        "EXP-GAP-PILOT-EVALUATION-RESULT",
+        "EXP-GAP-PILOT-OUTCOME",
+        "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP"
+      ],
+      "search_after": "2024-09-06T15:30:00+02:00",
+      "trigger_purposes": [
+        "similar_experience_retrieval",
+        "experience_reuse",
+        "lesson_learned_discovery"
+      ]
+    },
+    "lesson_learned_eligibility": "insufficient_evidence",
+    "lesson_learned_candidates": [],
+    "retrieval_cases": [
+      "experience_summary",
+      "final_pilot_scope",
+      "pilot_evaluation",
+      "pilot_outcome",
+      "classroom_integration_followup",
+      "external_competition_followup",
+      "lesson_learned",
+      "similar_experience"
+    ]
+  },
   "rebuild": {
     "delete_derived_state": "required",
     "rebuild_required": true,
@@ -776,7 +1516,21 @@
       "evidence_link_roles",
       "conflict_sets",
       "policy_budget_redaction",
-      "golden_retrieval_results"
+      "golden_retrieval_results",
+      "organizational_relationship_claims",
+      "relationship_epistemics",
+      "organizational_action_events",
+      "event_participations",
+      "participation_roles",
+      "decision_confirmation_communication_separation",
+      "profile_refs",
+      "experience_ref",
+      "experience_phase_statuses",
+      "experience_threads",
+      "experience_gaps",
+      "experience_reuse_context",
+      "experience_continuation_requirement",
+      "experience_lesson_learned_eligibility"
     ]
   }
 }

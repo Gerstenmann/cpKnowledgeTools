@@ -1,22 +1,53 @@
-# ruff: noqa: E501
 from __future__ import annotations
 
+import re
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-import yaml
+from .codec import (
+    PublicationUnitDocument,
+    load_publication_unit,
+    render_publication_unit,
+)
+from .models import (
+    PublicationAssemblyPlan,
+    PublicationRepresentation,
+    PublicationRepresentationItem,
+    PublicationRepresentationSection,
+    PublicationSemanticReference,
+)
 
 
-def _ref(subject_type: str, stable_id: str, authority_context: str = "Semantic Core") -> dict[str, Any]:
-    return {
-        "subject_type": subject_type,
-        "stable_id": stable_id,
-        "version": "0.1",
-        "authority_context": authority_context,
-    }
+class PublicationAssemblyError(ValueError):
+    """Raised when explicit publication inputs are structurally inconsistent."""
+
+    def __init__(self, code: str, detail: str) -> None:
+        super().__init__(f"{code}: {detail}")
+        self.code = code
+        self.detail = detail
 
 
-def _time_value(role: str, value: str | None, precision: str, modality: str) -> dict[str, Any]:
+def _semantic_ref(
+    subject_type: str,
+    stable_id: str,
+    *,
+    authority_context: str = "Semantic Core",
+) -> PublicationSemanticReference:
+    return PublicationSemanticReference(
+        subject_type=subject_type,
+        stable_id=stable_id,
+        version="0.1",
+        authority_context=authority_context,
+    )
+
+
+def _time_value(
+    role: str,
+    value: str | None,
+    precision: str,
+    modality: str,
+) -> dict[str, Any]:
     if value is None:
         return {
             "role": role,
@@ -30,6 +61,8 @@ def _time_value(role: str, value: str | None, precision: str, modality: str) -> 
             "uncertainty": None,
             "source_ref": None,
         }
+    timezone_match = re.search(r"(Z|[+-]\d{2}:\d{2})$", value)
+    timezone = timezone_match.group(1) if timezone_match else None
     return {
         "role": role,
         "value_kind": "instant",
@@ -37,7 +70,7 @@ def _time_value(role: str, value: str | None, precision: str, modality: str) -> 
         "modality": modality,
         "start": value,
         "end": None,
-        "timezone": None,
+        "timezone": timezone,
         "approximate": False,
         "uncertainty": None,
         "source_ref": None,
@@ -45,258 +78,68 @@ def _time_value(role: str, value: str | None, precision: str, modality: str) -> 
 
 
 class PublicationUnitAssembler:
+    """Build an unpublished Publication Unit from explicit, source-neutral inputs."""
+
     def assemble(
         self,
         semantic: dict[str, Any],
-        evidence: dict[str, Any],
         *,
-        knowledge_object_id: str,
-        title: str,
+        plan: PublicationAssemblyPlan,
+        representation: PublicationRepresentation,
         output_path: Path,
-        pilot_entity_rule_keys: list[str],
-        restricted_evidence_rule_key: str,
-        policy_refs: list[str] | None = None,
     ) -> dict[str, Any]:
-        policy_refs = list(policy_refs or [])
-        entity_by_key = {item["rule_key"]: item for item in semantic["entities"]}
-        evidence_rule_by_ref = {
-            item.evidence_address_ref: rule_key for rule_key, item in evidence.items()
-        }
+        semantic_refs = self._semantic_refs(semantic, plan)
+        bindings = self._validate_plan(plan, semantic_refs)
+        representation_indexes = self._validate_representation(
+            semantic,
+            plan,
+            representation,
+            semantic_refs,
+        )
 
-        claim_manifest = []
-        for claim in semantic["claims"]:
-            if claim["object_ref"]:
-                object_payload = {
-                    "kind": "reference",
-                    "reference": _ref("entity", claim["object_ref"]),
-                    "value": None,
-                    "datatype": None,
-                    "language": None,
-                }
-            else:
-                object_payload = {
-                    "kind": "literal",
-                    "reference": None,
-                    "value": claim["value"],
-                    "datatype": type(claim["value"]).__name__,
-                    "language": "en" if isinstance(claim["value"], str) else None,
-                }
-            claim_manifest.append(
-                {
-                    "claim_ref": _ref("claim", claim["claim_ref"]),
-                    "statement": {
-                        "subject_ref": _ref("entity", claim["subject_ref"]),
-                        "predicate_ref": claim["predicate_ref"],
-                        "object": object_payload,
-                    },
-                    "epistemic_status": claim["epistemic_status"],
-                    "time": [],
-                    "evidence_link_ids": [
-                        link["evidence_link_ref"]
-                        for link in semantic["evidence_links"]
-                        if link["claim_ref"] == claim["claim_ref"]
-                    ],
-                    "authority_basis_refs": [],
-                    "policy_anchor_ids": ["PA-KO"],
-                    "conflict_set_ids": [
-                        conflict["conflict_set_ref"]
-                        for conflict in semantic["conflict_sets"]
-                        if claim["claim_ref"] in conflict["claim_refs"]
-                    ],
-                    "narrative_anchor": f"claim-{claim['rule_key']}",
-                }
+        claims = [
+            self._claim_manifest(
+                claim,
+                semantic,
+                plan,
+                bindings,
+                representation_indexes["claims"],
             )
-
-        event_manifest = []
-        for event in semantic["events"]:
-            event_manifest.append(
-                {
-                    "event_ref": _ref("event", event["event_ref"]),
-                    "event_type_ref": event["event_type_ref"],
-                    "label": event["label"],
-                    "time": [
-                        _time_value(
-                            "event_time",
-                            event["event_time"],
-                            event["time_precision"],
-                            event["time_modality"],
-                        )
-                    ],
-                    "evidence_link_ids": [],
-                    "policy_anchor_ids": ["PA-KO"],
-                    "narrative_anchor": f"event-{event['rule_key']}",
-                }
-            )
-
-        participation_manifest = []
-        for participation in semantic["participations"]:
-            participation_manifest.append(
-                {
-                    "participation_ref": _ref(
-                        "event_participation", participation["participation_ref"]
-                    ),
-                    "event_ref": _ref("event", participation["event_ref"]),
-                    "entity_ref": _ref("entity", participation["entity_ref"]),
-                    "role": participation["role"],
-                    "time": [],
-                    "claim_refs": [],
-                    "evidence_link_ids": [],
-                    "policy_anchor_ids": ["PA-KO"],
-                    "narrative_anchor": f"participation-{participation['rule_key']}",
-                }
-            )
-
-        evidence_link_manifest = []
-        for link in semantic["evidence_links"]:
-            evidence_rule_key = evidence_rule_by_ref[link["evidence_address_ref"]]
-            evidence_link_manifest.append(
-                {
-                    "evidence_link_id": link["evidence_link_ref"],
-                    "subject_ref": _ref("claim", link["claim_ref"]),
-                    "evidence_address_ref": _ref(
-                        "evidence_address",
-                        link["evidence_address_ref"],
-                        "Source and Evidence",
-                    ),
-                    "role": link["role"],
-                    "time_relevance": [],
-                    "interpretation_provenance": {
-                        "producer_ref": _ref(
-                            "producer", "CPKT-RULE-INTERPRETER", "Platform and Integration"
-                        ),
-                        "method": "deterministic_reference_rules",
-                        "produced_at": "2026-08-08T00:00:00+02:00",
-                    },
-                    "policy_anchor_ids": [
-                        "PA-RESTRICTED-EVIDENCE"
-                        if evidence_rule_key == restricted_evidence_rule_key
-                        else "PA-KO"
-                    ],
-                    "narrative_anchor": f"evidence-{link['rule_key']}",
-                }
-            )
-
-        conflict_manifest = []
-        for conflict in semantic["conflict_sets"]:
-            conflict_manifest.append(
-                {
-                    "conflict_set_id": conflict["conflict_set_ref"],
-                    "claim_refs": [_ref("claim", ref) for ref in conflict["claim_refs"]],
-                    "conflict_dimensions": conflict["conflict_dimensions"],
-                    "preferred_claim_ref": _ref("claim", conflict["preferred_claim_ref"]),
-                    "preference_context": conflict["preference_context"],
-                    "resolution_record_ref": None,
-                    "rationale": conflict["rationale"],
-                    "narrative_anchor": f"conflict-{conflict['rule_key']}",
-                }
-            )
-
-        ko_ref = _ref("knowledge_object", knowledge_object_id)
-        policy_anchors = [
-            {
-                "policy_anchor_id": "PA-KO",
-                "subject_refs": [ko_ref],
-                "policy_refs": policy_refs,
-                "policy_decision_refs": [],
-                "dimensions": [
-                    "discoverability",
-                    "read_access",
-                    "evidence_resolution",
-                    "quotation",
-                    "transformation",
-                    "external_processing",
-                    "indexing",
-                    "memory_eligibility",
-                    "export",
-                    "retention",
-                ],
-                "narrative_anchor": "ko-policy",
-            },
-            {
-                "policy_anchor_id": "PA-RESTRICTED-EVIDENCE",
-                "subject_refs": [
-                    _ref(
-                        "evidence_address",
-                        evidence[restricted_evidence_rule_key].evidence_address_ref,
-                        "Source and Evidence",
-                    )
-                ],
-                "policy_refs": policy_refs,
-                "policy_decision_refs": [],
-                "dimensions": ["evidence_resolution", "quotation", "export"],
-                "narrative_anchor": "restricted-evidence-policy",
-            },
+            for claim in semantic["claims"]
         ]
-
-        cross_view = [
-            {
-                "mapping_id": "CVM-SUMMARY",
-                "semantic_ref": ko_ref,
-                "narrative_anchor": "ko-summary",
-                "representation_role": "summary",
-                "material": True,
-            },
-            {
-                "mapping_id": "CVM-APPLICABILITY",
-                "semantic_ref": ko_ref,
-                "narrative_anchor": "ko-applicability",
-                "representation_role": "applicability_note",
-                "material": True,
-            },
-            {
-                "mapping_id": "CVM-POLICY",
-                "semantic_ref": ko_ref,
-                "narrative_anchor": "ko-policy",
-                "representation_role": "policy_note",
-                "material": True,
-            },
+        events = [
+            self._event_manifest(
+                event,
+                semantic,
+                bindings,
+                representation_indexes["events"],
+            )
+            for event in semantic["events"]
         ]
-        for claim in semantic["claims"]:
-            cross_view.append(
-                {
-                    "mapping_id": f"CVM-CLAIM-{claim['rule_key']}",
-                    "semantic_ref": _ref("claim", claim["claim_ref"]),
-                    "narrative_anchor": f"claim-{claim['rule_key']}",
-                    "representation_role": "primary_statement",
-                    "material": True,
-                }
+        participations = [
+            self._participation_manifest(
+                participation,
+                semantic,
+                bindings,
+                representation_indexes["events"],
             )
-        for event in semantic["events"]:
-            cross_view.append(
-                {
-                    "mapping_id": f"CVM-EVENT-{event['rule_key']}",
-                    "semantic_ref": _ref("event", event["event_ref"]),
-                    "narrative_anchor": f"event-{event['rule_key']}",
-                    "representation_role": "event_note",
-                    "material": True,
-                }
+            for participation in semantic["participations"]
+        ]
+        evidence_links = [
+            self._evidence_link_manifest(
+                link,
+                plan,
+                bindings,
+                representation_indexes["evidence"],
             )
-        for participation in semantic["participations"]:
-            cross_view.append(
-                {
-                    "mapping_id": f"CVM-PART-{participation['rule_key']}",
-                    "semantic_ref": _ref(
-                        "event_participation", participation["participation_ref"]
-                    ),
-                    "narrative_anchor": f"participation-{participation['rule_key']}",
-                    "representation_role": "event_note",
-                    "material": True,
-                }
+            for link in semantic["evidence_links"]
+        ]
+        conflicts = [
+            self._conflict_manifest(
+                conflict,
+                representation_indexes["conflicts"],
             )
-        for conflict in semantic["conflict_sets"]:
-            cross_view.append(
-                {
-                    "mapping_id": f"CVM-CONFLICT-{conflict['rule_key']}",
-                    "semantic_ref": _ref("conflict_set", conflict["conflict_set_ref"]),
-                    "narrative_anchor": f"conflict-{conflict['rule_key']}",
-                    "representation_role": "conflict_note",
-                    "material": True,
-                }
-            )
-
-        applicability_entities = [
-            _ref("entity", entity_by_key[key]["entity_ref"])
-            for key in pilot_entity_rule_keys
+            for conflict in semantic["conflict_sets"]
         ]
 
         manifest = {
@@ -305,41 +148,34 @@ class PublicationUnitAssembler:
             "template_ref": "CPKS-TPL-KM-PU@0.1",
             "semantic_model_ref": "CPKS-SPEC-KM@0.20",
             "vocabulary_set_ref": "CPKS-SPEC-KM-VOC@0.1",
-            "knowledge_object_id": knowledge_object_id,
-            "knowledge_object_version": "0.1",
-            "title": title,
-            "language": "en",
+            "knowledge_object_id": plan.knowledge_object_id,
+            "knowledge_object_version": plan.knowledge_object_version,
+            "title": plan.title,
+            "language": plan.language,
             "canonical_path": None,
-            "primary_kind": "event_summary",
-            "knowledge_functions": ["descriptive", "explanatory"],
-            "applicability": {
-                "domain_refs": [],
-                "entity_refs": applicability_entities,
-                "organization_refs": [],
-                "product_refs": [],
-                "purposes": ["source_to_knowledge_core_mvp_test"],
-                "valid_time": [],
-            },
-            "profile_refs": [],
-            "claims": claim_manifest,
-            "events": event_manifest,
-            "event_participations": participation_manifest,
-            "evidence_links": evidence_link_manifest,
+            "primary_kind": plan.primary_kind,
+            "knowledge_functions": list(plan.knowledge_functions),
+            "applicability": plan.applicability.to_dict(),
+            "profile_refs": list(plan.profile_refs),
+            "claims": claims,
+            "events": events,
+            "event_participations": participations,
+            "evidence_links": evidence_links,
             "structural_relationships": [],
-            "conflict_sets": conflict_manifest,
-            "policy_anchors": policy_anchors,
-            "cross_view_mappings": cross_view,
+            "conflict_sets": conflicts,
+            "policy_anchors": [item.to_dict() for item in plan.policy_anchors],
+            "cross_view_mappings": self._cross_view_mappings(representation),
             "human_readable": {
-                "body_language": "en",
-                "summary_anchor": "ko-summary",
-                "details_anchor": "ko-details",
-                "claims_anchor": "ko-claims",
-                "events_anchor": "ko-events",
-                "evidence_anchor": "ko-evidence",
-                "conflicts_anchor": "ko-conflicts",
-                "applicability_anchor": "ko-applicability",
-                "policy_anchor": "ko-policy",
-                "publication_anchor": "ko-publication",
+                "body_language": representation.body_language,
+                "summary_anchor": representation.summary.narrative_anchor,
+                "details_anchor": representation.details.narrative_anchor,
+                "claims_anchor": representation.claims.narrative_anchor,
+                "events_anchor": representation.events.narrative_anchor,
+                "evidence_anchor": representation.evidence.narrative_anchor,
+                "conflicts_anchor": representation.conflicts.narrative_anchor,
+                "applicability_anchor": representation.applicability.narrative_anchor,
+                "policy_anchor": representation.policy.narrative_anchor,
+                "publication_anchor": representation.publication.narrative_anchor,
             },
             "review_record_refs": [],
             "policy_decision_refs": [],
@@ -359,141 +195,559 @@ class PublicationUnitAssembler:
             },
         }
 
-        body = self._body(semantic)
-        status = self._validate_cross_view(manifest, body)
-        manifest["integrity"]["cross_view_validation"] = {
-            "status": status,
-            "report_ref": "CPKT-MVP-XVIEW-001" if status == "pass" else None,
-        }
+        body = self._render_body(plan, representation)
+        self._validate_cross_view(manifest, representation, body)
+        manifest["integrity"]["cross_view_validation"]["status"] = "pass"
 
+        document = PublicationUnitDocument(manifest=manifest, markdown_body=body)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        yaml_text = yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True)
-        output_path.write_text(f"---\n{yaml_text}---\n\n{body}", encoding="utf-8")
+        output_path.write_text(render_publication_unit(document), encoding="utf-8")
         return manifest
 
-    def _body(self, semantic: dict[str, Any]) -> str:
-        lines = [
-            "# Minecraft Education esports pilot – synthetic golden case",
-            "",
-            '<a id="ko-summary"></a>',
-            "## Summary",
-            "",
-            "The school confirmed a limited after-school Minecraft Education esports pilot. Earlier proposal and open states remain evidentially traceable.",
-            "",
-            '<a id="ko-applicability"></a>',
-            "## Applicability",
-            "",
-            "Synthetic, non-sensitive Source-to-Knowledge MVP reference case.",
-            "",
-            '<a id="ko-details"></a>',
-            "## Context",
-            "",
-            "The dossier preserves proposal, response, confirmed pilot status, temporal progression, uncertainty, and policy boundaries.",
-            "",
-            '<a id="ko-claims"></a>',
-            "## Claims",
-            "",
+    def _semantic_refs(
+        self,
+        semantic: dict[str, Any],
+        plan: PublicationAssemblyPlan,
+    ) -> dict[tuple[str, str, str, str], PublicationSemanticReference]:
+        required = (
+            "entities",
+            "claims",
+            "evidence_links",
+            "events",
+            "participations",
+            "conflict_sets",
+        )
+        missing = [key for key in required if not isinstance(semantic.get(key), list)]
+        if missing:
+            raise PublicationAssemblyError(
+                "PUB-SEM-001",
+                f"semantic state lacks list collections: {', '.join(missing)}",
+            )
+
+        refs = [plan.knowledge_object_ref]
+        refs.extend(
+            _semantic_ref("entity", item["entity_ref"])
+            for item in semantic["entities"]
+        )
+        refs.extend(
+            _semantic_ref("claim", item["claim_ref"])
+            for item in semantic["claims"]
+        )
+        refs.extend(
+            _semantic_ref("event", item["event_ref"])
+            for item in semantic["events"]
+        )
+        refs.extend(
+            _semantic_ref("event_participation", item["participation_ref"])
+            for item in semantic["participations"]
+        )
+        refs.extend(
+            _semantic_ref("evidence_link", item["evidence_link_ref"])
+            for item in semantic["evidence_links"]
+        )
+        refs.extend(
+            _semantic_ref(
+                "evidence_address",
+                item["evidence_address_ref"],
+                authority_context="Source and Evidence",
+            )
+            for item in semantic["evidence_links"]
+        )
+        refs.extend(
+            _semantic_ref("conflict_set", item["conflict_set_ref"])
+            for item in semantic["conflict_sets"]
+        )
+        refs.extend(
+            subject_ref
+            for policy_anchor in plan.policy_anchors
+            for subject_ref in policy_anchor.subject_refs
+        )
+        return {item.key: item for item in refs}
+
+    def _validate_plan(
+        self,
+        plan: PublicationAssemblyPlan,
+        semantic_refs: dict[
+            tuple[str, str, str, str], PublicationSemanticReference
+        ],
+    ) -> dict[tuple[str, str, str, str], tuple[str, ...]]:
+        if not plan.knowledge_object_id or not plan.knowledge_object_version:
+            raise PublicationAssemblyError(
+                "PUB-PLAN-001",
+                "knowledge object identity and version are required",
+            )
+        anchor_ids = [item.policy_anchor_id for item in plan.policy_anchors]
+        if len(anchor_ids) != len(set(anchor_ids)):
+            raise PublicationAssemblyError(
+                "PUB-POL-001",
+                "policy anchor identifiers must be unique",
+            )
+        known_anchor_ids = set(anchor_ids)
+        bindings: dict[tuple[str, str, str, str], tuple[str, ...]] = {}
+        for binding in plan.policy_bindings:
+            if binding.semantic_ref.key not in semantic_refs:
+                raise PublicationAssemblyError(
+                    "PUB-POL-002",
+                    "policy binding references unknown semantic subject "
+                    f"{binding.semantic_ref.stable_id}",
+                )
+            if binding.semantic_ref.key in bindings:
+                raise PublicationAssemblyError(
+                    "PUB-POL-003",
+                    "policy binding subject is duplicated: "
+                    f"{binding.semantic_ref.stable_id}",
+                )
+            unknown = set(binding.policy_anchor_ids) - known_anchor_ids
+            if not binding.policy_anchor_ids or unknown:
+                raise PublicationAssemblyError(
+                    "PUB-POL-004",
+                    "policy binding must name existing anchors; unknown="
+                    f"{sorted(unknown)}",
+                )
+            bindings[binding.semantic_ref.key] = binding.policy_anchor_ids
+
+        for anchor in plan.policy_anchors:
+            if not anchor.subject_refs:
+                raise PublicationAssemblyError(
+                    "PUB-POL-005",
+                    f"policy anchor {anchor.policy_anchor_id} has no subject",
+                )
+            for subject_ref in anchor.subject_refs:
+                if subject_ref.key not in semantic_refs:
+                    raise PublicationAssemblyError(
+                        "PUB-POL-006",
+                        "policy anchor references unknown semantic subject "
+                        f"{subject_ref.stable_id}",
+                    )
+        return bindings
+
+    def _validate_representation(
+        self,
+        semantic: dict[str, Any],
+        plan: PublicationAssemblyPlan,
+        representation: PublicationRepresentation,
+        semantic_refs: dict[
+            tuple[str, str, str, str], PublicationSemanticReference
+        ],
+    ) -> dict[str, dict[tuple[str, str, str, str], PublicationRepresentationItem]]:
+        if representation.body_language != plan.language:
+            raise PublicationAssemblyError(
+                "PUB-REP-001",
+                "representation language must match the assembly plan",
+            )
+        sections = representation.sections()
+        anchors: list[str] = []
+        mapping_ids: list[str] = []
+        for section in sections:
+            anchors.append(section.narrative_anchor)
+            self._validate_representation_member(section, semantic_refs, mapping_ids)
+            for item in section.items:
+                anchors.append(item.narrative_anchor)
+                self._validate_representation_member(item, semantic_refs, mapping_ids)
+        if len(anchors) != len(set(anchors)):
+            raise PublicationAssemblyError(
+                "PUB-REP-002",
+                "representation narrative anchors must be unique",
+            )
+        if len(mapping_ids) != len(set(mapping_ids)):
+            raise PublicationAssemblyError(
+                "PUB-REP-003",
+                "cross-view mapping identifiers must be unique",
+            )
+        missing_policy_anchors = {
+            item.narrative_anchor for item in plan.policy_anchors
+        } - set(anchors)
+        if missing_policy_anchors:
+            raise PublicationAssemblyError(
+                "PUB-REP-004",
+                "policy narrative anchors are absent from representation: "
+                f"{sorted(missing_policy_anchors)}",
+            )
+
+        indexes = {
+            "claims": self._item_index(representation.claims),
+            "events": self._item_index(representation.events),
+            "evidence": self._item_index(representation.evidence),
+            "conflicts": self._item_index(representation.conflicts),
+        }
+        expected = {
+            "claims": {
+                _semantic_ref("claim", item["claim_ref"]).key
+                for item in semantic["claims"]
+            },
+            "events": {
+                *(
+                    _semantic_ref("event", item["event_ref"]).key
+                    for item in semantic["events"]
+                ),
+                *(
+                    _semantic_ref(
+                        "event_participation", item["participation_ref"]
+                    ).key
+                    for item in semantic["participations"]
+                ),
+            },
+            "evidence": {
+                _semantic_ref("evidence_link", item["evidence_link_ref"]).key
+                for item in semantic["evidence_links"]
+            },
+            "conflicts": {
+                _semantic_ref("conflict_set", item["conflict_set_ref"]).key
+                for item in semantic["conflict_sets"]
+            },
+        }
+        for section_name, expected_refs in expected.items():
+            actual_refs = set(indexes[section_name])
+            if actual_refs != expected_refs:
+                raise PublicationAssemblyError(
+                    "PUB-REP-005",
+                    f"{section_name} representation refs differ from semantic state; "
+                    f"missing={sorted(expected_refs - actual_refs)}, "
+                    f"extra={sorted(actual_refs - expected_refs)}",
+                )
+        return indexes
+
+    def _validate_representation_member(
+        self,
+        member: PublicationRepresentationSection | PublicationRepresentationItem,
+        semantic_refs: dict[
+            tuple[str, str, str, str], PublicationSemanticReference
+        ],
+        mapping_ids: list[str],
+    ) -> None:
+        semantic_ref = member.semantic_ref
+        if semantic_ref is not None and semantic_ref.key not in semantic_refs:
+            raise PublicationAssemblyError(
+                "PUB-REP-006",
+                f"representation references unknown subject {semantic_ref.stable_id}",
+            )
+        if member.material:
+            if (
+                semantic_ref is None
+                or not member.mapping_id
+                or not member.representation_role
+            ):
+                raise PublicationAssemblyError(
+                    "PUB-REP-007",
+                    "material representation requires semantic ref, mapping id, "
+                    "and role",
+                )
+            mapping_ids.append(member.mapping_id)
+        elif member.mapping_id is not None:
+            raise PublicationAssemblyError(
+                "PUB-REP-008",
+                "non-material representation cannot define a mapping id",
+            )
+
+    def _item_index(
+        self,
+        section: PublicationRepresentationSection,
+    ) -> dict[tuple[str, str, str, str], PublicationRepresentationItem]:
+        result: dict[
+            tuple[str, str, str, str], PublicationRepresentationItem
+        ] = {}
+        for item in section.items:
+            if item.semantic_ref.key in result:
+                raise PublicationAssemblyError(
+                    "PUB-REP-009",
+                    "semantic reference appears more than once in section: "
+                    f"{item.semantic_ref.stable_id}",
+                )
+            result[item.semantic_ref.key] = item
+        return result
+
+    def _policy_ids(
+        self,
+        semantic_ref: PublicationSemanticReference,
+        bindings: dict[tuple[str, str, str, str], tuple[str, ...]],
+    ) -> list[str]:
+        try:
+            return list(bindings[semantic_ref.key])
+        except KeyError as exc:
+            raise PublicationAssemblyError(
+                "PUB-POL-007",
+                "no explicit policy binding for semantic subject "
+                f"{semantic_ref.stable_id}",
+            ) from exc
+
+    def _claim_manifest(
+        self,
+        claim: dict[str, Any],
+        semantic: dict[str, Any],
+        plan: PublicationAssemblyPlan,
+        bindings: dict[tuple[str, str, str, str], tuple[str, ...]],
+        representation_items: dict[
+            tuple[str, str, str, str], PublicationRepresentationItem
+        ],
+    ) -> dict[str, Any]:
+        claim_ref = _semantic_ref("claim", claim["claim_ref"])
+        if claim["object_ref"]:
+            object_payload = {
+                "kind": "reference",
+                "reference": _semantic_ref(
+                    "entity", claim["object_ref"]
+                ).to_dict(),
+                "value": None,
+                "datatype": None,
+                "language": None,
+            }
+        else:
+            object_payload = {
+                "kind": "literal",
+                "reference": None,
+                "value": claim["value"],
+                "datatype": type(claim["value"]).__name__,
+                "language": plan.language
+                if isinstance(claim["value"], str)
+                else None,
+            }
+        return {
+            "claim_ref": claim_ref.to_dict(),
+            "statement": {
+                "subject_ref": _semantic_ref(
+                    "entity", claim["subject_ref"]
+                ).to_dict(),
+                "predicate_ref": claim["predicate_ref"],
+                "object": object_payload,
+            },
+            "epistemic_status": claim["epistemic_status"],
+            "time": [
+                _time_value(
+                    item["role"],
+                    item["value"],
+                    item["precision"],
+                    item["modality"],
+                )
+                for item in claim.get("time", [])
+            ],
+            "evidence_link_ids": [
+                link["evidence_link_ref"]
+                for link in semantic["evidence_links"]
+                if link["subject_type"] == "claim"
+                and link["subject_ref"] == claim["claim_ref"]
+            ],
+            "authority_basis_refs": [],
+            "policy_anchor_ids": self._policy_ids(claim_ref, bindings),
+            "conflict_set_ids": [
+                conflict["conflict_set_ref"]
+                for conflict in semantic["conflict_sets"]
+                if claim["claim_ref"] in conflict["claim_refs"]
+            ],
+            "narrative_anchor": representation_items[
+                claim_ref.key
+            ].narrative_anchor,
+        }
+
+    def _event_manifest(
+        self,
+        event: dict[str, Any],
+        semantic: dict[str, Any],
+        bindings: dict[tuple[str, str, str, str], tuple[str, ...]],
+        representation_items: dict[
+            tuple[str, str, str, str], PublicationRepresentationItem
+        ],
+    ) -> dict[str, Any]:
+        event_ref = _semantic_ref("event", event["event_ref"])
+        return {
+            "event_ref": event_ref.to_dict(),
+            "event_type_ref": event["event_type_ref"],
+            "label": event["label"],
+            "time": [
+                _time_value(
+                    "event_time",
+                    event["event_time"],
+                    event["time_precision"],
+                    event["time_modality"],
+                )
+            ],
+            "evidence_link_ids": [
+                link["evidence_link_ref"]
+                for link in semantic["evidence_links"]
+                if link["subject_type"] == "event"
+                and link["subject_ref"] == event["event_ref"]
+            ],
+            "policy_anchor_ids": self._policy_ids(event_ref, bindings),
+            "narrative_anchor": representation_items[event_ref.key].narrative_anchor,
+        }
+
+    def _participation_manifest(
+        self,
+        participation: dict[str, Any],
+        semantic: dict[str, Any],
+        bindings: dict[tuple[str, str, str, str], tuple[str, ...]],
+        representation_items: dict[
+            tuple[str, str, str, str], PublicationRepresentationItem
+        ],
+    ) -> dict[str, Any]:
+        participation_ref = _semantic_ref(
+            "event_participation", participation["participation_ref"]
+        )
+        return {
+            "participation_ref": participation_ref.to_dict(),
+            "event_ref": _semantic_ref(
+                "event", participation["event_ref"]
+            ).to_dict(),
+            "entity_ref": _semantic_ref(
+                "entity", participation["entity_ref"]
+            ).to_dict(),
+            "role": participation["role"],
+            "time": [],
+            "claim_refs": [],
+            "evidence_link_ids": [
+                link["evidence_link_ref"]
+                for link in semantic["evidence_links"]
+                if link["subject_type"] == "event_participation"
+                and link["subject_ref"] == participation["participation_ref"]
+            ],
+            "policy_anchor_ids": self._policy_ids(participation_ref, bindings),
+            "narrative_anchor": representation_items[
+                participation_ref.key
+            ].narrative_anchor,
+        }
+
+    def _evidence_link_manifest(
+        self,
+        link: dict[str, Any],
+        plan: PublicationAssemblyPlan,
+        bindings: dict[tuple[str, str, str, str], tuple[str, ...]],
+        representation_items: dict[
+            tuple[str, str, str, str], PublicationRepresentationItem
+        ],
+    ) -> dict[str, Any]:
+        link_ref = _semantic_ref("evidence_link", link["evidence_link_ref"])
+        evidence_ref = _semantic_ref(
+            "evidence_address",
+            link["evidence_address_ref"],
+            authority_context="Source and Evidence",
+        )
+        return {
+            "evidence_link_id": link["evidence_link_ref"],
+            "subject_ref": _semantic_ref(
+                link["subject_type"], link["subject_ref"]
+            ).to_dict(),
+            "evidence_address_ref": evidence_ref.to_dict(),
+            "role": link["role"],
+            "time_relevance": [],
+            "interpretation_provenance": (
+                plan.evidence_link_interpretation_provenance.to_dict()
+            ),
+            "policy_anchor_ids": self._policy_ids(link_ref, bindings),
+            "narrative_anchor": representation_items[link_ref.key].narrative_anchor,
+        }
+
+    def _conflict_manifest(
+        self,
+        conflict: dict[str, Any],
+        representation_items: dict[
+            tuple[str, str, str, str], PublicationRepresentationItem
+        ],
+    ) -> dict[str, Any]:
+        conflict_ref = _semantic_ref(
+            "conflict_set", conflict["conflict_set_ref"]
+        )
+        return {
+            "conflict_set_id": conflict["conflict_set_ref"],
+            "claim_refs": [
+                _semantic_ref("claim", ref).to_dict()
+                for ref in conflict["claim_refs"]
+            ],
+            "conflict_dimensions": conflict["conflict_dimensions"],
+            "preferred_claim_ref": _semantic_ref(
+                "claim", conflict["preferred_claim_ref"]
+            ).to_dict(),
+            "preference_context": conflict["preference_context"],
+            "resolution_record_ref": None,
+            "rationale": conflict["rationale"],
+            "narrative_anchor": representation_items[
+                conflict_ref.key
+            ].narrative_anchor,
+        }
+
+    def _representation_members(
+        self,
+        representation: PublicationRepresentation,
+    ) -> Iterable[PublicationRepresentationSection | PublicationRepresentationItem]:
+        for section in representation.sections():
+            yield section
+            yield from section.items
+
+    def _cross_view_mappings(
+        self,
+        representation: PublicationRepresentation,
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "mapping_id": member.mapping_id,
+                "semantic_ref": member.semantic_ref.to_dict(),
+                "narrative_anchor": member.narrative_anchor,
+                "representation_role": member.representation_role,
+                "material": True,
+            }
+            for member in self._representation_members(representation)
+            if member.material
+            and member.mapping_id is not None
+            and member.semantic_ref is not None
+            and member.representation_role is not None
         ]
-        for claim in semantic["claims"]:
-            lines += [
-                f'<a id="claim-{claim["rule_key"]}"></a>',
-                f'### {claim["rule_key"]}',
-                "",
-                self._claim_sentence(claim),
-                "",
-            ]
 
-        lines += ['<a id="ko-events"></a>', "## Events and participations", ""]
-        for event in semantic["events"]:
-            lines += [
-                f'<a id="event-{event["rule_key"]}"></a>',
-                f'### {event["label"]}',
-                "",
-                f"Event state: {event['time_modality']}; time: {event['event_time'] or 'unknown'}.",
-                "",
-            ]
-        for participation in semantic["participations"]:
-            lines += [
-                f'<a id="participation-{participation["rule_key"]}"></a>',
-                f'### Participation {participation["rule_key"]}',
-                "",
-                f"Role: {participation['role']}.",
-                "",
-            ]
-
-        lines += ['<a id="ko-evidence"></a>', "## Evidence and provenance", ""]
-        for link in semantic["evidence_links"]:
-            lines += [
-                f'<a id="evidence-{link["rule_key"]}"></a>',
-                f'### {link["rule_key"]}',
-                "",
-                f"Evidence role: `{link['role']}`; address remains version-bound and resolvable.",
-                "",
-            ]
-
-        lines += ['<a id="ko-conflicts"></a>', "## Conflicts and uncertainty", ""]
-        for conflict in semantic["conflict_sets"]:
-            lines += [
-                f'<a id="conflict-{conflict["rule_key"]}"></a>',
-                f'### {conflict["rule_key"]}',
-                "",
-                f"Preferred current state is context-bound; prior alternatives remain addressable. {conflict['rationale']}",
-                "",
-            ]
-
-        lines += [
-            '<a id="ko-policy"></a>',
-            "## Policy and use",
-            "",
-            "The abstract budget claim is readable for the test consumer. Resolution of the restricted exact-budget evidence remains denied.",
-            "",
-            '<a id="restricted-evidence-policy"></a>',
-            "### Restricted evidence policy",
-            "",
-            "Restricted source evidence is referenced but its exact monetary amount is intentionally not reproduced here.",
-            "",
-            '<a id="ko-publication"></a>',
-            "## Review and publication",
-            "",
-            "Publication state: `unpublished`. This MVP does not perform canonical Vault publication.",
-            "",
-        ]
+    def _render_body(
+        self,
+        plan: PublicationAssemblyPlan,
+        representation: PublicationRepresentation,
+    ) -> str:
+        lines = [f"# {plan.title}", ""]
+        for section in representation.sections():
+            lines.extend(
+                [
+                    f'<a id="{section.narrative_anchor}"></a>',
+                    f"## {section.heading}",
+                    "",
+                ]
+            )
+            if section.rendered_text:
+                lines.extend([section.rendered_text, ""])
+            for item in section.items:
+                lines.extend(
+                    [
+                        f'<a id="{item.narrative_anchor}"></a>',
+                        f"### {item.heading}",
+                        "",
+                        item.rendered_text,
+                        "",
+                    ]
+                )
         return "\n".join(lines)
 
-    def _claim_sentence(self, claim: dict[str, Any]) -> str:
-        key = claim["rule_key"]
-        value = claim["value"]
-        sentences = {
-            "workshop_12sep": "The concept workshop is planned for 12 September 2024 and is confirmed as the current plan.",
-            "training_19sep": "The initial proposal planned team training for 19 September 2024; this historical plan remains preserved.",
-            "training_26sep": "The confirmed pilot plan schedules team training for 26 September 2024.",
-            "capacity_about20": "The initial proposal estimated approximately 20 interested students.",
-            "capacity_max16": "The confirmed pilot capacity is limited to 16 students.",
-            "adviser_not_selected": "At the school-response stage, the adviser had not yet been selected.",
-            "adviser_james": "James Stone is the confirmed school adviser for the pilot.",
-            "scope_open": "The initial academic versus extracurricular scope remained open in the school response.",
-            "scope_afterschool": "The confirmed current pilot scope is after-school only.",
-            "academic_deferred": "Classroom integration is deferred until after pilot evaluation.",
-            "competition_later_possible": "External competition remains a possible later phase.",
-            "competition_not_approved": "External competition is not approved at the current pilot stage.",
-            "previous_success_reported": "The school reported previous Minecraft use as successful; this remains a reported statement rather than independent confirmation.",
-            "budget_approved": "The pilot has an approved internal budget.",
+    def _validate_cross_view(
+        self,
+        manifest: dict[str, Any],
+        representation: PublicationRepresentation,
+        body: str,
+    ) -> None:
+        representation_anchors = {
+            member.narrative_anchor
+            for member in self._representation_members(representation)
         }
-        return sentences.get(key, f"{claim['predicate_ref']}: {value!r}")
-
-    def _validate_cross_view(self, manifest: dict[str, Any], body: str) -> str:
-        anchors = {mapping["narrative_anchor"] for mapping in manifest["cross_view_mappings"]}
-        anchors.add("restricted-evidence-policy")
-        for anchor in anchors:
-            if body.count(f'id="{anchor}"') != 1:
-                return "fail"
-        return "pass"
+        mapping_anchors = {
+            mapping["narrative_anchor"]
+            for mapping in manifest["cross_view_mappings"]
+        }
+        if not mapping_anchors.issubset(representation_anchors):
+            raise PublicationAssemblyError(
+                "PUB-XVIEW-001",
+                "cross-view mappings contain an unrendered anchor",
+            )
+        invalid = sorted(
+            anchor
+            for anchor in representation_anchors
+            if body.count(f'id="{anchor}"') != 1
+        )
+        if invalid:
+            raise PublicationAssemblyError(
+                "PUB-XVIEW-002",
+                f"representation anchors must occur exactly once: {invalid}",
+            )
 
 
 def load_publication_manifest(path: Path) -> dict[str, Any]:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\n"):
-        raise ValueError("Publication Unit does not start with YAML frontmatter")
-    _, remainder = text.split("---\n", 1)
-    yaml_text, _body = remainder.split("---\n", 1)
-    return yaml.safe_load(yaml_text)
+    return load_publication_unit(path).manifest
