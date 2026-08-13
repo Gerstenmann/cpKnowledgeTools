@@ -1,3 +1,16 @@
+from .continuation import (
+    AuthorizationDecision,
+    BudgetUsage,
+    CandidateEvidence,
+    CandidateMetadata,
+    CandidateScope,
+    ContinuationBudget,
+    ContinuationExecutor,
+    ContinuationRequest,
+    ContinuationResult,
+    ContinuationServices,
+    PolicyContext,
+)
 from .experience import (
     ExperienceRetrievalRequest,
     ExperienceRetrievalResult,
@@ -14,6 +27,16 @@ from .retrieval import (
 )
 
 __all__ = [
+    "AuthorizationDecision",
+    "BudgetUsage",
+    "CandidateEvidence",
+    "CandidateMetadata",
+    "CandidateScope",
+    "ContinuationBudget",
+    "ContinuationExecutor",
+    "ContinuationRequest",
+    "ContinuationResult",
+    "ContinuationServices",
     "EvidenceResolutionRequest",
     "EvidenceResolutionResult",
     "EvidenceResolver",
@@ -21,6 +44,7 @@ __all__ = [
     "ExperienceRetrievalResult",
     "ExperienceRetriever",
     "KnowledgeRetriever",
+    "PolicyContext",
     "RetrievalRenderer",
     "RetrievalRequest",
     "RetrievalResult",
