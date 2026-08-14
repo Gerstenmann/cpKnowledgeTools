@@ -55,6 +55,12 @@ For Managed Artifact / governance validation work, also resolve and read:
 - `CPKS-SPEC-ART`
 - `GOV-P01`
 
+For Owner handover, generated review-artifact, or output-lifecycle work, also resolve and read:
+
+- `CPKS-SPEC-OPS`
+
+Apply the active `CPKS-SPEC-OPS` to the classification, placement, retention, and promotion of such outputs.
+
 After reading `CPKT-SPEC-ARCH`, resolve any stable IDs in its active `depends_on`, `related_decisions`, or other relationships that are materially relevant to the files you will change. Do not preload unrelated governance.
 
 ## Work Packages and Owner instructions

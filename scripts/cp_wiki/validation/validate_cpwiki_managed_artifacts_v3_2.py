@@ -2062,12 +2062,30 @@ def validate_version_sequences(
         if line_created and min(line_created) >= VERSION_RULE_EFFECTIVE_DATE:
             if first_numeric.document_type == "decision_record":
                 if first_numeric.version not in {"0.1", "1.0"}:
+                    historical_first = scalar_text(first_numeric.frontmatter.get("status")) in {
+                        "superseded",
+                        "withdrawn",
+                        "deprecated",
+                        "archived",
+                        "rejected",
+                        "completed",
+                        "cancelled",
+                    }
                     add(
                         findings,
                         first_numeric,
-                        "error",
-                        "invalid_initial_decision_version",
-                        "A new Decision Record line must start with version 0.1 or 1.0.",
+                        "warning" if historical_first else "error",
+                        (
+                            "historical_initial_decision_version"
+                            if historical_first
+                            else "invalid_initial_decision_version"
+                        ),
+                        (
+                            "Historical Decision Record line starts outside the current initial-version rule; "
+                            "preserve the historical version and do not retroactively renumber it."
+                            if historical_first
+                            else "A new Decision Record line must start with version 0.1 or 1.0."
+                        ),
                         field="version",
                         actual=first_numeric.version,
                         expected=["0.1", "1.0"],
