@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
 from typing import Any
 
 from cp_knowledge_tools.derived import (
@@ -311,3 +312,104 @@ def test_builder_is_deterministic_order_independent_and_does_not_mutate_input() 
     )
     assert projection_a.reuse_context.domain_terms == ("education", "school")
     assert projection_a.reuse_context.topic_terms == ("pilot", "topic")
+
+
+def test_partial_phase_and_gap_progression_are_generic_and_evidence_bound() -> None:
+    manifest = _manifest()
+    progressed_subjects = [
+        _event("EVT-EXECUTION-ACTUAL", "test.event.execution", "actual"),
+        _claim("CLM-OUTCOME", "test.outcome", "mixed"),
+        _claim("CLM-FOLLOWUP", "test.follow_up", "approved_not_performed"),
+    ]
+    manifest["events"].append(progressed_subjects[0])
+    manifest["claims"].extend(progressed_subjects[1:])
+    for subject_type, item in (
+        ("event", progressed_subjects[0]),
+        ("claim", progressed_subjects[1]),
+        ("claim", progressed_subjects[2]),
+    ):
+        stable_id = item[f"{subject_type}_ref"]["stable_id"]
+        manifest["evidence_links"].append(
+            {
+                "evidence_link_id": f"EL-{stable_id}",
+                "subject_ref": _ref(subject_type, stable_id),
+                "evidence_address_ref": _ref(
+                    "evidence_address",
+                    f"EA-{stable_id}",
+                ),
+                "role": "supports",
+            }
+        )
+
+    selector = ExperienceSemanticSelector
+    baseline_plan = _plan()
+    plan = replace(
+        baseline_plan,
+        phases=tuple(
+            replace(
+                phase,
+                status_when_supported=(
+                    "partial" if phase.phase_ref == "follow_up" else "supported"
+                ),
+            )
+            for phase in baseline_plan.phases
+        ),
+        gaps=(
+            ExperienceGapPlan(
+                "GAP-EXECUTION",
+                "Did it occur?",
+                "execution",
+                ("EVT-EXECUTION",),
+                progression_requirements=(
+                    selector("event", "EVT-EXECUTION-ACTUAL"),
+                ),
+                status_when_progressed="resolved",
+            ),
+            ExperienceGapPlan(
+                "GAP-OUTCOME",
+                "What was the outcome?",
+                "outcome",
+                ("CLM-DEPENDENCY",),
+                progression_requirements=(
+                    selector("claim", "CLM-OUTCOME"),
+                ),
+                status_when_progressed="resolved",
+            ),
+            ExperienceGapPlan(
+                "GAP-FOLLOWUP-A",
+                "What followed?",
+                "follow_up",
+                ("CLM-DEFERRED",),
+                progression_requirements=(
+                    selector("claim", "CLM-FOLLOWUP"),
+                ),
+                status_when_progressed="informed_unresolved",
+            ),
+        ),
+        continuation=replace(
+            baseline_plan.continuation,
+            critical_gap_refs=(
+                "GAP-EXECUTION",
+                "GAP-OUTCOME",
+                "GAP-FOLLOWUP-A",
+            ),
+        ),
+    )
+
+    projection = ExperienceProjectionBuilder().build(manifest, plan)
+    phase_states = {item.phase_ref: item.status for item in projection.phases}
+    gap_states = {item.gap_ref: item.status for item in projection.gaps}
+
+    assert phase_states["execution"] == "supported"
+    assert phase_states["outcome"] == "supported"
+    assert phase_states["follow_up"] == "partial"
+    assert gap_states == {
+        "GAP-EXECUTION": "resolved",
+        "GAP-OUTCOME": "resolved",
+        "GAP-FOLLOWUP-A": "informed_unresolved",
+    }
+    assert projection.experience_completeness == "partial"
+    assert projection.continuation_requirements[0].critical_gap_refs == (
+        "GAP-FOLLOWUP-A",
+    )
+    assert "CLM-FOLLOWUP" in projection.gaps[2].semantic_basis_refs

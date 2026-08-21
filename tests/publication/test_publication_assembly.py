@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
 
@@ -189,9 +190,7 @@ def _inputs(
                 policy_anchor_ids=("PA-DELIVERY",),
             ),
             PublicationPolicyBinding(
-                semantic_ref=_ref(
-                    "event_participation", "PART-OPERATIONS-DEPLOYMENT"
-                ),
+                semantic_ref=_ref("event_participation", "PART-OPERATIONS-DEPLOYMENT"),
                 policy_anchor_ids=("PA-DELIVERY",),
             ),
             PublicationPolicyBinding(
@@ -207,9 +206,7 @@ def _inputs(
                 policy_anchor_ids=("PA-DELIVERY",),
             ),
             PublicationPolicyBinding(
-                semantic_ref=_ref(
-                    "evidence_link", "EL-DEPLOYMENT-PARTICIPATION"
-                ),
+                semantic_ref=_ref("evidence_link", "EL-DEPLOYMENT-PARTICIPATION"),
                 policy_anchor_ids=("PA-DELIVERY",),
             ),
         ]
@@ -319,36 +316,28 @@ def _inputs(
             heading="Evidence and provenance",
             items=(
                 PublicationRepresentationItem(
-                    semantic_ref=_ref(
-                        "evidence_link", "EL-DEPLOYMENT-PLANNED"
-                    ),
+                    semantic_ref=_ref("evidence_link", "EL-DEPLOYMENT-PLANNED"),
                     narrative_anchor="evidence-deployment-planned",
                     representation_role="evidence_note",
                     rendered_text="The scheduling record remains addressable.",
                     heading="Scheduling evidence",
                 ),
                 PublicationRepresentationItem(
-                    semantic_ref=_ref(
-                        "evidence_link", "EL-DEPLOYMENT-CURRENT"
-                    ),
+                    semantic_ref=_ref("evidence_link", "EL-DEPLOYMENT-CURRENT"),
                     narrative_anchor="evidence-deployment-current",
                     representation_role="evidence_note",
                     rendered_text="The completion record remains addressable.",
                     heading="Completion evidence",
                 ),
                 PublicationRepresentationItem(
-                    semantic_ref=_ref(
-                        "evidence_link", "EL-DEPLOYMENT-EVENT"
-                    ),
+                    semantic_ref=_ref("evidence_link", "EL-DEPLOYMENT-EVENT"),
                     narrative_anchor="evidence-deployment-event",
                     representation_role="evidence_note",
                     rendered_text="The event record remains addressable.",
                     heading="Event evidence",
                 ),
                 PublicationRepresentationItem(
-                    semantic_ref=_ref(
-                        "evidence_link", "EL-DEPLOYMENT-PARTICIPATION"
-                    ),
+                    semantic_ref=_ref("evidence_link", "EL-DEPLOYMENT-PARTICIPATION"),
                     narrative_anchor="evidence-deployment-participation",
                     representation_role="evidence_note",
                     rendered_text="The participation record remains addressable.",
@@ -361,9 +350,7 @@ def _inputs(
             heading="Conflicts and uncertainty",
             items=(
                 PublicationRepresentationItem(
-                    semantic_ref=_ref(
-                        "conflict_set", "CF-DEPLOYMENT-STATE"
-                    ),
+                    semantic_ref=_ref("conflict_set", "CF-DEPLOYMENT-STATE"),
                     narrative_anchor="conflict-deployment-state",
                     representation_role="conflict_note",
                     rendered_text="The completed state is preferred for current use.",
@@ -401,6 +388,96 @@ def _inputs(
     return plan, representation
 
 
+def _hardening_context() -> dict[str, object]:
+    return {
+        "claim_refs": ["CLM-DEPLOYMENT-PLANNED", "CLM-DEPLOYMENT-CURRENT"],
+        "claim_relationships": [],
+        "program_occurrences": [],
+        "evidence_assessments": [
+            {
+                "assessment_ref": "EVA-DEPLOYMENT-CURRENT",
+                "claim_ref": "CLM-DEPLOYMENT-CURRENT",
+                "purpose": "publication_validation",
+                "evidence_link_ids": ["EL-DEPLOYMENT-CURRENT"],
+                "dimensions": {
+                    "independence": "independent",
+                    "directness": "direct",
+                    "source_role": "operator",
+                    "formality": "formal",
+                    "competence": "domain_competent",
+                    "claim_authority": "authorized_for_claim",
+                    "specificity": "claim_specific",
+                    "temporal_proximity": "near_event",
+                    "perspective": "operations",
+                },
+                "method": "explicit_assessment",
+                "assessed_by": "validator:test",
+                "assessed_at": "2026-08-20T10:00:00+02:00",
+                "uncertainty": "none",
+            }
+        ],
+        "temporal_constraints": [
+            {
+                "constraint_ref": "TC-DEPLOYMENT-WINDOW",
+                "subject_ref": "EVT-ROBOTICS-DEPLOYMENT",
+                "bound_kind": "interval",
+                "lower_bound": "2026-07-01",
+                "upper_bound": "2026-07-31",
+                "precision": "day",
+                "modality": "actual",
+                "input_refs": ["EVT-ROBOTICS-DEPLOYMENT"],
+                "evidence_link_ids": ["EL-DEPLOYMENT-EVENT"],
+                "rule_ref": "RULE-DEPLOYMENT-WINDOW",
+                "derivation_provenance": ["source_bounded_window"],
+                "certainty": "deterministic",
+            }
+        ],
+        "conflict_compatibility_assessments": [
+            {
+                "assessment_ref": "CCA-DEPLOYMENT-STATE",
+                "claim_refs": [
+                    "CLM-DEPLOYMENT-PLANNED",
+                    "CLM-DEPLOYMENT-CURRENT",
+                ],
+                "checks": {
+                    "time": True,
+                    "context": True,
+                    "perspective": True,
+                    "observation_granularity": True,
+                    "qualification": True,
+                },
+                "remaining_material_incompatibility": False,
+                "outcome": "qualification_or_compatible_difference",
+            }
+        ],
+        "epistemic_context": [
+            {
+                "claim_ref": "CLM-DEPLOYMENT-PLANNED",
+                "source_role_refs": ["EL-DEPLOYMENT-PLANNED"],
+                "perspective_refs": ["operations_planning"],
+                "evidence_assessment_refs": [],
+                "qualification_claim_refs": ["CLM-DEPLOYMENT-CURRENT"],
+                "observation_context_refs": [],
+                "confidence_dimensions": {},
+            },
+            {
+                "claim_ref": "CLM-DEPLOYMENT-CURRENT",
+                "source_role_refs": ["EL-DEPLOYMENT-CURRENT"],
+                "perspective_refs": ["operations"],
+                "evidence_assessment_refs": ["EVA-DEPLOYMENT-CURRENT"],
+                "qualification_claim_refs": [],
+                "observation_context_refs": [],
+                "confidence_dimensions": {},
+            },
+        ],
+        "delivery_context": {
+            "primary_claim_ref": "CLM-DEPLOYMENT-CURRENT",
+            "correction_history_refs": ["CLM-DEPLOYMENT-PLANNED"],
+            "equivalent_unresolved_alternative_refs": [],
+        },
+    }
+
+
 def test_generic_assembly_uses_explicit_unrelated_domain_inputs(
     tmp_path: Path,
 ) -> None:
@@ -416,18 +493,16 @@ def test_generic_assembly_uses_explicit_unrelated_domain_inputs(
     document = load_publication_unit(path)
 
     assert document.manifest == manifest
+    assert manifest["schema_ref"] == "CPKS-SPEC-KM-PU@0.1"
+    assert manifest["template_ref"] == "CPKS-TPL-KM-PU@0.1"
     assert manifest["title"] == "Robotics deployment readiness"
     assert manifest["applicability"] == plan.applicability.to_dict()
     assert manifest["publication"]["publication_state"] == "unpublished"
     assert manifest["profile_refs"] == ["cpks.profile.core-knowledge@1.1"]
-    assert manifest["evidence_links"][1]["policy_anchor_ids"] == [
-        "PA-AUDIT-EVIDENCE"
-    ]
+    assert manifest["evidence_links"][1]["policy_anchor_ids"] == ["PA-AUDIT-EVIDENCE"]
     assert manifest["claims"][0]["time"][0]["start"].endswith("+02:00")
     assert manifest["claims"][0]["time"][0]["timezone"] == "+02:00"
-    assert manifest["events"][0]["evidence_link_ids"] == [
-        "EL-DEPLOYMENT-EVENT"
-    ]
+    assert manifest["events"][0]["evidence_link_ids"] == ["EL-DEPLOYMENT-EVENT"]
     assert manifest["event_participations"][0]["evidence_link_ids"] == [
         "EL-DEPLOYMENT-PARTICIPATION"
     ]
@@ -437,10 +512,87 @@ def test_generic_assembly_uses_explicit_unrelated_domain_inputs(
     assert manifest["integrity"]["cross_view_validation"]["status"] == "pass"
     assert "The robotics deployment is operational." in document.markdown_body
     assert "CLM-DEPLOYMENT-CURRENT" in {
-        item["semantic_ref"]["stable_id"]
-        for item in manifest["cross_view_mappings"]
+        item["semantic_ref"]["stable_id"] for item in manifest["cross_view_mappings"]
     }
     assert parse_publication_unit(render_publication_unit(document)) == document
+
+
+def test_finalization_bound_assembly_uses_current_schema_template_pair(
+    tmp_path: Path,
+) -> None:
+    plan, representation = _inputs(version="0.2")
+
+    manifest = PublicationUnitAssembler().assemble(
+        _semantic_state(),
+        plan=plan,
+        representation=representation,
+        output_path=tmp_path / "robotics-deployment-finalization-bound.md",
+        publication_finalization_plan_ref="PFP-ROBOTICS-DEPLOYMENT@0.1",
+    )
+
+    assert manifest["schema_ref"] == "CPKS-SPEC-KM-PU@0.2"
+    assert manifest["template_ref"] == "CPKS-TPL-KM-PU@0.2"
+
+
+def test_real_publication_path_materializes_and_validates_hardening_contract(
+    tmp_path: Path,
+) -> None:
+    plan, representation = _inputs(version="0.3")
+
+    manifest = PublicationUnitAssembler().assemble(
+        _semantic_state(),
+        plan=plan,
+        representation=representation,
+        output_path=tmp_path / "robotics-deployment-hardening.md",
+        publication_finalization_plan_ref="PFP-ROBOTICS-DEPLOYMENT@0.1",
+        hardening_context=_hardening_context(),
+        compatible_template_ref="CPKT-TEST-TPL-KM-PU@0.1",
+    )
+
+    assert manifest["schema_ref"] == "CPKS-SPEC-KM-PU@0.3"
+    assert manifest["semantic_model_ref"] == "CPKS-SPEC-KM@0.21"
+    assert manifest["template_ref"] == "CPKT-TEST-TPL-KM-PU@0.1"
+    assert manifest["evidence_assessments"][0]["assessment_ref"] == (
+        "EVA-DEPLOYMENT-CURRENT"
+    )
+    assert manifest["temporal_constraints"][0]["bound_kind"] == "interval"
+    assert manifest["claims"][1]["epistemic_context"]["perspective_refs"] == [
+        "operations"
+    ]
+    assert manifest["claims"][1]["evidence_assessment_refs"] == [
+        "EVA-DEPLOYMENT-CURRENT"
+    ]
+    assert manifest["conflict_sets"][0]["compatibility_checks"] == {
+        "time_scope_checked": True,
+        "context_checked": True,
+        "perspective_checked": True,
+        "granularity_checked": True,
+        "qualification_checked": True,
+    }
+    assert manifest["conflict_sets"][0]["conflict_classification"] == (
+        "qualification_or_compatible_difference"
+    )
+
+    with pytest.raises(PublicationAssemblyError, match="PUB-HARD-002"):
+        PublicationUnitAssembler().assemble(
+            _semantic_state(),
+            plan=plan,
+            representation=representation,
+            output_path=tmp_path / "missing-compatible-template.md",
+            hardening_context=_hardening_context(),
+        )
+
+    invalid = deepcopy(_hardening_context())
+    invalid["temporal_constraints"][0]["bound_kind"] = "closed_interval"
+    with pytest.raises(PublicationAssemblyError, match="PUB-HARD-001"):
+        PublicationUnitAssembler().assemble(
+            _semantic_state(),
+            plan=plan,
+            representation=representation,
+            output_path=tmp_path / "invalid-hardening.md",
+            hardening_context=invalid,
+            compatible_template_ref="CPKT-TEST-TPL-KM-PU@0.1",
+        )
 
 
 def test_representation_change_requires_separate_knowledge_object_version(
@@ -466,9 +618,7 @@ def test_representation_change_requires_separate_knowledge_object_version(
     assert manifest_a["knowledge_object_id"] == manifest_b["knowledge_object_id"]
     assert manifest_a["knowledge_object_version"] == "0.1"
     assert manifest_b["knowledge_object_version"] == "0.2"
-    assert manifest_a["claims"][0]["claim_ref"] == manifest_b["claims"][0][
-        "claim_ref"
-    ]
+    assert manifest_a["claims"][0]["claim_ref"] == manifest_b["claims"][0]["claim_ref"]
     assert (tmp_path / "release-a.md").read_text() != (
         tmp_path / "release-b.md"
     ).read_text()

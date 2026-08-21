@@ -6,6 +6,7 @@ from typing import Any
 
 from cp_knowledge_tools.platform.hashing import canonical_json_hash
 from cp_knowledge_tools.publication.codec import PublicationUnitDocument
+from cp_knowledge_tools.validation.hardening import HardeningContractValidator
 
 from .models import (
     SEVERITY_RANK,
@@ -18,7 +19,7 @@ from .profiles import ProfileComposition, compose_applicable_profiles
 from .rules import RULE_REGISTRY, RuleContext
 
 VALIDATOR_REF = "cpkt.validator.core-knowledge"
-VALIDATOR_VERSION = "0.1.0"
+VALIDATOR_VERSION = "0.2.0"
 
 
 class CoreKnowledgeValidator:
@@ -151,6 +152,36 @@ class CoreKnowledgeValidator:
             applicable,
             profile_composition=composition,
         )
+        hardening_present = any(
+            field in input_value["manifest"]
+            for field in ("evidence_assessments", "temporal_constraints")
+        )
+        if hardening_present:
+            hardening = HardeningContractValidator().validate_publication_manifest(
+                input_value["manifest"]
+            )
+            validation["diagnostics"].extend(
+                CoreDiagnostic(
+                    severity=item.severity,
+                    code=item.code,
+                    path=item.path,
+                    message=item.message,
+                    validator_rule_ref="CK-SCH-001",
+                    rule_sources=("CPKS-SPEC-KM-PU@0.3", "CPKS-SPEC-VAL@0.3"),
+                ).to_dict()
+                for item in hardening.diagnostics
+            )
+            validation["artifacts"]["hardening_contract"] = {
+                "canonical_shape": "CPKS-SPEC-KM-PU@0.3",
+                "status": "pass" if hardening.valid else "fail",
+            }
+            for outcome in validation["rule_outcomes"]:
+                if outcome["validator_rule_ref"] == "CK-SCH-001":
+                    outcome["diagnostic_count"] += len(hardening.diagnostics)
+                    outcome["artifact_keys"] = sorted(
+                        {*outcome["artifact_keys"], "hardening_contract"}
+                    )
+                    break
         profile_definition = self.rule_definitions["CK-PROFILE-001"]
         composition_diagnostics = [
             CoreDiagnostic(
@@ -177,8 +208,7 @@ class CoreKnowledgeValidator:
                 outcome["diagnostic_count"] += len(composition_diagnostics)
                 break
         if any(
-            item["severity"] in {"fatal", "error"}
-            for item in validation["diagnostics"]
+            item["severity"] in {"fatal", "error"} for item in validation["diagnostics"]
         ):
             validation["conformance_status"] = "fail"
         after = canonical_json_hash(input_value)
@@ -226,9 +256,7 @@ class CoreKnowledgeValidator:
             "applicable_profile_resolution": composition.resolution,
             "applicable_profiles": list(composition.applicable_profiles),
             "effective_vocabularies": composition.effective_vocabularies,
-            "contract_conformance_corpus_execution": (
-                "not_in_scope_for_this_slice"
-            ),
+            "contract_conformance_corpus_execution": ("not_in_scope_for_this_slice"),
             "input_mode": "standalone_publication_unit",
             "rule_sources": rule_sources,
             "started_at": started_at,

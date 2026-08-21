@@ -33,6 +33,10 @@ class LocalHtmlAdapter:
             else None
         )
         source_time = time_node.get("datetime") if time_node else None
+        if source_time is None:
+            source_time_node = soup.find("meta", attrs={"name": "source-time"})
+            if isinstance(source_time_node, Tag):
+                source_time = source_time_node.get("content")
         normalized_text = "\n".join(article.stripped_strings)
 
         raw_hash = sha256_bytes(raw_bytes)
@@ -57,6 +61,24 @@ class LocalHtmlAdapter:
 
     def capture_many(self, bindings: Iterable[tuple[str, Path]]) -> list[SourceRecord]:
         return [self.capture(source_key, path) for source_key, path in bindings]
+
+    def passage_evidence_addresses(
+        self,
+        record: SourceRecord,
+    ) -> tuple[EvidenceAddress, ...]:
+        """Address natural block passages without scenario semantic annotations."""
+
+        soup = BeautifulSoup(record.raw_html, "html.parser")
+        article = soup.find("article") or soup.find("main") or soup.find("body") or soup
+        seen: set[str] = set()
+        addresses: list[EvidenceAddress] = []
+        for tag in article.find_all(("p", "li", "dd", "blockquote")):
+            text = " ".join(tag.stripped_strings)
+            if not text or text in seen:
+                continue
+            seen.add(text)
+            addresses.append(self.evidence_address(record, [text]))
+        return tuple(addresses)
 
     def evidence_address(
         self,

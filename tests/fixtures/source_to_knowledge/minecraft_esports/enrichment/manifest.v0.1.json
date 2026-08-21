@@ -1,0 +1,214 @@
+{
+  "fixture_set_ref": "GT-S2K-ENRICHMENT-01-D2",
+  "fixture_set_version": "0.1",
+  "scenario_ref": "GT-S2K-ENRICHMENT-01@0.8",
+  "capability_ref": "HR-005",
+  "work_package_ref": "CPKS-WP-003@0.2",
+  "sensitivity": "synthetic_non_sensitive",
+  "purpose": "additional_inputs_for_controlled_knowledge_enrichment_frontier",
+  "d1_expected_path": "tests/golden/source_to_knowledge/minecraft_esports/enrichment/expected/scenario.v0.8.json",
+  "d1_expected_sha256": "eda713688cc7a4b301538a7cde431bc57619049f36e5ff8ff26fb814090148b2",
+  "design_constraints": [
+    "fixtures_are_test_inputs_not_normative_rule_sources",
+    "no_real_or_personal_data",
+    "no_new_persistent_claim_or_event_ids_are_assigned_by_D2",
+    "source_time_is_not_automatically_event_time",
+    "independent_new_evidence_is_distinct_from_same_evidence_replay",
+    "approved_does_not_mean_performed_or_repeated",
+    "conflict_preserves_both_assertions_and_evidence",
+    "correct_does_not_preselect_resolution_type"
+  ],
+  "source_fixtures": [
+    {
+      "source_ref": "DOC-07",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/enrichment/html/07-independent-approval-confirmation.html",
+      "sha256": "4030f23486a3d603dd03ed044cd4be79a85b78dc683c28347b472a1ed107b158",
+      "role": "same_proposition_new_independent_evidence",
+      "source_time": "2025-03-18T10:00:00+01:00"
+    },
+    {
+      "source_ref": "DOC-08",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/enrichment/html/08-technical-operation-conflict.html",
+      "sha256": "4044ad439325ae37433f147fb94ae766521f82226526d8d992928595d55b19fd",
+      "role": "conflict_uncertainty",
+      "source_time": "2024-12-19T10:30:00+01:00"
+    },
+    {
+      "source_ref": "DOC-09",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/enrichment/html/09-pilot-capacity-correction.html",
+      "sha256": "7625b90d67934e94f86a472d6a6b7bde7f4fe9b7cdc7c1755cfa7d143b7d628d",
+      "role": "correct_same_object_boundary",
+      "source_time": "2024-09-10T09:00:00+02:00"
+    }
+  ],
+  "reused_existing_inputs": [
+    {
+      "source_ref": "DOC-04",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/04-pilot-evaluation-summary.html",
+      "sha256": "1c65b3e9a7f580beaeb93379ea15b92cfaa4568349297bce46ffad416dbab116",
+      "role": "KF-D09_evaluation_occurrence_and_prior_technical_operation_evidence"
+    },
+    {
+      "source_ref": "DOC-05",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/05-spring-follow-up-decisions.html",
+      "sha256": "884f481547017e34de9af83a6097e46056f8514e168875f0cf501edf6067745a",
+      "role": "prior_same_proposition_and_same_evidence_replay"
+    }
+  ],
+  "cases": {
+    "same_proposition_new_evidence": {
+      "case_ref": "D2-EVIDENCE-01",
+      "prior_state": {
+        "semantic_unit_kind": "claim",
+        "test_local_ref": "PRIOR-SECOND-CYCLE-APPROVED",
+        "proposition": {
+          "subject": "minecraft_esports_pilot",
+          "predicate": "second_after_school_cycle",
+          "object": "approved"
+        },
+        "evidence_refs": [
+          "CE-DOC-05"
+        ],
+        "source_refs": [
+          "DOC-05"
+        ]
+      },
+      "incoming_source_ref": "DOC-07",
+      "expected": {
+        "same_proposition": true,
+        "independent_new_evidence": true,
+        "material_evidence_coverage_delta": true,
+        "knowledge_finding": true,
+        "semantic_change_operation": "update_evidence_basis",
+        "resolution_type": "revise_existing_identity",
+        "stable_claim_identity_preserved": true,
+        "new_claim_state_expected": true,
+        "new_knowledge_object_version_expected_if_canonicalized": true,
+        "all_evidence_provenance_preserved": [
+          "CE-DOC-05",
+          "CE-DOC-07"
+        ]
+      },
+      "prohibited_inferences": [
+        "second_cycle_performed",
+        "second_cycle_repeated",
+        "second_cycle_institutionalized"
+      ]
+    },
+    "conflict_uncertainty": {
+      "case_ref": "D2-CONFLICT-01",
+      "prior_state": {
+        "semantic_unit_kind": "claim",
+        "test_local_ref": "PRIOR-TECHNICAL-STABILITY",
+        "proposition": {
+          "subject": "minecraft_esports_pilot",
+          "predicate": "technical_operation",
+          "object": "stable_after_first_session"
+        },
+        "evidence_refs": [
+          "CE-DOC-04"
+        ],
+        "source_refs": [
+          "DOC-04"
+        ]
+      },
+      "incoming_source_ref": "DOC-08",
+      "expected": {
+        "material_delta": true,
+        "delta_class_allowed": [
+          "conflict",
+          "uncertainty"
+        ],
+        "knowledge_finding": true,
+        "semantic_change_operation": "register_conflict",
+        "resolution_type": "create_new_identity",
+        "prior_claim_preserved": true,
+        "new_conflicting_claim_identity_expected": true,
+        "conflict_set_expected": true,
+        "automatic_winner_or_resolution": false,
+        "automatic_publication": false,
+        "all_evidence_provenance_preserved": [
+          "CE-DOC-04",
+          "CE-DOC-08"
+        ]
+      },
+      "prohibited_inferences": [
+        "technical_operation_universally_failed",
+        "replace_DOC04_without_resolution"
+      ]
+    },
+    "no_material_change_same_evidence_replay": {
+      "case_ref": "D2-NOMAT-01",
+      "incoming_source_ref": "DOC-05",
+      "replay_mode": "same_source_snapshot_same_evidence_occurrence",
+      "prior_state": {
+        "semantic_unit_kind": "claim",
+        "test_local_ref": "PRIOR-SECOND-CYCLE-APPROVED-WITH-DOC05",
+        "proposition": {
+          "subject": "minecraft_esports_pilot",
+          "predicate": "second_after_school_cycle",
+          "object": "approved"
+        },
+        "evidence_refs": [
+          "CE-DOC-05"
+        ],
+        "source_refs": [
+          "DOC-05"
+        ],
+        "evidence_coverage_already_contains_incoming_occurrence": true
+      },
+      "expected": {
+        "material_delta": false,
+        "new_evidence_coverage": false,
+        "knowledge_finding": false,
+        "change_candidate": false,
+        "new_knowledge_object_version": false,
+        "publication_change_set": null
+      },
+      "defensive_lifecycle_case_if_equivalent_candidate_is_supplied": {
+        "resolution_type": "map_to_existing_without_new_version",
+        "provenance_mapping_only": true,
+        "new_knowledge_object_version": false,
+        "publication_change_set": null
+      }
+    },
+    "correct_same_object_boundary": {
+      "case_ref": "D2-CORRECT-01",
+      "prior_state": {
+        "semantic_unit_kind": "claim",
+        "test_local_ref": "PRIOR-PILOT-CAPACITY-16",
+        "proposition": {
+          "subject": "minecraft_esports_pilot",
+          "predicate": "pilot_capacity",
+          "object": 16
+        },
+        "evidence_refs": [
+          "TEST-PRIOR-EVIDENCE-CAPACITY-16"
+        ]
+      },
+      "incoming_source_ref": "DOC-09",
+      "expected": {
+        "material_delta": true,
+        "knowledge_finding": true,
+        "semantic_change_operation": "correct",
+        "same_object_assessment": "different_claim_proposition_due_material_object_value_change",
+        "resolution_type": "create_new_identity",
+        "prior_claim_identity_preserved_historically": true,
+        "new_claim_identity_expected": true,
+        "claim_value_overwrite_in_place": false,
+        "new_knowledge_object_version_expected_if_canonicalized": true
+      },
+      "prohibited_inferences": [
+        "correct_automatically_means_revise_existing_identity",
+        "overwrite_value_16_in_place_under_same_claim_identity"
+      ]
+    }
+  },
+  "coverage": {
+    "conflict_uncertainty": "D2-CONFLICT-01",
+    "same_proposition_new_evidence": "D2-EVIDENCE-01",
+    "no_material_change": "D2-NOMAT-01",
+    "correct_same_object": "D2-CORRECT-01",
+    "KF-D09_evaluation_occurrence": "reuses_DOC-04_no_new_fixture_required"
+  }
+}

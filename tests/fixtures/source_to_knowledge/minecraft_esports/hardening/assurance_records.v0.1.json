@@ -1,0 +1,30 @@
+{
+  "fixture_set_ref": "FIX-S2K-POSTR5-ASSURANCE-01",
+  "fixture_version": "0.1",
+  "synthetic": true,
+  "canonical": false,
+  "sensitive": false,
+  "isolation_marker": "TEST-ONLY-NOT-A-REAL-REVIEW-AUTHORITY-OR-PUBLICATION",
+  "review_record": {
+    "record_ref": "REVIEW-SYNTHETIC-NOT-AUTHORITATIVE",
+    "synthetic": true,
+    "test_isolated": true,
+    "result": "changes_required",
+    "grants_acceptance": false
+  },
+  "authority_record": {
+    "record_ref": "AUTH-SYNTHETIC-NONE",
+    "synthetic": true,
+    "test_isolated": true,
+    "allowed_actions": [],
+    "grants_publication_authority": false
+  },
+  "publication_record": {
+    "record_ref": "PUB-SYNTHETIC-NOT-EXECUTED",
+    "synthetic": true,
+    "test_isolated": true,
+    "publication_state": "unpublished",
+    "execution_occurred": false,
+    "canonical_path": null
+  }
+}

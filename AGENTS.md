@@ -38,7 +38,6 @@ Base bundle for material `cpKnowledgeTools` work:
 
 - `CPKS-FWK-ARCH`
 - `CPKT-SPEC-ARCH`
-- `CPKS-DEC-030`
 
 For Source-to-Knowledge MVP work, also resolve and read as applicable:
 
@@ -47,7 +46,6 @@ For Source-to-Knowledge MVP work, also resolve and read as applicable:
 
 For Project Document validation work, also resolve and read:
 
-- `CPKS-DEC-029`
 - `CPKS-SPEC-PDOC`
 
 For Managed Artifact / governance validation work, also resolve and read:

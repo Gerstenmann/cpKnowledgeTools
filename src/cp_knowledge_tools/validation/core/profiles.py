@@ -7,7 +7,7 @@ from .models import PreparedCoreInputs
 
 CORE_RULE_SOURCES = {
     "CPKS-SPEC-KM@0.20": "exact",
-    "CPKS-SPEC-KM-PU@0.1": "exact",
+    "CPKS-SPEC-KM-PU@0.2": "exact",
     "CPKS-SPEC-KM-VOC@0.1": "exact",
 }
 
@@ -120,9 +120,7 @@ def _issue(
     issues.append(CompositionIssue(code=code, path=path, message=message))
 
 
-def _profile_rule(
-    payload: dict[str, Any], target: str
-) -> dict[str, Any] | None:
+def _profile_rule(payload: dict[str, Any], target: str) -> dict[str, Any] | None:
     matches = [
         rule
         for rule in payload.get("validator_rules", [])
@@ -444,9 +442,11 @@ def compose_applicable_profiles(
             )
             role_rule = _profile_rule(payload, "event_participation")
             event_type_rule = _profile_rule(payload, "event_state.event_type_ref")
-            if name == "event_participation_role" and any(
-                "allowed_event_types" in item for item in terms
-            ) and role_rule is None:
+            if (
+                name == "event_participation_role"
+                and any("allowed_event_types" in item for item in terms)
+                and role_rule is None
+            ):
                 _issue(
                     issues,
                     f"Profile role constraints in {namespace} have no validator rule",
@@ -531,9 +531,7 @@ def compose_applicable_profiles(
                 "source_ref": vocabulary["profile_ref"],
             }
             if "allowed_event_types" in item:
-                public_term["allowed_event_types"] = sorted(
-                    item["allowed_event_types"]
-                )
+                public_term["allowed_event_types"] = sorted(item["allowed_event_types"])
             target["terms"].append(public_term)
             target["accepted_values"].append(item["term_ref"])
             term_context = {

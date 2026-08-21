@@ -7,10 +7,20 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+from cp_knowledge_tools.lifecycle import (
+    HashRuleBinding,
+    PublicationRecord,
+    publication_unit_knowledge_content_hash,
+)
 from cp_knowledge_tools.platform.hashing import canonical_json_hash
 
 ExperienceSubjectType = Literal["claim", "event", "event_participation"]
-ExperiencePhaseStatus = Literal["supported", "unresolved"]
+ExperiencePhaseStatus = Literal["supported", "partial", "unresolved"]
+ExperienceGapStatus = Literal[
+    "unresolved",
+    "resolved",
+    "informed_unresolved",
+]
 
 
 class ExperienceProjectionError(ValueError):
@@ -36,6 +46,7 @@ class ExperiencePhasePlan:
     phase_ref: str
     requirements: tuple[ExperienceSemanticSelector, ...]
     required_for_lesson_learned: bool = False
+    status_when_supported: Literal["supported", "partial"] = "supported"
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,6 +61,11 @@ class ExperienceGapPlan:
     question: str
     phase_ref: str
     semantic_basis_refs: tuple[str, ...] = ()
+    progression_requirements: tuple[ExperienceSemanticSelector, ...] = ()
+    status_when_progressed: Literal[
+        "resolved",
+        "informed_unresolved",
+    ] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,7 +127,7 @@ class ExperienceThread:
 class ExperienceGap:
     gap_ref: str
     question: str
-    status: Literal["unresolved"]
+    status: ExperienceGapStatus
     phase_ref: str
     semantic_basis_refs: tuple[str, ...]
 
@@ -155,8 +171,8 @@ class ExperienceProjection:
 class ExperienceProjectionBuilder:
     """Build a deterministic non-authoritative experience view from a PU."""
 
-    projection_schema_version = "0.1"
-    builder_version = "0.1"
+    projection_schema_version = "0.2"
+    builder_version = "0.2"
 
     def build(
         self,
@@ -188,14 +204,13 @@ class ExperienceProjectionBuilder:
             self._thread(item, subjects) for item in plan.threads
         )
         gaps = tuple(
-            self._gap(item, phase_by_ref, subjects) for item in plan.gaps
-            if self._gap_is_open(item, phase_by_ref)
+            self._gap(item, phase_by_ref, subjects, evidence_by_subject)
+            for item in plan.gaps
         )
 
-        supported_count = sum(item.status == "supported" for item in phases)
-        if supported_count == len(phases):
+        if phases and all(item.status == "supported" for item in phases):
             completeness = "complete"
-        elif supported_count:
+        elif any(item.status != "unresolved" for item in phases):
             completeness = "partial"
         else:
             completeness = "unresolved"
@@ -353,7 +368,7 @@ class ExperienceProjectionBuilder:
         )
         return ExperiencePhase(
             phase_ref=plan.phase_ref,
-            status="supported" if supported else "unresolved",
+            status=plan.status_when_supported if supported else "unresolved",
             semantic_basis_refs=semantic_refs,
             evidence_refs=evidence_refs,
             required_for_lesson_learned=plan.required_for_lesson_learned,
@@ -425,24 +440,25 @@ class ExperienceProjectionBuilder:
             )
         return ExperienceThread(plan.thread_ref, plan.semantic_refs)
 
-    def _gap_is_open(
-        self,
-        plan: ExperienceGapPlan,
-        phases: Mapping[str, ExperiencePhase],
-    ) -> bool:
-        if plan.phase_ref not in phases:
-            raise ExperienceProjectionError(
-                f"gap {plan.gap_ref!r} references unknown phase "
-                f"{plan.phase_ref!r}"
-            )
-        return phases[plan.phase_ref].status == "unresolved"
-
     def _gap(
         self,
         plan: ExperienceGapPlan,
         phases: Mapping[str, ExperiencePhase],
         subjects: Mapping[str, Sequence[dict[str, Any]]],
+        evidence_by_subject: Mapping[str, tuple[str, ...]],
     ) -> ExperienceGap:
+        if plan.phase_ref not in phases:
+            raise ExperienceProjectionError(
+                f"gap {plan.gap_ref!r} references unknown phase "
+                f"{plan.phase_ref!r}"
+            )
+        if bool(plan.progression_requirements) != bool(
+            plan.status_when_progressed
+        ):
+            raise ExperienceProjectionError(
+                f"gap {plan.gap_ref!r} must define progression requirements "
+                "and progressed status together"
+            )
         known_refs = {
             self._stable_id(subject_type, item)
             for subject_type, items in subjects.items()
@@ -455,13 +471,57 @@ class ExperienceProjectionBuilder:
                 f"{sorted(unknown_refs)}"
             )
         phase = phases[plan.phase_ref]
+        progression_matches = tuple(
+            self._matches(selector, subjects)
+            for selector in plan.progression_requirements
+        )
+        progression_supported = bool(plan.progression_requirements) and all(
+            items
+            and (
+                not selector.requires_evidence
+                or any(
+                    evidence_by_subject.get(
+                        self._stable_id(selector.subject_type, item),
+                        (),
+                    )
+                    for item in items
+                )
+            )
+            for selector, items in zip(
+                plan.progression_requirements,
+                progression_matches,
+                strict=True,
+            )
+        )
+        progression_refs = {
+            self._stable_id(selector.subject_type, item)
+            for selector, items in zip(
+                plan.progression_requirements,
+                progression_matches,
+                strict=True,
+            )
+            for item in items
+        }
         basis_refs = tuple(
-            sorted(set((*plan.semantic_basis_refs, *phase.semantic_basis_refs)))
+            sorted(
+                set(
+                    (
+                        *plan.semantic_basis_refs,
+                        *phase.semantic_basis_refs,
+                        *progression_refs,
+                    )
+                )
+            )
         )
         return ExperienceGap(
             gap_ref=plan.gap_ref,
             question=plan.question,
-            status="unresolved",
+            status=(
+                plan.status_when_progressed
+                if progression_supported
+                and plan.status_when_progressed is not None
+                else "unresolved"
+            ),
             phase_ref=plan.phase_ref,
             semantic_basis_refs=basis_refs,
         )
@@ -473,7 +533,9 @@ class ExperienceProjectionBuilder:
     ) -> tuple[ExperienceContinuationRequirement, ...]:
         if plan.continuation is None:
             return ()
-        open_gap_refs = {item.gap_ref for item in gaps}
+        open_gap_refs = {
+            item.gap_ref for item in gaps if item.status != "resolved"
+        }
         critical_gap_refs = tuple(
             ref
             for ref in plan.continuation.critical_gap_refs
@@ -510,3 +572,143 @@ class ExperienceProjectionBuilder:
         if value["kind"] == "reference":
             return value["reference"]["stable_id"]
         return value["value"]
+
+
+@dataclass(frozen=True, slots=True)
+class ExperienceRebuildResult:
+    disposition: Literal["rebuilt", "blocked"]
+    reason_code: str
+    projection: ExperienceProjection | None = None
+    stale_projection_refs: tuple[str, ...] = ()
+    publication_record_ref: str | None = None
+    source_publication_unit_ref: str | None = None
+
+
+class ExperienceProjectionStore:
+    """Small rebuildable store; its projections are never canonical sources."""
+
+    def __init__(
+        self,
+        projections: Sequence[ExperienceProjection] = (),
+    ) -> None:
+        self._projections = {
+            item.experience_projection_ref: item for item in projections
+        }
+        self._statuses = {
+            item.experience_projection_ref: "current" for item in projections
+        }
+
+    def projections(self) -> tuple[ExperienceProjection, ...]:
+        return tuple(
+            self._projections[key] for key in sorted(self._projections)
+        )
+
+    def status(self, projection_ref: str) -> str | None:
+        return self._statuses.get(projection_ref)
+
+    def delete(self, projection_ref: str) -> bool:
+        if projection_ref not in self._projections:
+            return False
+        del self._projections[projection_ref]
+        del self._statuses[projection_ref]
+        return True
+
+    def mark_prior_versions_stale(
+        self,
+        *,
+        stable_id: str,
+        current_version: str,
+    ) -> tuple[str, ...]:
+        stale_refs = []
+        for projection_ref, projection in self._projections.items():
+            publication_ref = projection.publication_unit_ref
+            if (
+                publication_ref["stable_id"] == stable_id
+                and publication_ref["version"] != current_version
+                and self._statuses[projection_ref] == "current"
+            ):
+                self._statuses[projection_ref] = "stale"
+                stale_refs.append(projection_ref)
+        return tuple(sorted(stale_refs))
+
+    def put_current(self, projection: ExperienceProjection) -> None:
+        self._projections[projection.experience_projection_ref] = projection
+        self._statuses[projection.experience_projection_ref] = "current"
+
+
+class PublicationBoundExperienceRebuilder:
+    """Rebuild Derived Experience only from a verified published unit."""
+
+    def rebuild(
+        self,
+        *,
+        manifest: Mapping[str, Any],
+        markdown_body: str,
+        plan: ExperienceProjectionPlan,
+        publication_record: PublicationRecord,
+        store: ExperienceProjectionStore,
+    ) -> ExperienceRebuildResult:
+        if publication_record.outcome != "success" or not publication_record.immutable:
+            return self._blocked("successful_publication_record_required")
+
+        stable_id = str(manifest.get("knowledge_object_id", ""))
+        version = str(manifest.get("knowledge_object_version", ""))
+        publication_unit_ref = f"{stable_id}@{version}"
+        publication = manifest.get("publication", {})
+        if (
+            not stable_id
+            or not version
+            or publication_unit_ref not in publication_record.published_unit_refs
+        ):
+            return self._blocked("publication_record_unit_binding_mismatch")
+        if (
+            publication.get("publication_state") != "published"
+            or publication.get("publication_record_ref")
+            != publication_record.publication_record_ref
+        ):
+            return self._blocked("published_unit_state_not_verified")
+        if not publication_record.knowledge_content_hashes:
+            return self._blocked("publication_record_knowledge_hash_missing")
+        declared_hash = manifest.get("integrity", {}).get("content_hash")
+        record_hash = publication_record.knowledge_content_hashes[0]
+        hash_binding = HashRuleBinding(
+            algorithm=record_hash.algorithm,
+            canonicalization_profile_ref=record_hash.canonicalization_profile,
+            approval_context_ref=record_hash.approval_context_ref,
+            synthetic_test_fixture=record_hash.synthetic_test_fixture,
+        )
+        actual_hash = publication_unit_knowledge_content_hash(
+            dict(manifest),
+            markdown_body,
+            hash_binding,
+        )
+        if (
+            not isinstance(declared_hash, Mapping)
+            or declared_hash.get("value") != record_hash.value
+            or actual_hash != record_hash
+        ):
+            return self._blocked("publication_record_knowledge_hash_mismatch")
+        if plan.focus_knowledge_object_ref != publication_unit_ref:
+            return self._blocked("experience_plan_published_unit_mismatch")
+
+        projection = ExperienceProjectionBuilder().build(manifest, plan)
+        stale_refs = store.mark_prior_versions_stale(
+            stable_id=stable_id,
+            current_version=version,
+        )
+        store.put_current(projection)
+        return ExperienceRebuildResult(
+            disposition="rebuilt",
+            reason_code="experience_rebuilt_from_published_unit",
+            projection=projection,
+            stale_projection_refs=stale_refs,
+            publication_record_ref=publication_record.publication_record_ref,
+            source_publication_unit_ref=publication_unit_ref,
+        )
+
+    @staticmethod
+    def _blocked(reason_code: str) -> ExperienceRebuildResult:
+        return ExperienceRebuildResult(
+            disposition="blocked",
+            reason_code=reason_code,
+        )

@@ -1,0 +1,1276 @@
+{
+  "scenario_ref": "GT-S2K-ENRICHMENT-01",
+  "scenario_version": "0.8",
+  "scenario_role": "frontier",
+  "capability_ref": "HR-005",
+  "purpose": "controlled_knowledge_enrichment",
+  "project_key": "communications-knowledge-pilot",
+  "baseline_scenario_ref": "GT-S2K-CONTINUATION-01",
+  "baseline_scenario_version": "0.2",
+  "parent_regression_scenario_ref": "GT-S2K-MINI-DOSSIER-01",
+  "parent_regression_scenario_version": "1.2",
+  "work_package_ref": "CPKS-WP-003@0.2",
+  "sensitivity": "synthetic_non_sensitive",
+  "expected_artifact_role": "executable_test_design_not_normative_rule_source",
+  "rule_basis": [
+    "CPKS-DEC-028@1.1",
+    "CPKS-SPEC-TST@0.1",
+    "CPKS-SPEC-KM@0.20",
+    "CPKS-SPEC-KM-PU@0.2",
+    "CPKS-SPEC-KPR@0.3",
+    "CPKS-SPEC-MEM@0.3",
+    "CPKS-SPEC-SEC@0.3",
+    "CPKS-SPEC-VAL@0.2",
+    "CPKS-SPEC-OPS@0.4",
+    "CPKT-SPEC-ARCH@1.5",
+    "DEV-P04@0.1"
+  ],
+  "project_decisions": {
+    "finding_eligibility": "material_semantic_delta",
+    "change_candidate_eligibility": "actionable_semantic_delta",
+    "granularity": "independently_reviewable_semantic_unit",
+    "deduplication": "provenance_preserving_semantic_deduplication",
+    "change_operation": "controlled_semantic_change_operation",
+    "review_routing": "federated_revision_bound_review_routing",
+    "policy_publication_gates": "fail_closed_version_bound_atomic_publication_gates",
+    "resolution_version_generation": "same_object_constrained_resolution_and_immutable_knowledge_version_projection",
+    "experience_rebuild_acceptance": "publication_bound_rebuildable_experience_projection_and_acceptance",
+    "system_wide_normative_status": "not_decided"
+  },
+  "input_state": {
+    "continuation_scenario_ref": "GT-S2K-CONTINUATION-01@0.2",
+    "continuation_outcome": "partial",
+    "content_reads": [
+      "DOC-04",
+      "DOC-05"
+    ],
+    "resolved_gap_refs": [
+      "EXP-GAP-PILOT-EXECUTION",
+      "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+      "EXP-GAP-PILOT-EVALUATION-RESULT",
+      "EXP-GAP-PILOT-OUTCOME"
+    ],
+    "unresolved_gap_refs": [
+      "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP",
+      "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP",
+      "EXP-GAP-PILOT-REPETITION"
+    ],
+    "lesson_learned_eligibility": "eligible",
+    "write_back": false,
+    "prior_knowledge_object_ref": "KO-GT-ME-ESPORTS-PILOT@0.1",
+    "prior_knowledge_object_publication_state": "unpublished",
+    "prior_knowledge_object_canonical_path": null,
+    "experience_ref": "EXP-GT-ME-ESPORTS-PILOT-RMIS-2024",
+    "experience_projection_baseline": "1.2"
+  },
+  "candidate_sources": [
+    {
+      "source_ref": "DOC-04",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/04-pilot-evaluation-summary.html",
+      "sha256": "1c65b3e9a7f580beaeb93379ea15b92cfaa4568349297bce46ffad416dbab116",
+      "role": "evaluation_and_outcome"
+    },
+    {
+      "source_ref": "DOC-05",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/05-spring-follow-up-decisions.html",
+      "sha256": "884f481547017e34de9af83a6097e46056f8514e168875f0cf501edf6067745a",
+      "role": "follow_up_decisions"
+    },
+    {
+      "source_ref": "DOC-06",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/continuation/html/06-workshop-room-note.html",
+      "sha256": "32e1ac8465e95a7a4a3c7dec96ba65482b4888368004c77fe30878fe8af4697d",
+      "role": "decoy"
+    }
+  ],
+  "finding_eligibility": {
+    "required": [
+      "evidence_content_actually_read",
+      "content_read_authorized",
+      "evidence_reproducibly_resolvable",
+      "semantic_assertion_present",
+      "material_delta_to_relevant_prior_knowledge",
+      "time_epistemic_uncertainty_conflict_preserved",
+      "finding_remains_non_canonical"
+    ],
+    "non_canonical": true
+  },
+  "change_candidate_eligibility": {
+    "required": [
+      "knowledge_finding_exists",
+      "target_or_subject_determinable",
+      "relevant_prior_state_resolvable",
+      "concrete_bounded_semantic_effect_expressible",
+      "effect_fully_grounded_in_finding_and_evidence",
+      "time_epistemic_uncertainty_conflict_preserved",
+      "no_identity_review_policy_publication_decision_preempted",
+      "candidate_remains_non_canonical"
+    ]
+  },
+  "semantic_change_operations": [
+    "add",
+    "qualify",
+    "temporal_progression",
+    "constrain",
+    "extend_scope",
+    "register_conflict",
+    "correct",
+    "update_epistemic_state",
+    "update_evidence_basis"
+  ],
+  "forbidden_as_semantic_change_operation": [
+    "create_new_identity",
+    "revise_existing_identity",
+    "merge_into_existing",
+    "merge_into_new_identity",
+    "split_into_new_identities",
+    "merge_subjects",
+    "split_subject",
+    "retract_published_version",
+    "deprecate_identity",
+    "retire_identity",
+    "publish_new_version",
+    "supersede_version",
+    "retract_version",
+    "approve",
+    "reject",
+    "permit",
+    "deny",
+    "delete",
+    "overwrite"
+  ],
+  "golden_deltas": [
+    {
+      "ref": "KF-D01",
+      "evidence_source_ref": "DOC-04",
+      "evidence": "pilot_occurred",
+      "prior_state": "EVT-INTERNAL-PILOT planned; actual occurrence unknown",
+      "delta_class": [
+        "temporal_progression"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "temporal_progression",
+      "semantic_target": "EVT-INTERNAL-PILOT",
+      "proposed_effect": "planned_to_actual_same_event",
+      "resolution_ref": "RES-D01",
+      "resolution_type": "revise_existing_identity",
+      "identity_effect": "same_event_id_new_state",
+      "prohibited_inferences": [
+        "new_pilot_event_identity",
+        "universal_effectiveness"
+      ]
+    },
+    {
+      "ref": "KF-D02",
+      "evidence_source_ref": "DOC-04",
+      "evidence": "engagement_and_teamwork_strong",
+      "prior_state": "evaluation_result_unknown",
+      "delta_class": [
+        "addition"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "add",
+      "proposed_effect": "add_pilot_specific_engagement_teamwork_evaluation",
+      "resolution_ref": "RES-D02",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_identity_expected",
+      "prohibited_inferences": [
+        "generalize_beyond_this_pilot"
+      ]
+    },
+    {
+      "ref": "KF-D03",
+      "evidence_source_ref": "DOC-04",
+      "evidence": "coding_progression_mixed",
+      "prior_state": "evaluation_result_unknown",
+      "delta_class": [
+        "addition"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "add",
+      "proposed_effect": "add_mixed_coding_progression_evaluation",
+      "resolution_ref": "RES-D03",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_identity_expected",
+      "prohibited_inferences": [
+        "simplify_to_success",
+        "simplify_to_failure",
+        "generalize_beyond_this_pilot"
+      ]
+    },
+    {
+      "ref": "KF-D04",
+      "evidence_source_ref": "DOC-04",
+      "evidence": "technical_operation_stable_after_first_session",
+      "prior_state": "technical_progression_unknown",
+      "delta_class": [
+        "addition",
+        "temporal_qualification"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "add",
+      "proposed_effect": "add_time_qualified_technical_operation_progression",
+      "resolution_ref": "RES-D04",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_identity_expected",
+      "prohibited_inferences": [
+        "technical_operation_stable_before_or_during_first_session"
+      ]
+    },
+    {
+      "ref": "KF-D05",
+      "evidence_source_ref": "DOC-04",
+      "evidence": "promising_after_school_not_ready_for_classroom",
+      "prior_state": "outcome_unknown",
+      "delta_class": [
+        "addition",
+        "constraint"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "add",
+      "proposed_effect": "add_coupled_outcome_assessment",
+      "resolution_ref": "RES-D05",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_identity_expected",
+      "must_preserve_together": [
+        "promising_after_school",
+        "not_ready_for_classroom"
+      ]
+    },
+    {
+      "ref": "KF-D06",
+      "evidence_source_ref": "DOC-05",
+      "evidence": "second_after_school_cycle_approved",
+      "prior_state": "follow_up_unknown",
+      "delta_class": [
+        "temporal_progression"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "temporal_progression",
+      "proposed_effect": "add_follow_up_approval_state",
+      "resolution_ref": "RES-D06",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_event_or_claim_identity_per_core_materialization",
+      "prohibited_inferences": [
+        "performed",
+        "repeated",
+        "institutionalized"
+      ]
+    },
+    {
+      "ref": "KF-D07",
+      "evidence_source_ref": "DOC-05",
+      "evidence": "classroom_2024_25_not_introduced_not_permanently_rejected",
+      "prior_state": "follow_up_unknown",
+      "delta_class": [
+        "temporal_progression",
+        "constraint"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "temporal_progression",
+      "proposed_effect": "add_time_bounded_classroom_follow_up_state",
+      "resolution_ref": "RES-D07",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_identity_expected",
+      "preserve_existing_refs": [
+        "CLM-ACADEMIC-DEFERRED"
+      ],
+      "must_preserve_together": [
+        "not_introduced_2024_25",
+        "not_permanently_rejected"
+      ],
+      "prohibited_inferences": [
+        "permanently_rejected",
+        "later_introduced"
+      ]
+    },
+    {
+      "ref": "KF-D08",
+      "evidence_source_ref": "DOC-05",
+      "evidence": "external_competition_2024_25_not_planned_not_permanently_excluded",
+      "prior_state": "follow_up_unknown",
+      "delta_class": [
+        "temporal_progression",
+        "constraint"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "temporal_progression",
+      "proposed_effect": "add_time_bounded_external_competition_follow_up_state",
+      "resolution_ref": "RES-D08",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_identity_expected",
+      "preserve_existing_refs": [
+        "CLM-EXT-COMP-NOT-APPROVED"
+      ],
+      "must_preserve_together": [
+        "not_planned_2024_25",
+        "not_permanently_excluded"
+      ],
+      "prohibited_inferences": [
+        "permanently_excluded",
+        "later_approved",
+        "later_participated"
+      ]
+    },
+    {
+      "ref": "KF-D09",
+      "evidence_source_ref": "DOC-04",
+      "evidence": "evaluation_completed_after_cycle",
+      "prior_state": "evaluation_occurrence_unknown",
+      "delta_class": [
+        "addition"
+      ],
+      "finding_expected": true,
+      "candidate_eligible": true,
+      "semantic_change_operation": "add",
+      "proposed_effect": "add_evaluation_occurrence_event",
+      "resolution_ref": "RES-D09",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_event_identity_expected",
+      "source_time": "2024-12-18T16:00:00+01:00",
+      "event_time": null,
+      "prohibited_inferences": [
+        "source_time_equals_exact_event_time"
+      ]
+    }
+  ],
+  "finding_negative_cases": [
+    {
+      "ref": "KF-N01",
+      "input": "candidate_discovered_content_not_read",
+      "expected": "no_finding"
+    },
+    {
+      "ref": "KF-N02",
+      "input": "metadata_read_content_not_authorized",
+      "expected": "no_finding"
+    },
+    {
+      "ref": "KF-N03",
+      "input": "evidence_not_reproducibly_resolvable",
+      "expected": "no_finding"
+    },
+    {
+      "ref": "KF-N04",
+      "input": "content_reads_equals_2",
+      "expected": "no_knowledge_finding"
+    },
+    {
+      "ref": "KF-N05",
+      "input": "candidate_scope_exhausted",
+      "expected": "no_knowledge_finding"
+    },
+    {
+      "ref": "KF-N06",
+      "input": "semantically_equivalent_existing_proposition_with_no_material_evidence_epistemic_time_conflict_scope_change",
+      "expected": "no_finding"
+    },
+    {
+      "ref": "KF-N07",
+      "input": "lesson_learned_eligibility_eligible_alone",
+      "expected": "no_automatic_finding"
+    },
+    {
+      "ref": "KF-N08",
+      "input": "approval_interpreted_as_actual_repetition",
+      "expected": "block"
+    },
+    {
+      "ref": "KF-N09",
+      "input": "not_introduced_2024_25_interpreted_as_permanently_rejected",
+      "expected": "block"
+    },
+    {
+      "ref": "KF-N10",
+      "input": "not_planned_2024_25_interpreted_as_permanently_excluded",
+      "expected": "block"
+    },
+    {
+      "ref": "KF-N11",
+      "input": "DOC-06_decoy_without_relevant_semantic_evidence",
+      "expected": "no_finding"
+    }
+  ],
+  "same_proposition_new_evidence_case": {
+    "ref": "KF-E01",
+    "input": "existing_proposition_plus_new_independent_authorized_evidence_materially_changes_evidence_coverage",
+    "expected": "finding_possible",
+    "candidate_operation": "update_evidence_basis"
+  },
+  "change_candidate_negative_cases": [
+    {
+      "ref": "CC-N01",
+      "situation": "target_identity_not_unambiguously_resolvable",
+      "expected": "no_change_candidate_yet"
+    },
+    {
+      "ref": "CC-N02",
+      "situation": "relevant_prior_knowledge_state_not_determinable",
+      "expected": "no_change_candidate_yet"
+    },
+    {
+      "ref": "CC-N03",
+      "situation": "proposed_change_exceeds_finding_or_evidence",
+      "expected": "block"
+    },
+    {
+      "ref": "CC-N04",
+      "situation": "approved_proposed_as_performed_or_repeated",
+      "expected": "block"
+    },
+    {
+      "ref": "CC-N05",
+      "situation": "not_introduced_2024_25_proposed_as_permanently_rejected",
+      "expected": "block"
+    },
+    {
+      "ref": "CC-N06",
+      "situation": "conflict_candidate_overwrites_existing_assertion_without_resolution",
+      "expected": "block"
+    },
+    {
+      "ref": "CC-N07",
+      "situation": "candidate_makes_same_object_merge_or_split_decision",
+      "expected": "block"
+    },
+    {
+      "ref": "CC-N08",
+      "situation": "candidate_emitted_as_review_decision_policy_permit_or_publication",
+      "expected": "block"
+    },
+    {
+      "ref": "CC-N09",
+      "situation": "material_finding_but_semantic_target_effect_still_unclear",
+      "expected": "retain_finding_no_candidate_yet"
+    },
+    {
+      "ref": "CC-N10",
+      "situation": "semantic_change_operation_supersede_version",
+      "expected": "block_wrong_layer_publication_lifecycle"
+    },
+    {
+      "ref": "CC-N11",
+      "situation": "semantic_change_operation_merge_or_split",
+      "expected": "block_wrong_layer_resolution"
+    },
+    {
+      "ref": "CC-N12",
+      "situation": "semantic_change_operation_publish_new_version",
+      "expected": "block_wrong_layer_publication_change_set"
+    },
+    {
+      "ref": "CC-N13",
+      "situation": "semantic_change_operation_approve_reject_permit_or_deny",
+      "expected": "block_foreign_authority"
+    },
+    {
+      "ref": "CC-N14",
+      "situation": "multiple_independently_reviewable_primary_operations_in_one_candidate",
+      "expected": "split_into_atomic_candidates"
+    }
+  ],
+  "granularity_cases": [
+    {
+      "case": "engagement_and_teamwork_strong",
+      "expected_unit": "separate_finding"
+    },
+    {
+      "case": "coding_progression_mixed",
+      "expected_unit": "separate_finding"
+    },
+    {
+      "case": "technical_operation_stable_after_first_session",
+      "expected_unit": "separate_finding"
+    },
+    {
+      "case": "promising_after_school_plus_not_ready_for_classroom",
+      "expected_unit": "single_coupled_finding_and_candidate"
+    },
+    {
+      "case": "classroom_not_introduced_plus_not_permanently_rejected",
+      "expected_unit": "single_coupled_finding_and_candidate"
+    },
+    {
+      "case": "competition_not_planned_plus_not_permanently_excluded",
+      "expected_unit": "single_coupled_finding_and_candidate"
+    }
+  ],
+  "deduplication_cases": [
+    {
+      "case": "same_run_same_evidence_same_delta_twice",
+      "semantic_equivalent": true,
+      "grouping": "dedupe_identical_repetition",
+      "provenance": "single_concrete_observation_sufficient"
+    },
+    {
+      "case": "independent_sources_same_second_cycle_approved_semantics",
+      "semantic_equivalent": true,
+      "grouping": "shared_semantic_finding_core_allowed",
+      "provenance": "preserve_all_independent_evidence_and_observations"
+    },
+    {
+      "case": "equivalent_findings_same_target_prior_state_effect",
+      "semantic_equivalent": true,
+      "grouping": "single_shared_change_candidate_allowed",
+      "provenance": "preserve_all_supporting_finding_refs"
+    },
+    {
+      "case": "same_property_different_time_scope",
+      "semantic_equivalent": false,
+      "grouping": "do_not_dedupe"
+    },
+    {
+      "case": "support_vs_conflict",
+      "semantic_equivalent": false,
+      "grouping": "do_not_dedupe"
+    },
+    {
+      "case": "same_statement_materially_different_epistemic_qualification",
+      "semantic_equivalent": false,
+      "grouping": "do_not_dedupe"
+    },
+    {
+      "case": "same_target_different_proposed_semantic_effect",
+      "semantic_equivalent": false,
+      "grouping": "separate_candidates"
+    }
+  ],
+  "candidate_equivalence_requires": [
+    "same_target",
+    "same_relevant_prior_state",
+    "same_proposed_semantic_effect",
+    "same_time_scope",
+    "same_epistemic_conflict_treatment",
+    "same_relevant_constraints"
+  ],
+  "review_routing": {
+    "baseline_reviews": [
+      "technical_validation",
+      "source_and_evidence_review"
+    ],
+    "operation_additional_reviews": {
+      "add": [
+        "domain_review"
+      ],
+      "qualify": [
+        "domain_review",
+        "entity_and_identity_review_if_same_object_relevant"
+      ],
+      "temporal_progression": [
+        "domain_review",
+        "entity_and_identity_review_if_event_or_same_object_ambiguous"
+      ],
+      "constrain": [
+        "domain_review",
+        "entity_and_identity_review_if_same_object_relevant"
+      ],
+      "extend_scope": [
+        "domain_review",
+        "independent_quality_review",
+        "entity_and_identity_review_if_same_object_relevant"
+      ],
+      "register_conflict": [
+        "domain_review",
+        "independent_quality_review"
+      ],
+      "correct": [
+        "domain_review",
+        "independent_quality_review",
+        "entity_and_identity_review_if_same_object_relevant"
+      ],
+      "update_epistemic_state": [
+        "domain_review"
+      ],
+      "update_evidence_basis": [
+        "baseline_only_if_claim_content_time_applicability_epistemic_conflict_unchanged",
+        "otherwise_domain_review"
+      ]
+    },
+    "privacy_and_security_review_trigger": [
+      "evidence_or_source_sensitivity_materially_affected",
+      "access_or_processing_boundary_materially_affected",
+      "policy_anchor_or_processing_zone_materially_affected",
+      "new_privacy_or_security_risk"
+    ],
+    "authorities": {
+      "technical_validation": "authorized_validator_or_conformance_mechanism",
+      "source_and_evidence_review": "project_owner_default_unless_more_specific_authority",
+      "domain_review": "project_owner_default",
+      "entity_and_identity_review": "project_owner_applies_active_core_same_object_rules_resolution_remains_separate",
+      "independent_quality_review": "project_owner_only_if_not_candidate_revision_producer_else_other_authorized_human",
+      "privacy_and_security_review": "specialized_authority_not_derived_from_project_ownership",
+      "policy_review": "trust_policy_review_authority_not_policy_decision",
+      "publication_review": "project_owner_default_for_synthetic_publication_package_no_policy_or_publication_authority"
+    },
+    "revision_binding": {
+      "material_revision_invalidates_review_by_default": true,
+      "carry_forward_requires": [
+        "review_scope_unchanged",
+        "rule_basis_still_valid",
+        "explicit_carry_forward_evidence"
+      ]
+    }
+  },
+  "review_negative_cases": [
+    {
+      "ref": "RV-N01",
+      "situation": "candidate_revision_without_technical_validation",
+      "expected": "not_review_gate_ready"
+    },
+    {
+      "ref": "RV-N02",
+      "situation": "candidate_revision_without_source_and_evidence_review",
+      "expected": "not_review_gate_ready"
+    },
+    {
+      "ref": "RV-N03",
+      "situation": "correct_without_independent_quality_review",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N04",
+      "situation": "extend_scope_without_independent_quality_review",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N05",
+      "situation": "register_conflict_without_independent_quality_review",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N06",
+      "situation": "producing_agent_or_tool_self_issues_independent_quality_review",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N07",
+      "situation": "project_owner_is_producer_and_self_issues_same_independent_quality_review",
+      "expected": "block_other_human_required"
+    },
+    {
+      "ref": "RV-N08",
+      "situation": "rev1_review_silently_reused_after_material_rev2",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N09",
+      "situation": "domain_review_interpreted_as_resolution_policy_permit_or_publication",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N10",
+      "situation": "project_ownership_interpreted_as_privacy_policy_or_publication_authority",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N11",
+      "situation": "technical_conformance_report_treated_as_independent_quality_review",
+      "expected": "block"
+    },
+    {
+      "ref": "RV-N12",
+      "situation": "conflict_review_selects_winner_without_resolution",
+      "expected": "block"
+    }
+  ],
+  "publication_policy": {
+    "binding": "one_candidate_revision_plus_one_resolution_decision_to_one_atomic_publication_change_set",
+    "requested_action": "publish",
+    "publication_review_required_before_policy_evaluation": true,
+    "policy_evaluation_required_fields": [
+      "candidate_revision_ref",
+      "resolution_decision_ref",
+      "publication_change_set_ref",
+      "requested_action",
+      "subject_refs",
+      "actor_or_role_ref",
+      "purpose",
+      "processing_zone",
+      "requested_effect_scope",
+      "profile_refs",
+      "review_record_refs",
+      "conformance_report_refs",
+      "risk_input_refs",
+      "quality_input_refs",
+      "agent_authority_context"
+    ],
+    "g5": {
+      "permit": "pass_if_context_still_valid",
+      "conditions_all_satisfied": "pass",
+      "conditions_open_failed_or_expired": "block",
+      "review": "block_additional_reviews_then_reevaluate",
+      "escalate": "block",
+      "deny": "block",
+      "missing_required_input": "block",
+      "applicable_profile_missing_unresolvable_or_conflicting": "block",
+      "stale_policy_decision": "block"
+    },
+    "reevaluation_triggers": [
+      "candidate_revision",
+      "resolution_decision",
+      "publication_change_set",
+      "subject_or_target_version",
+      "actor_or_role",
+      "requested_action",
+      "purpose",
+      "processing_zone",
+      "effect_scope",
+      "policy_version",
+      "applicable_profiles",
+      "agent_authority",
+      "risk_or_quality_inputs",
+      "review_status",
+      "validity_time"
+    ],
+    "g6_required": [
+      "candidate_revision_immutable",
+      "resolution_decision_valid",
+      "change_set_complete_and_atomic",
+      "preconditions_and_expected_prior_states_complete",
+      "candidate_reviews_satisfied",
+      "publication_review_satisfied",
+      "policy_g5_satisfied",
+      "conditions_satisfied",
+      "publication_unit_present",
+      "hashes_present",
+      "rollback_retraction_or_compensation_defined",
+      "publication_authority_proven"
+    ],
+    "g7": {
+      "policy_permit_without_execution": "no_publication",
+      "publication_request_created": "no_publication",
+      "technical_write_without_valid_publication_record": "no_valid_publication",
+      "partial_uncompensated_publication": "fatal",
+      "atomic_execution_plus_valid_record_plus_matching_hash_and_target_state": "publication_proven"
+    },
+    "live_project_status": {
+      "applicable_active_knowledge_publication_policy_proven": false,
+      "publication_authority_proven": false,
+      "positive_g5_g6_g7_may_be_claimed": false,
+      "expected_behavior": "fail_closed"
+    }
+  },
+  "policy_publication_negative_cases": [
+    {
+      "ref": "PG-N01",
+      "situation": "policy_evaluation_treated_as_permit",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N02",
+      "situation": "quality_gate_passed_treated_as_publication_permit",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N03",
+      "situation": "candidate_review_passed_treated_as_publication_permit",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N04",
+      "situation": "publication_review_missing",
+      "expected": "g4_g5_not_ready"
+    },
+    {
+      "ref": "PG-N05",
+      "situation": "change_set_materially_changed_after_permit",
+      "expected": "reevaluation_required"
+    },
+    {
+      "ref": "PG-N06",
+      "situation": "resolution_materially_changed_after_permit",
+      "expected": "reevaluation_required"
+    },
+    {
+      "ref": "PG-N07",
+      "situation": "applicable_profile_missing",
+      "expected": "fail_closed"
+    },
+    {
+      "ref": "PG-N08",
+      "situation": "open_condition_ignored",
+      "expected": "fail_closed"
+    },
+    {
+      "ref": "PG-N09",
+      "situation": "review_escalate_or_deny_leads_to_publication_request",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N10",
+      "situation": "policy_permit_treated_as_publication_record",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N11",
+      "situation": "technical_write_capability_treated_as_publication_authority",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N12",
+      "situation": "two_independent_atomic_candidates_bundled_without_semantic_coupling",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N13",
+      "situation": "correct_automatically_maps_to_supersede_version_without_resolution",
+      "expected": "block"
+    },
+    {
+      "ref": "PG-N14",
+      "situation": "write_back_equated_with_canonical_knowledge_publication",
+      "expected": "block"
+    }
+  ],
+  "resolution_matrix": [
+    {
+      "ref": "RES-D01",
+      "candidate": "pilot_occurred",
+      "operation": "temporal_progression",
+      "same_object": "same_EVT_INTERNAL_PILOT",
+      "resolution_type": "revise_existing_identity",
+      "identity_effect": "event_id_stable_state_actual"
+    },
+    {
+      "ref": "RES-D02",
+      "candidate": "engagement_teamwork_strong",
+      "operation": "add",
+      "same_object": "new_proposition",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_id"
+    },
+    {
+      "ref": "RES-D03",
+      "candidate": "coding_progression_mixed",
+      "operation": "add",
+      "same_object": "new_proposition",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_id"
+    },
+    {
+      "ref": "RES-D04",
+      "candidate": "technical_operation_stable_after_first_session",
+      "operation": "add",
+      "same_object": "new_proposition",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_id"
+    },
+    {
+      "ref": "RES-D05",
+      "candidate": "promising_after_school_not_ready_for_classroom",
+      "operation": "add",
+      "same_object": "new_coupled_proposition",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_id"
+    },
+    {
+      "ref": "RES-D06",
+      "candidate": "second_after_school_cycle_approved",
+      "operation": "temporal_progression",
+      "same_object": "new_occurrence_or_new_proposition",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_event_or_claim_identity_per_core_materialization"
+    },
+    {
+      "ref": "RES-D07",
+      "candidate": "classroom_2024_25_not_introduced_not_permanently_rejected",
+      "operation": "temporal_progression",
+      "same_object": "new_time_bound_proposition",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_id_preserve_CLM_ACADEMIC_DEFERRED"
+    },
+    {
+      "ref": "RES-D08",
+      "candidate": "competition_2024_25_not_planned_not_permanently_excluded",
+      "operation": "temporal_progression",
+      "same_object": "new_time_bound_proposition",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_claim_id_preserve_CLM_EXT_COMP_NOT_APPROVED"
+    },
+    {
+      "ref": "RES-D09",
+      "candidate": "evaluation_completed_after_cycle",
+      "operation": "add",
+      "same_object": "new_evaluation_occurrence",
+      "resolution_type": "create_new_identity",
+      "identity_effect": "new_event_id_exact_event_time_unknown"
+    }
+  ],
+  "resolution_special_cases": [
+    {
+      "ref": "RES-E01",
+      "situation": "same_proposition_materially_new_independent_evidence_other_semantics_unchanged",
+      "semantic_change_operation": "update_evidence_basis",
+      "resolution_type": "revise_existing_identity",
+      "identity_effect": "same_claim_id_new_claim_state",
+      "new_knowledge_object_version": true
+    },
+    {
+      "ref": "RES-NM01",
+      "situation": "fully_already_canonical_no_material_new_evidence_epistemic_time_conflict_scope_state",
+      "resolution_type": "map_to_existing_without_new_version",
+      "new_knowledge_object_version": false,
+      "publication_change_set": null
+    },
+    {
+      "ref": "RES-CF01",
+      "situation": "new_proposition_B_conflicts_with_existing_claim_A",
+      "semantic_change_operation": "register_conflict",
+      "resolution_type": "create_new_identity",
+      "expected": "preserve_A_and_B_and_conflict_set"
+    },
+    {
+      "ref": "RES-CR01",
+      "situation": "claim_value_16_corrected_to_14",
+      "semantic_change_operation": "correct",
+      "resolution_type": "create_new_identity",
+      "expected": "new_claim_id_due_material_object_value_change"
+    },
+    {
+      "ref": "RES-CR02",
+      "situation": "same_proposition_only_evidence_basis_materially_corrected",
+      "semantic_change_operation": "update_evidence_basis",
+      "resolution_type": "revise_existing_identity"
+    },
+    {
+      "ref": "RES-EP01",
+      "situation": "same_proposition_only_epistemic_state_materially_changed",
+      "semantic_change_operation": "update_epistemic_state",
+      "resolution_type": "revise_existing_identity"
+    }
+  ],
+  "resolution_negative_cases": [
+    {
+      "ref": "RES-N01",
+      "situation": "add_automatically_becomes_create_new_identity",
+      "expected": "block_same_object_assessment_required"
+    },
+    {
+      "ref": "RES-N02",
+      "situation": "correct_automatically_becomes_revise_existing_identity",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N03",
+      "situation": "temporal_progression_automatically_becomes_revise_existing_identity",
+      "expected": "block_new_occurrence_may_need_new_id"
+    },
+    {
+      "ref": "RES-N04",
+      "situation": "materially_changed_claim_value_keeps_same_claim_id",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N05",
+      "situation": "same_proposition_only_new_evidence_gets_unnecessary_new_claim_id",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N06",
+      "situation": "conflict_overwrites_existing_claim",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N07",
+      "situation": "material_knowledge_object_state_changed_in_place",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N08",
+      "situation": "map_to_existing_without_new_version_despite_material_delta",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N09",
+      "situation": "golden_baseline_0_1_unpublished_is_superseded",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N10",
+      "situation": "resolution_decision_emitted_as_review_permit_or_publication",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N11",
+      "situation": "project_owner_resolution_interpreted_as_policy_or_publication_authority",
+      "expected": "block"
+    },
+    {
+      "ref": "RES-N12",
+      "situation": "entity_and_identity_review_creates_resolution_decision",
+      "expected": "block"
+    }
+  ],
+  "knowledge_version_projection": {
+    "stable_knowledge_object_id": "KO-GT-ME-ESPORTS-PILOT",
+    "isolated_positive_cases": {
+      "prior_knowledge_object_ref": "KO-GT-ME-ESPORTS-PILOT@0.1",
+      "planned_target_knowledge_object_ref": "KO-GT-ME-ESPORTS-PILOT@0.2",
+      "same_knowledge_object_identity": true
+    },
+    "new_version_required_when": [
+      "new_claim_in_publication_unit",
+      "existing_claim_material_evidence_epistemic_time_conflict_state_changes",
+      "existing_event_planned_to_actual",
+      "material_conflict_set_change"
+    ],
+    "new_version_not_required_when": [
+      "technical_reindex_or_build_only",
+      "map_to_existing_without_new_version_no_material_delta"
+    ],
+    "publication_operation_boundaries": {
+      "create_new_identity": [
+        "create_identity",
+        "materialize_new_knowledge_object_version"
+      ],
+      "revise_existing_identity": [
+        "materialize_new_state_same_subject_id",
+        "materialize_new_knowledge_object_version"
+      ],
+      "map_to_existing_without_new_version": [],
+      "close_without_canonicalization": [],
+      "retract_existing_version": [
+        "retract_version"
+      ]
+    },
+    "supersession": {
+      "published_predecessor": "may_require_supersede_version_after_successful_successor_publication",
+      "unpublished_predecessor": "supersede_version_forbidden"
+    }
+  },
+  "experience_rebuild_acceptance": {
+    "trigger": "successful_publication_record_plus_exact_published_knowledge_version",
+    "direct_update_forbidden_from": [
+      "ContinuationResult",
+      "Finding",
+      "ChangeCandidate",
+      "ResolutionDecision",
+      "PolicyPermit",
+      "PublicationRequest"
+    ],
+    "experience_ref": "EXP-GT-ME-ESPORTS-PILOT-RMIS-2024",
+    "focus_knowledge_object_ref": "<exact-final-successfully-published-HR005-KO-version>",
+    "floating_latest_allowed": false,
+    "golden_as_of": "2025-03-14T11:30:00+01:00",
+    "experience_completeness": "partial",
+    "baseline_phases": {
+      "context": "supported",
+      "intent": "supported",
+      "proposal": "supported",
+      "decision": "supported",
+      "scope": "supported",
+      "execution": "unresolved",
+      "evaluation": "unresolved",
+      "outcome": "unresolved",
+      "follow_up": "unresolved"
+    },
+    "post_hr005_phases": {
+      "context": "supported",
+      "intent": "supported",
+      "proposal": "supported",
+      "decision": "supported",
+      "scope": "supported",
+      "execution": "supported",
+      "evaluation": "supported",
+      "outcome": "supported",
+      "follow_up": "partial"
+    },
+    "gap_states": {
+      "EXP-GAP-PILOT-EXECUTION": "resolved",
+      "EXP-GAP-PILOT-EVALUATION-OCCURRENCE": "resolved",
+      "EXP-GAP-PILOT-EVALUATION-RESULT": "resolved",
+      "EXP-GAP-PILOT-OUTCOME": "resolved",
+      "EXP-GAP-CLASSROOM-INTEGRATION-FOLLOWUP": "informed_unresolved",
+      "EXP-GAP-EXTERNAL-COMPETITION-FOLLOWUP": "informed_unresolved",
+      "EXP-GAP-PILOT-REPETITION": "informed_unresolved"
+    },
+    "lesson_learned_eligibility": "eligible",
+    "lesson_learned_auto_creation_allowed": false,
+    "resolved_gaps_must_not_remain_continuation_search_targets": [
+      "EXP-GAP-PILOT-EXECUTION",
+      "EXP-GAP-PILOT-EVALUATION-OCCURRENCE",
+      "EXP-GAP-PILOT-EVALUATION-RESULT",
+      "EXP-GAP-PILOT-OUTCOME"
+    ],
+    "remaining_purpose_specific_follow_up_questions": [
+      "Was the second after-school cycle actually performed?",
+      "Was classroom integration later introduced?",
+      "Did external competition later occur?"
+    ],
+    "reuse_context_minimum": {
+      "domain_terms": [
+        "education",
+        "school",
+        "pilot"
+      ],
+      "topic_terms": [
+        "minecraft_education",
+        "esports",
+        "after_school",
+        "classroom_integration",
+        "pilot_evaluation",
+        "external_competition"
+      ],
+      "purpose_terms": [
+        "proposal_planning",
+        "similar_experience_retrieval",
+        "experience_reuse",
+        "lesson_learned_discovery"
+      ]
+    },
+    "abc": {
+      "A": "pre_HR005_experience_projection",
+      "B": "first_validated_rebuild_after_successful_HR005_publication",
+      "C": "delete_B_and_rebuild_from_exact_same_published_knowledge_version",
+      "A_not_semantically_equivalent_B": true,
+      "B_semantically_equivalent_C": true
+    },
+    "bc_semantic_equivalence_required": [
+      "experience_ref",
+      "exact_focus_knowledge_object_ref",
+      "golden_as_of",
+      "all_phase_states",
+      "experience_completeness",
+      "scope_and_evaluation_thread",
+      "external_competition_thread",
+      "gap_identities_and_states",
+      "reuse_context",
+      "current_continuation_requirement",
+      "lesson_learned_eligibility",
+      "evidence_time_epistemic_uncertainty_boundaries"
+    ],
+    "bc_semantic_equivalence_not_required": [
+      "run_id",
+      "build_timestamp",
+      "technically_nonsemantic_collection_order_unless_stricter_contract_applies"
+    ]
+  },
+  "experience_rebuild_negative_cases": [
+    {
+      "ref": "EXP-RB-N01",
+      "situation": "finding_directly_updates_experience",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N02",
+      "situation": "policy_permit_directly_updates_experience",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N03",
+      "situation": "publication_request_used_as_rebuild_trigger",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N04",
+      "situation": "projection_binds_latest_instead_of_exact_published_knowledge_version",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N05",
+      "situation": "old_projection_silently_remains_current_after_new_publication",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N06",
+      "situation": "partial_rebuild_exposed_as_current",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N07",
+      "situation": "rebuild_failure_mutates_canonical_knowledge",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N08",
+      "situation": "golden_as_of_set_to_publication_or_rebuild_time",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N09",
+      "situation": "follow_up_marked_supported_despite_limited_DOC05_evidence",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N10",
+      "situation": "follow_up_remains_unresolved_and_ignores_DOC05",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N11",
+      "situation": "resolved_gaps_remain_continuation_search_targets",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N12",
+      "situation": "eligible_auto_creates_lesson_learned",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N13",
+      "situation": "B_and_C_semantically_differ_with_identical_rebuild_input",
+      "expected": "block"
+    },
+    {
+      "ref": "EXP-RB-N14",
+      "situation": "B_semantically_unchanged_from_A_despite_published_HR005_deltas",
+      "expected": "block"
+    }
+  ],
+  "conflict_uncertainty_fixture_requirement": {
+    "required": true,
+    "fixture_path": null,
+    "fixture_hash": null,
+    "expected": {
+      "existing_assertion_A_preserved": true,
+      "new_authorized_read_evidence_supports_conflicting_or_materially_weakening_B": true,
+      "material_delta": true,
+      "finding_expected": true,
+      "delta_class_allowed": [
+        "conflict",
+        "uncertainty"
+      ],
+      "automatic_overwrite_A": false,
+      "automatic_publication_B": false,
+      "all_evidence_time_epistemic_refs_preserved": true,
+      "human_or_review_lifecycle_required": true
+    },
+    "note": "Concrete synthetic fixture is D2 and is intentionally not invented by D1."
+  },
+  "acceptance": {
+    "scenario_0_8_conceptual_project_gates_open": false,
+    "required_assertions": [
+      "all_nine_project_rules_encoded",
+      "KF_D01_through_KF_D09_encoded",
+      "finding_and_candidate_negative_cases_encoded",
+      "controlled_semantic_change_operation_vocab_encoded",
+      "review_routing_and_revision_binding_encoded",
+      "resolution_matrix_RES_D01_through_RES_D09_encoded",
+      "same_claim_evidence_no_material_change_conflict_correct_cases_encoded",
+      "policy_and_publication_gates_encoded",
+      "live_project_fail_closed_without_publication_policy_or_authority",
+      "publication_bound_experience_rebuild_encoded",
+      "A_not_equivalent_B",
+      "B_semantically_equivalent_C"
+    ]
+  },
+  "human_review": {
+    "required": true,
+    "implementing_agent_may_approve": false,
+    "effectiveness_question": "Wir planen etwas Ähnliches für eine andere Schule. Was haben wir aus dem damaligen Pilot gelernt?",
+    "must_preserve": [
+      "approved_not_equal_performed",
+      "not_introduced_not_equal_permanently_rejected",
+      "not_planned_not_equal_permanently_excluded",
+      "no_universal_transferability_inference"
+    ]
+  }
+}

@@ -17,6 +17,13 @@ from .experience import (
     ExperienceRetrievalResult,
     ExperienceRetriever,
 )
+from .hardening import (
+    ClaimDeliveryView,
+    CurrentnessContext,
+    CurrentOpportunityProjection,
+    DeliveryClaimProjector,
+    HumanEnrichmentOpportunityRouter,
+)
 from .retrieval import (
     EvidenceResolutionRequest,
     EvidenceResolutionResult,
@@ -38,6 +45,10 @@ __all__ = [
     "ContinuationRequest",
     "ContinuationResult",
     "ContinuationServices",
+    "ClaimDeliveryView",
+    "CurrentnessContext",
+    "CurrentOpportunityProjection",
+    "DeliveryClaimProjector",
     "derive_lesson_learned_required_gap_refs",
     "EvidenceResolutionRequest",
     "EvidenceResolutionResult",
@@ -45,6 +56,7 @@ __all__ = [
     "ExperienceRetrievalRequest",
     "ExperienceRetrievalResult",
     "ExperienceRetriever",
+    "HumanEnrichmentOpportunityRouter",
     "KnowledgeRetriever",
     "PolicyContext",
     "RetrievalRenderer",

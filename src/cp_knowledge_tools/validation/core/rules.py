@@ -58,9 +58,7 @@ _RELATIONSHIP_CLASSES = {
     "event_participation",
     "structural_relationship",
 }
-_RELATIONSHIP_PREDICATES = set(
-    CORE_VOCABULARIES["relationship_predicate"]["terms"]
-)
+_RELATIONSHIP_PREDICATES = set(CORE_VOCABULARIES["relationship_predicate"]["terms"])
 _CONFLICT_DIMENSIONS = {
     "factual",
     "temporal",
@@ -203,6 +201,8 @@ def build_round_trip_projection(
         "conflict_sets": _id_key("conflict_set_id"),
         "policy_anchors": _id_key("policy_anchor_id"),
         "cross_view_mappings": _id_key("mapping_id"),
+        "evidence_assessments": _id_key("assessment_ref"),
+        "temporal_constraints": _id_key("constraint_ref"),
     }
     for field_name in contract["round_trip_projection"]:
         if field_name == "identity":
@@ -220,6 +220,11 @@ def build_round_trip_projection(
             )
         else:
             projection[field_name] = deepcopy(document.manifest.get(field_name))
+    for field_name in ("evidence_assessments", "temporal_constraints"):
+        if field_name in document.manifest and field_name not in projection:
+            projection[field_name] = _sorted_copy(
+                document.manifest.get(field_name, []), sortable[field_name]
+            )
     return projection
 
 
@@ -235,6 +240,13 @@ def build_rebuild_projection(manifest: dict[str, Any]) -> dict[str, Any]:
                 "evidence_link_ids": deepcopy(claim.get("evidence_link_ids", [])),
                 "policy_anchor_ids": deepcopy(claim.get("policy_anchor_ids", [])),
                 "conflict_set_ids": deepcopy(claim.get("conflict_set_ids", [])),
+                "epistemic_context": deepcopy(claim.get("epistemic_context")),
+                "evidence_assessment_refs": deepcopy(
+                    claim.get("evidence_assessment_refs", [])
+                ),
+                "qualification_claim_refs": deepcopy(
+                    claim.get("qualification_claim_refs", [])
+                ),
             }
         )
 
@@ -288,10 +300,14 @@ def build_rebuild_projection(manifest: dict[str, Any]) -> dict[str, Any]:
         },
         "claim_index": sorted(claims, key=_id_key("claim_ref")),
         "event_index": sorted(events, key=_id_key("event_ref")),
-        "participation_index": sorted(
-            participations, key=_id_key("participation_ref")
-        ),
+        "participation_index": sorted(participations, key=_id_key("participation_ref")),
         "evidence_index": sorted(evidence, key=_id_key("evidence_link_id")),
+        "evidence_assessment_index": _sorted_copy(
+            manifest.get("evidence_assessments", []), _id_key("assessment_ref")
+        ),
+        "temporal_constraint_index": _sorted_copy(
+            manifest.get("temporal_constraints", []), _id_key("constraint_ref")
+        ),
         "conflict_index": _sorted_copy(
             manifest.get("conflict_sets", []), _id_key("conflict_set_id")
         ),
@@ -311,6 +327,9 @@ def _claim_material_projection(claim: dict[str, Any]) -> dict[str, Any]:
             "evidence_link_ids",
             "authority_basis_refs",
             "conflict_set_ids",
+            "epistemic_context",
+            "evidence_assessment_refs",
+            "qualification_claim_refs",
         )
     }
 
@@ -388,8 +407,7 @@ def _rule_conflict(context: RuleContext) -> RuleOutcome:
         preferred = conflict.get("preferred_claim_ref")
         if preferred is not None:
             valid = valid and _reference_key(preferred) in {
-                _reference_key(ref)
-                for ref in (refs if isinstance(refs, list) else [])
+                _reference_key(ref) for ref in (refs if isinstance(refs, list) else [])
             }
         if not valid:
             outcome.diagnostics.append(
@@ -535,8 +553,10 @@ def _rule_event(context: RuleContext) -> RuleOutcome:
             event_type = event.get("event_type_ref")
             event_term = event_type_terms.get(event_type, {})
             event_code = event_term.get("code")
-            if isinstance(allowed, list) and event_type not in allowed and (
-                event_code not in allowed
+            if (
+                isinstance(allowed, list)
+                and event_type not in allowed
+                and (event_code not in allowed)
             ):
                 outcome.diagnostics.append(
                     _profile_term_diagnostic(
@@ -686,9 +706,7 @@ def _rule_rebuild(context: RuleContext) -> RuleOutcome:
     )
     canonical_refs_preserved = all(
         isinstance(item.get("claim_ref"), dict) for item in second["claim_index"]
-    ) and all(
-        isinstance(item.get("event_ref"), dict) for item in second["event_index"]
-    )
+    ) and all(isinstance(item.get("event_ref"), dict) for item in second["event_index"])
     rebuild = {
         "canonical_references_preserved": canonical_refs_preserved,
         "conflicts_preserved": conflicts_preserved,
@@ -697,9 +715,7 @@ def _rule_rebuild(context: RuleContext) -> RuleOutcome:
         "projection_hash": second_hash,
         "same_hash_after_delete_and_rebuild": same,
     }
-    outcome.artifacts.update(
-        {"derived_projection": second, "rebuild": rebuild}
-    )
+    outcome.artifacts.update({"derived_projection": second, "rebuild": rebuild})
     if not all(
         (
             same,
@@ -740,6 +756,8 @@ def _rule_round_trip(context: RuleContext) -> RuleOutcome:
             "structural_relationships",
             "conflict_sets",
             "policy_anchors",
+            "evidence_assessments",
+            "temporal_constraints",
         )
     )
     anchors_preserved = before.get("cross_view_mappings") == after.get(
@@ -754,9 +772,7 @@ def _rule_round_trip(context: RuleContext) -> RuleOutcome:
         "same_semantic_projection_hash_after_reparse": before_hash == after_hash,
         "semantic_projection_hash": after_hash,
     }
-    outcome.artifacts.update(
-        {"round_trip": round_trip, "semantic_projection": after}
-    )
+    outcome.artifacts.update({"round_trip": round_trip, "semantic_projection": after})
     if not all(round_trip.values()):
         outcome.diagnostics.append(
             context.diagnostic(
@@ -769,9 +785,7 @@ def _rule_round_trip(context: RuleContext) -> RuleOutcome:
     return outcome
 
 
-def _schema_diagnostic(
-    context: RuleContext, path: str, message: str
-) -> CoreDiagnostic:
+def _schema_diagnostic(context: RuleContext, path: str, message: str) -> CoreDiagnostic:
     return context.diagnostic(path=path, message=message)
 
 
@@ -837,13 +851,21 @@ def _rule_schema(context: RuleContext) -> RuleOutcome:
                 )
             )
 
+    hardening_present = any(
+        field in manifest for field in ("evidence_assessments", "temporal_constraints")
+    )
     exact_values = {
         "document_type": "knowledge_object_publication_unit",
-        "schema_ref": "CPKS-SPEC-KM-PU@0.1",
-        "template_ref": "CPKS-TPL-KM-PU@0.1",
-        "semantic_model_ref": "CPKS-SPEC-KM@0.20",
+        "schema_ref": (
+            "CPKS-SPEC-KM-PU@0.3" if hardening_present else "CPKS-SPEC-KM-PU@0.2"
+        ),
+        "semantic_model_ref": (
+            "CPKS-SPEC-KM@0.21" if hardening_present else "CPKS-SPEC-KM@0.20"
+        ),
         "vocabulary_set_ref": "CPKS-SPEC-KM-VOC@0.1",
     }
+    if not hardening_present:
+        exact_values["template_ref"] = "CPKS-TPL-KM-PU@0.2"
     for field_name, expected in exact_values.items():
         if field_name in manifest and manifest.get(field_name) != expected:
             outcome.diagnostics.append(
@@ -853,6 +875,17 @@ def _rule_schema(context: RuleContext) -> RuleOutcome:
                     f"{field_name!r} must equal {expected!r}",
                 )
             )
+    if hardening_present and manifest.get("template_ref") in {
+        "CPKS-TPL-KM-PU@0.1",
+        "CPKS-TPL-KM-PU@0.2",
+    }:
+        outcome.diagnostics.append(
+            _schema_diagnostic(
+                context,
+                "/template_ref",
+                "KM-PU 0.3 cannot claim compatibility through an older Template",
+            )
+        )
     version = manifest.get("knowledge_object_version")
     if isinstance(version, str) and not re.fullmatch(
         r"[0-9]+\.[0-9]+(?:\.[0-9]+)?", version
@@ -989,9 +1022,7 @@ def _rule_schema(context: RuleContext) -> RuleOutcome:
                 )
             )
 
-    for index, relationship in enumerate(
-        manifest.get("structural_relationships", [])
-    ):
+    for index, relationship in enumerate(manifest.get("structural_relationships", [])):
         if not isinstance(relationship, dict):
             continue
         if relationship.get("relationship_class") not in _RELATIONSHIP_CLASSES:
@@ -1012,18 +1043,41 @@ def _rule_schema(context: RuleContext) -> RuleOutcome:
             )
 
     publication = manifest.get("publication")
-    if isinstance(publication, dict) and publication.get("publication_state") not in {
-        "unpublished",
-        "published",
-        "superseded",
-    }:
-        outcome.diagnostics.append(
-            _schema_diagnostic(
-                context,
-                "/publication/publication_state",
-                "publication_state is outside the controlled lifecycle",
+    if isinstance(publication, dict):
+        if "publication_finalization_plan_ref" not in publication:
+            outcome.diagnostics.append(
+                _schema_diagnostic(
+                    context,
+                    "/publication/publication_finalization_plan_ref",
+                    "publication_finalization_plan_ref is required by KM-PU 0.2",
+                )
             )
-        )
+        elif publication.get("publication_finalization_plan_ref") is not None and (
+            not isinstance(publication.get("publication_finalization_plan_ref"), str)
+            or not publication["publication_finalization_plan_ref"]
+        ):
+            outcome.diagnostics.append(
+                _schema_diagnostic(
+                    context,
+                    "/publication/publication_finalization_plan_ref",
+                    (
+                        "publication_finalization_plan_ref must be null or "
+                        "a concrete reference"
+                    ),
+                )
+            )
+        if publication.get("publication_state") not in {
+            "unpublished",
+            "published",
+            "superseded",
+        }:
+            outcome.diagnostics.append(
+                _schema_diagnostic(
+                    context,
+                    "/publication/publication_state",
+                    "publication_state is outside the controlled lifecycle",
+                )
+            )
 
     claim_refs = {
         _reference_key(item.get("claim_ref"))
@@ -1058,9 +1112,7 @@ def _rule_schema(context: RuleContext) -> RuleOutcome:
                 continue
             identity = item.get(identity_field)
             identities.append(
-                _reference_key(identity)
-                if isinstance(identity, dict)
-                else identity
+                _reference_key(identity) if isinstance(identity, dict) else identity
             )
         if any(not identity for identity in identities) or len(identities) != len(
             set(identities)
@@ -1093,9 +1145,10 @@ def _rule_schema(context: RuleContext) -> RuleOutcome:
                         )
                     )
     for index, participation in enumerate(manifest.get("event_participations", [])):
-        if isinstance(participation, dict) and _reference_key(
-            participation.get("event_ref")
-        ) not in event_refs:
+        if (
+            isinstance(participation, dict)
+            and _reference_key(participation.get("event_ref")) not in event_refs
+        ):
             outcome.diagnostics.append(
                 _schema_diagnostic(
                     context,
@@ -1114,9 +1167,10 @@ def _rule_schema(context: RuleContext) -> RuleOutcome:
                     )
                 )
     execution = context.input_value.get("execution_context")
-    if isinstance(execution, dict) and execution.get(
-        "all_declared_references_resolve"
-    ) is False:
+    if (
+        isinstance(execution, dict)
+        and execution.get("all_declared_references_resolve") is False
+    ):
         outcome.diagnostics.append(
             _schema_diagnostic(
                 context,
@@ -1209,10 +1263,14 @@ def _rule_time(context: RuleContext) -> RuleOutcome:
                     continue
                 left_times = left.get("time", [])
                 right_times = right.get("time", [])
-                if not left_times or not right_times or any(
-                    _intervals_overlap(left_time, right_time)
-                    for left_time in left_times
-                    for right_time in right_times
+                if (
+                    not left_times
+                    or not right_times
+                    or any(
+                        _intervals_overlap(left_time, right_time)
+                        for left_time in left_times
+                        for right_time in right_times
+                    )
                 ):
                     outcome.artifacts["conflict_required"] = True
     return outcome

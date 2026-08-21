@@ -1,0 +1,49 @@
+{
+  "scenario_ref": "GT-S2K-POSTR5-HARDENING-01@0.1",
+  "assertion_scope": "source_backed_extension",
+  "golden_is_runtime_input": false,
+  "required_source_range": "DOC-01..DOC-12",
+  "expectations": {
+    "program_occurrence": {
+      "proposed_program_is_implemented": false,
+      "program_and_pilot_identities_distinct": true,
+      "pilot_relationship": "part_of",
+      "relationship_qualification": "proposed_model"
+    },
+    "rationale": {
+      "evidentiable": true,
+      "relationship": "rationale_for",
+      "causality_asserted": false
+    },
+    "currentness": {
+      "ongoing_program": false,
+      "classroom_rollout_currently_planned": false,
+      "external_competition_current_commitment": false,
+      "current_lead": false,
+      "permanent_rejection": false,
+      "historical_cause_established": false
+    },
+    "perspective_and_granularity": {
+      "required_perspective_count": 3,
+      "hard_conflict": false,
+      "universal_technical_failure": false,
+      "school_accepted_specialist_mitigation": false,
+      "specialist_has_universal_authority": false
+    },
+    "correction": {
+      "primary_capacity": 14,
+      "historical_capacity": 16,
+      "history_preserved": true
+    },
+    "frontier": {
+      "status": "unresolved",
+      "actual_noncontinuation_reason_known": false
+    },
+    "human_enrichment": {
+      "opportunity_may_arise": true,
+      "opportunity_is_request": false,
+      "kpr_eligibility_required": true,
+      "human_response_present": false
+    }
+  }
+}

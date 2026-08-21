@@ -11,8 +11,8 @@ from cp_knowledge_tools.publication.codec import parse_yaml_frontmatter
 
 from .models import CoreValidationInputError, PreparedCoreInputs
 
-CORE_PROFILE = ("cpks.profile.core-knowledge", "1.1")
-CORE_CORPUS = ("cpks.corpus.core-knowledge", "1.1")
+CORE_PROFILE = ("cpks.profile.core-knowledge", "1.2")
+CORE_CORPUS = ("cpks.corpus.core-knowledge", "1.2")
 CONTRACT_PROFILE = ("cpks.profile.contract-conformance", "1.1")
 CANONICALIZATION_PROFILE = (
     "cpks.profile.canonicalization.canonical-json-value",
@@ -157,9 +157,11 @@ def _content_hash(
             f"/{field_name}/hash_scope",
         )
     canonical = content_hash.get("canonicalization_profile")
-    if not isinstance(canonical, dict) or (
-        canonical.get("profile_ref"), canonical.get("profile_version")
-    ) != CANONICALIZATION_PROFILE:
+    if (
+        not isinstance(canonical, dict)
+        or (canonical.get("profile_ref"), canonical.get("profile_version"))
+        != CANONICALIZATION_PROFILE
+    ):
         _raise(
             code,
             "manifest does not use the required canonicalization profile",
@@ -202,9 +204,10 @@ def _validate_profile_manifest(
             "/document_type",
         )
     payload = manifest.get("payload")
-    if not isinstance(payload, dict) or (
-        payload.get("profile_ref"), payload.get("profile_version")
-    ) != identity:
+    if (
+        not isinstance(payload, dict)
+        or (payload.get("profile_ref"), payload.get("profile_version")) != identity
+    ):
         _raise(
             "core_knowledge_profile_integrity_failed",
             f"profile payload identity does not match {profile_ref}@{version}",
@@ -250,6 +253,36 @@ def prepare_core_inputs(
     _core_identity, core_hash = _validate_profile_manifest(
         profile_manifest, CORE_PROFILE
     )
+
+    core_payload = profile_manifest.get("payload", {})
+    core_compatibility = {
+        item.get("rule_source"): item.get("compatibility_mode")
+        for item in core_payload.get("compatible_core_versions", [])
+        if isinstance(item, dict)
+    }
+    contract_compatibility = {
+        item.get("rule_source"): item.get("compatibility_mode")
+        for item in core_payload.get("compatible_contract_versions", [])
+        if isinstance(item, dict)
+    }
+    for rule_source in (
+        "CPKS-SPEC-KM@0.20",
+        "CPKS-SPEC-KM-VOC@0.1",
+        "CPKS-SPEC-KM-PU@0.2",
+        "CPKS-TPL-KM-PU@0.2",
+    ):
+        if core_compatibility.get(rule_source) != "exact":
+            _raise(
+                "core_knowledge_profile_resolution_failed",
+                f"Core Profile is not exact-compatible with {rule_source}",
+                "/payload/compatible_core_versions",
+            )
+    if contract_compatibility.get("CPKS-SPEC-KPR@0.3") != "exact":
+        _raise(
+            "core_knowledge_profile_resolution_failed",
+            "Core Profile is not exact-compatible with CPKS-SPEC-KPR@0.3",
+            "/payload/compatible_contract_versions",
+        )
     supplied: dict[tuple[str, str], dict[str, Any]] = {}
     for item in required_profile_manifests:
         identity = (item.get("profile_ref"), item.get("profile_version"))

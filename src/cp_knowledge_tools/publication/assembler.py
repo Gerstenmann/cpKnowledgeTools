@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
+
+from cp_knowledge_tools.validation.hardening import HardeningContractValidator
 
 from .codec import (
     PublicationUnitDocument,
     load_publication_unit,
     render_publication_unit,
 )
+from .contracts import PUBLICATION_UNIT_TEMPLATE_BY_SCHEMA
+from .hardening import HardeningPublicationContext
 from .models import (
     PublicationAssemblyPlan,
     PublicationRepresentation,
@@ -87,6 +91,14 @@ class PublicationUnitAssembler:
         plan: PublicationAssemblyPlan,
         representation: PublicationRepresentation,
         output_path: Path,
+        publication_finalization_plan_ref: str | None = None,
+        review_record_refs: tuple[str, ...] = (),
+        policy_decision_refs: tuple[str, ...] = (),
+        cross_view_report_ref: str | None = None,
+        hardening_context: (
+            HardeningPublicationContext | Mapping[str, Any] | None
+        ) = None,
+        compatible_template_ref: str | None = None,
     ) -> dict[str, Any]:
         semantic_refs = self._semantic_refs(semantic, plan)
         bindings = self._validate_plan(plan, semantic_refs)
@@ -141,12 +153,76 @@ class PublicationUnitAssembler:
             )
             for conflict in semantic["conflict_sets"]
         ]
+        canonical_hardening: dict[str, Any] | None = None
+        if hardening_context is not None:
+            try:
+                context = (
+                    hardening_context
+                    if isinstance(hardening_context, HardeningPublicationContext)
+                    else HardeningPublicationContext.from_mapping(hardening_context)
+                )
+                canonical_hardening = context.canonical_publication_fields(
+                    claim_refs=tuple(item["claim_ref"] for item in semantic["claims"]),
+                    conflict_claim_refs=tuple(
+                        tuple(item["claim_refs"]) for item in semantic["conflict_sets"]
+                    ),
+                )
+            except (TypeError, ValueError) as error:
+                raise PublicationAssemblyError("PUB-HARD-001", str(error)) from error
+            for claim, semantic_claim in zip(claims, semantic["claims"], strict=True):
+                claim.update(
+                    canonical_hardening["claim_fields"][semantic_claim["claim_ref"]]
+                )
+            for conflict, semantic_conflict in zip(
+                conflicts, semantic["conflict_sets"], strict=True
+            ):
+                key = tuple(sorted(semantic_conflict["claim_refs"]))
+                conflict.update(canonical_hardening["conflict_fields"][key])
 
+        policy_anchors = [item.to_dict() for item in plan.policy_anchors]
+        if policy_decision_refs:
+            for policy_anchor in policy_anchors:
+                policy_anchor["policy_decision_refs"] = list(policy_decision_refs)
+
+        publication = {
+            "publication_state": "unpublished",
+            "publication_record_ref": None,
+            "published_at": None,
+            "publisher_ref": None,
+            "predecessor_publication_ref": None,
+        }
+        if publication_finalization_plan_ref:
+            publication["publication_finalization_plan_ref"] = (
+                publication_finalization_plan_ref
+            )
+
+        schema_ref = (
+            "CPKS-SPEC-KM-PU@0.3"
+            if canonical_hardening is not None
+            else (
+                "CPKS-SPEC-KM-PU@0.2"
+                if publication_finalization_plan_ref
+                else "CPKS-SPEC-KM-PU@0.1"
+            )
+        )
+        if canonical_hardening is not None and not compatible_template_ref:
+            raise PublicationAssemblyError(
+                "PUB-HARD-002",
+                "KM-PU 0.3 assembly requires an explicit compatible Template ref",
+            )
         manifest = {
             "document_type": "knowledge_object_publication_unit",
-            "schema_ref": "CPKS-SPEC-KM-PU@0.1",
-            "template_ref": "CPKS-TPL-KM-PU@0.1",
-            "semantic_model_ref": "CPKS-SPEC-KM@0.20",
+            "schema_ref": schema_ref,
+            "template_ref": (
+                compatible_template_ref
+                if canonical_hardening is not None
+                else PUBLICATION_UNIT_TEMPLATE_BY_SCHEMA[schema_ref]
+            ),
+            "semantic_model_ref": (
+                "CPKS-SPEC-KM@0.21"
+                if canonical_hardening is not None
+                else "CPKS-SPEC-KM@0.20"
+            ),
             "vocabulary_set_ref": "CPKS-SPEC-KM-VOC@0.1",
             "knowledge_object_id": plan.knowledge_object_id,
             "knowledge_object_version": plan.knowledge_object_version,
@@ -163,7 +239,7 @@ class PublicationUnitAssembler:
             "evidence_links": evidence_links,
             "structural_relationships": [],
             "conflict_sets": conflicts,
-            "policy_anchors": [item.to_dict() for item in plan.policy_anchors],
+            "policy_anchors": policy_anchors,
             "cross_view_mappings": self._cross_view_mappings(representation),
             "human_readable": {
                 "body_language": representation.body_language,
@@ -177,23 +253,33 @@ class PublicationUnitAssembler:
                 "policy_anchor": representation.policy.narrative_anchor,
                 "publication_anchor": representation.publication.narrative_anchor,
             },
-            "review_record_refs": [],
-            "policy_decision_refs": [],
-            "publication": {
-                "publication_state": "unpublished",
-                "publication_record_ref": None,
-                "published_at": None,
-                "publisher_ref": None,
-                "predecessor_publication_ref": None,
-            },
+            "review_record_refs": list(review_record_refs),
+            "policy_decision_refs": list(policy_decision_refs),
+            "publication": publication,
             "integrity": {
                 "content_hash": None,
                 "cross_view_validation": {
                     "status": "pending",
-                    "report_ref": None,
+                    "report_ref": cross_view_report_ref,
                 },
             },
         }
+        if canonical_hardening is not None:
+            manifest["evidence_assessments"] = canonical_hardening[
+                "evidence_assessments"
+            ]
+            manifest["temporal_constraints"] = canonical_hardening[
+                "temporal_constraints"
+            ]
+
+            validation = HardeningContractValidator().validate_publication_manifest(
+                manifest
+            )
+            if not validation.valid:
+                detail = ", ".join(
+                    f"{item.code}@{item.path}" for item in validation.diagnostics
+                )
+                raise PublicationAssemblyError("PUB-HARD-001", detail)
 
         body = self._render_body(plan, representation)
         self._validate_cross_view(manifest, representation, body)
@@ -226,16 +312,13 @@ class PublicationUnitAssembler:
 
         refs = [plan.knowledge_object_ref]
         refs.extend(
-            _semantic_ref("entity", item["entity_ref"])
-            for item in semantic["entities"]
+            _semantic_ref("entity", item["entity_ref"]) for item in semantic["entities"]
         )
         refs.extend(
-            _semantic_ref("claim", item["claim_ref"])
-            for item in semantic["claims"]
+            _semantic_ref("claim", item["claim_ref"]) for item in semantic["claims"]
         )
         refs.extend(
-            _semantic_ref("event", item["event_ref"])
-            for item in semantic["events"]
+            _semantic_ref("event", item["event_ref"]) for item in semantic["events"]
         )
         refs.extend(
             _semantic_ref("event_participation", item["participation_ref"])
@@ -267,9 +350,7 @@ class PublicationUnitAssembler:
     def _validate_plan(
         self,
         plan: PublicationAssemblyPlan,
-        semantic_refs: dict[
-            tuple[str, str, str, str], PublicationSemanticReference
-        ],
+        semantic_refs: dict[tuple[str, str, str, str], PublicationSemanticReference],
     ) -> dict[tuple[str, str, str, str], tuple[str, ...]]:
         if not plan.knowledge_object_id or not plan.knowledge_object_version:
             raise PublicationAssemblyError(
@@ -326,9 +407,7 @@ class PublicationUnitAssembler:
         semantic: dict[str, Any],
         plan: PublicationAssemblyPlan,
         representation: PublicationRepresentation,
-        semantic_refs: dict[
-            tuple[str, str, str, str], PublicationSemanticReference
-        ],
+        semantic_refs: dict[tuple[str, str, str, str], PublicationSemanticReference],
     ) -> dict[str, dict[tuple[str, str, str, str], PublicationRepresentationItem]]:
         if representation.body_language != plan.language:
             raise PublicationAssemblyError(
@@ -381,9 +460,7 @@ class PublicationUnitAssembler:
                     for item in semantic["events"]
                 ),
                 *(
-                    _semantic_ref(
-                        "event_participation", item["participation_ref"]
-                    ).key
+                    _semantic_ref("event_participation", item["participation_ref"]).key
                     for item in semantic["participations"]
                 ),
             },
@@ -410,9 +487,7 @@ class PublicationUnitAssembler:
     def _validate_representation_member(
         self,
         member: PublicationRepresentationSection | PublicationRepresentationItem,
-        semantic_refs: dict[
-            tuple[str, str, str, str], PublicationSemanticReference
-        ],
+        semantic_refs: dict[tuple[str, str, str, str], PublicationSemanticReference],
         mapping_ids: list[str],
     ) -> None:
         semantic_ref = member.semantic_ref
@@ -443,9 +518,7 @@ class PublicationUnitAssembler:
         self,
         section: PublicationRepresentationSection,
     ) -> dict[tuple[str, str, str, str], PublicationRepresentationItem]:
-        result: dict[
-            tuple[str, str, str, str], PublicationRepresentationItem
-        ] = {}
+        result: dict[tuple[str, str, str, str], PublicationRepresentationItem] = {}
         for item in section.items:
             if item.semantic_ref.key in result:
                 raise PublicationAssemblyError(
@@ -484,9 +557,7 @@ class PublicationUnitAssembler:
         if claim["object_ref"]:
             object_payload = {
                 "kind": "reference",
-                "reference": _semantic_ref(
-                    "entity", claim["object_ref"]
-                ).to_dict(),
+                "reference": _semantic_ref("entity", claim["object_ref"]).to_dict(),
                 "value": None,
                 "datatype": None,
                 "language": None,
@@ -497,16 +568,12 @@ class PublicationUnitAssembler:
                 "reference": None,
                 "value": claim["value"],
                 "datatype": type(claim["value"]).__name__,
-                "language": plan.language
-                if isinstance(claim["value"], str)
-                else None,
+                "language": plan.language if isinstance(claim["value"], str) else None,
             }
         return {
             "claim_ref": claim_ref.to_dict(),
             "statement": {
-                "subject_ref": _semantic_ref(
-                    "entity", claim["subject_ref"]
-                ).to_dict(),
+                "subject_ref": _semantic_ref("entity", claim["subject_ref"]).to_dict(),
                 "predicate_ref": claim["predicate_ref"],
                 "object": object_payload,
             },
@@ -533,9 +600,7 @@ class PublicationUnitAssembler:
                 for conflict in semantic["conflict_sets"]
                 if claim["claim_ref"] in conflict["claim_refs"]
             ],
-            "narrative_anchor": representation_items[
-                claim_ref.key
-            ].narrative_anchor,
+            "narrative_anchor": representation_items[claim_ref.key].narrative_anchor,
         }
 
     def _event_manifest(
@@ -584,9 +649,7 @@ class PublicationUnitAssembler:
         )
         return {
             "participation_ref": participation_ref.to_dict(),
-            "event_ref": _semantic_ref(
-                "event", participation["event_ref"]
-            ).to_dict(),
+            "event_ref": _semantic_ref("event", participation["event_ref"]).to_dict(),
             "entity_ref": _semantic_ref(
                 "entity", participation["entity_ref"]
             ).to_dict(),
@@ -642,25 +705,22 @@ class PublicationUnitAssembler:
             tuple[str, str, str, str], PublicationRepresentationItem
         ],
     ) -> dict[str, Any]:
-        conflict_ref = _semantic_ref(
-            "conflict_set", conflict["conflict_set_ref"]
-        )
+        conflict_ref = _semantic_ref("conflict_set", conflict["conflict_set_ref"])
         return {
             "conflict_set_id": conflict["conflict_set_ref"],
             "claim_refs": [
-                _semantic_ref("claim", ref).to_dict()
-                for ref in conflict["claim_refs"]
+                _semantic_ref("claim", ref).to_dict() for ref in conflict["claim_refs"]
             ],
             "conflict_dimensions": conflict["conflict_dimensions"],
-            "preferred_claim_ref": _semantic_ref(
-                "claim", conflict["preferred_claim_ref"]
-            ).to_dict(),
+            "preferred_claim_ref": (
+                _semantic_ref("claim", conflict["preferred_claim_ref"]).to_dict()
+                if conflict["preferred_claim_ref"] is not None
+                else None
+            ),
             "preference_context": conflict["preference_context"],
             "resolution_record_ref": None,
             "rationale": conflict["rationale"],
-            "narrative_anchor": representation_items[
-                conflict_ref.key
-            ].narrative_anchor,
+            "narrative_anchor": representation_items[conflict_ref.key].narrative_anchor,
         }
 
     def _representation_members(
@@ -729,8 +789,7 @@ class PublicationUnitAssembler:
             for member in self._representation_members(representation)
         }
         mapping_anchors = {
-            mapping["narrative_anchor"]
-            for mapping in manifest["cross_view_mappings"]
+            mapping["narrative_anchor"] for mapping in manifest["cross_view_mappings"]
         }
         if not mapping_anchors.issubset(representation_anchors):
             raise PublicationAssemblyError(

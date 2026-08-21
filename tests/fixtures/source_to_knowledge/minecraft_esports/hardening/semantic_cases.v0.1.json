@@ -1,0 +1,112 @@
+{
+  "fixture_set_ref": "FIX-S2K-POSTR5-SEMANTIC-01",
+  "fixture_version": "0.1",
+  "synthetic": true,
+  "canonical": false,
+  "sensitive": false,
+  "cases": {
+    "perspective_qualification": {
+      "claim_a": {
+        "claim_ref": "CLM-DOC04-TECHNICAL",
+        "value": "stable_during_observed_sessions",
+        "perspective": "program_coordinator",
+        "observation_granularity": "session_summary",
+        "evidence_link_ids": ["EL-DOC04-TECHNICAL"]
+      },
+      "claim_b": {
+        "claim_ref": "CLM-DOC08-TECHNICAL",
+        "value": "intermittent_setup_failures",
+        "perspective": "technical_operator",
+        "observation_granularity": "device_setup",
+        "evidence_link_ids": ["EL-DOC08-TECHNICAL"]
+      },
+      "conflict_set_ref": "CF-DOC04-DOC08-TECHNICAL",
+      "compatibility_checks": {
+        "time": true,
+        "context": true,
+        "perspective": true,
+        "observation_granularity": true,
+        "qualification": true
+      },
+      "conflict_classification": "qualification_or_compatible_difference",
+      "expected_outcome": "qualification_or_compatible_difference"
+    },
+    "correction_history": {
+      "primary_claim_ref": "CLM-CAPACITY-14",
+      "primary_value": 14,
+      "historical_claim_ref": "CLM-CAPACITY-16",
+      "historical_value": 16,
+      "relationship": "corrects",
+      "expected_primary_value": 14
+    },
+    "currentness": {
+      "historical_claim_ref": "CLM-HISTORICAL-OPENNESS",
+      "historical_statement": "not permanently excluded",
+      "purpose": "current_opportunity_assessment",
+      "currentness": "historical_only",
+      "current_evidence_refs": [],
+      "expected_current_opportunity": false
+    },
+    "shared_origin_evidence": {
+      "claim_ref": "CLM-SECOND-CYCLE-APPROVED",
+      "evidence": [
+        {
+          "evidence_link_id": "EL-DOC05-APPROVAL",
+          "origin_ref": "ORIGIN-SCHOOL-DECISION"
+        },
+        {
+          "evidence_link_id": "EL-DOC07-APPROVAL",
+          "origin_ref": "ORIGIN-SCHOOL-DECISION"
+        }
+      ],
+      "expected_independence": "shared_origin"
+    },
+    "evidence_assessment": {
+      "assessment_ref": "EVA-SECOND-CYCLE-APPROVED",
+      "claim_ref": "CLM-SECOND-CYCLE-APPROVED",
+      "purpose": "publication_validation",
+      "evidence_link_ids": ["EL-DOC05-APPROVAL", "EL-DOC07-APPROVAL"],
+      "dimensions": {
+        "independence": "shared_origin",
+        "directness": "direct_statement",
+        "source_role": "formal_confirmation",
+        "formality": "formal",
+        "competence": "domain_competent",
+        "claim_authority": "authorized_for_claim",
+        "specificity": "claim_specific",
+        "temporal_proximity": "near_event",
+        "perspective": "institutional_decision"
+      },
+      "method": "explicit_origin_comparison",
+      "assessed_by": "validator:test",
+      "assessed_at": "2026-08-20T10:00:00+02:00",
+      "uncertainty": "shared origin confirmed by fixture lineage"
+    },
+    "rationale": {
+      "reason_claim_ref": "CLM-SUPPORT-REASON",
+      "target_ref": "CLM-SUPPORT-NEED",
+      "relationship": "rationale_for",
+      "profile_ref": "cpks.profile.organizational-context@0.3",
+      "evidence_link_ids": ["EL-SUPPORT-REASON"]
+    },
+    "program_occurrence": {
+      "program_ref": "PRG-SYNTHETIC-EDUCATION",
+      "occurrence_ref": "EVT-SYNTHETIC-PILOT-CYCLE",
+      "relationship": "part_of"
+    },
+    "temporal_constraint": {
+      "constraint_ref": "TC-EVALUATION-WINDOW",
+      "subject_ref": "EVT-EVALUATION",
+      "bound_kind": "interval",
+      "lower_bound": "2024-10-01",
+      "upper_bound": "2024-12-18",
+      "precision": "day",
+      "modality": "actual",
+      "input_refs": ["EVT-PILOT-CYCLE", "CLM-EVALUATION-COMPLETE"],
+      "evidence_link_ids": ["EL-EVALUATION-REPORT"],
+      "rule_ref": "RULE-AFTER-PILOT-BEFORE-REPORT",
+      "derivation_provenance": ["after_completed_pilot", "before_report_time"],
+      "certainty": "deterministic"
+    }
+  }
+}

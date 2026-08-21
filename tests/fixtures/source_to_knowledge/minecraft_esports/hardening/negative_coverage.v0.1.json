@@ -1,0 +1,77 @@
+{
+  "NEG-01": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "atomic_claim_identity_collapsed"
+  },
+  "NEG-02": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "rationale_not_structured_or_causality_invented"
+  },
+  "NEG-03": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "program_occurrence_identity_collapsed"
+  },
+  "NEG-04": {
+    "test_file": "tests/delivery/test_post_r5_hardening.py",
+    "test_function": "test_sf04_historical_openness_is_not_a_current_opportunity",
+    "assertion": "historical_openness_projected_as_current"
+  },
+  "NEG-05": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "independence_inferred_from_source_count"
+  },
+  "NEG-06": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "evidence_dimensions_replaced_by_global_score"
+  },
+  "NEG-07": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "probabilistic_inference_marked_deterministic"
+  },
+  "NEG-08": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "hard_conflict_without_compatibility_checks"
+  },
+  "NEG-09": {
+    "test_file": "tests/validation/test_post_r5_hardening.py",
+    "test_function": "test_negative_semantic_contracts_fail_closed",
+    "assertion": "correction_history_rendered_as_equal_alternative"
+  },
+  "NEG-10": {
+    "test_file": "tests/sources/test_human_interaction.py",
+    "test_function": "test_src_hum_01_later_input_creates_a_new_record_not_a_mutation",
+    "assertion": "human_input_mutated_older_source"
+  },
+  "NEG-11": {
+    "test_file": "tests/lifecycle/test_human_enrichment.py",
+    "test_function": "test_heq_03_revise_creates_new_immutable_candidate_revision",
+    "assertion": "candidate_revision_mutated_in_place"
+  },
+  "NEG-12": {
+    "test_file": "tests/lifecycle/test_human_enrichment.py",
+    "test_function": "test_heq_04_owner_unknown_closes_request_but_not_frontier",
+    "assertion": "request_completion_resolved_frontier_implicitly"
+  },
+  "NEG-13": {
+    "test_file": "tests/lifecycle/test_human_enrichment.py",
+    "test_function": "test_heq_05_open_review_blocks_only_affected_candidate",
+    "assertion": "candidate_review_blocked_global_pipeline"
+  },
+  "NEG-14": {
+    "test_file": "tests/lifecycle/test_human_enrichment.py",
+    "test_function": "test_neg14_incomplete_kpr_eligibility_cannot_persist",
+    "assertion": "opportunity_persisted_without_kpr_eligibility"
+  },
+  "NEG-15": {
+    "test_file": "tests/lifecycle/test_human_enrichment.py",
+    "test_function": "test_heq_02_eligibility_creates_candidate_not_acceptance_or_publication",
+    "assertion": "eligibility_treated_as_acceptance"
+  }
+}

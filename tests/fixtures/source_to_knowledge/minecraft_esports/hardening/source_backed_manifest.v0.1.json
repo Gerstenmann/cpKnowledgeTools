@@ -1,0 +1,49 @@
+{
+  "fixture_set_ref": "FIX-S2K-POSTR5-SOURCE-BACKED-01",
+  "fixture_set_version": "0.1",
+  "synthetic": true,
+  "canonical": false,
+  "sensitive": false,
+  "scenario_ref": "GT-S2K-POSTR5-HARDENING-01@0.1",
+  "relationship_to_existing_corpus": {
+    "existing_source_range": "DOC-01..DOC-09",
+    "new_source_range": "DOC-10..DOC-12",
+    "composition": "cumulative_source_dossier",
+    "existing_sources_modified": false
+  },
+  "runtime_semantic_annotations_used": false,
+  "source_plausibility_review": {
+    "reviewer_role": "owner",
+    "review_stage": "fixture_text_before_materialization",
+    "knowledge_output_acceptance_granted": false,
+    "common_frontier": "pass",
+    "documents": {
+      "DOC-10": "pass_with_changes_final_text_approved_for_materialization",
+      "DOC-11": "pass_with_changes_final_text_approved_for_materialization",
+      "DOC-12": "pass_with_changes_final_text_approved_for_materialization"
+    }
+  },
+  "source_fixtures": [
+    {
+      "source_ref": "DOC-10",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/hardening/html/10-program-context-and-rationale.html",
+      "sha256": "5a601dc4d33b1bcc3ca6b3d004e6aab62d986875f13e8b86270e7ed1c35dbb17",
+      "source_time": "2024-09-13T10:15:00+02:00",
+      "technical_test_role": "internal_program_context_and_rationale"
+    },
+    {
+      "source_ref": "DOC-11",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/hardening/html/11-later-program-planning-status.html",
+      "sha256": "1df13b7ba6f1d4f5b17d6be8ec60a3e09364b21f07cbf972b15b5a687e1f1794",
+      "source_time": "2026-01-27T09:30:00+01:00",
+      "technical_test_role": "later_program_planning_currentness"
+    },
+    {
+      "source_ref": "DOC-12",
+      "path": "tests/fixtures/source_to_knowledge/minecraft_esports/hardening/html/12-minecraft-technical-specialist-observation.html",
+      "sha256": "5f037b6188eea802050e96791a2d9dc8bea58378bc88d865947a03cc74d0bdbc",
+      "source_time": "2024-10-18T12:10:00+02:00",
+      "technical_test_role": "external_minecraft_delivery_specialist_observation"
+    }
+  ]
+}

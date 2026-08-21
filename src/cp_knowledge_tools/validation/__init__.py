@@ -1,5 +1,10 @@
 """Deterministic validation capabilities for cpKnowledgeTools."""
 
+from .hardening import (
+    HardeningContractValidator,
+    HardeningDiagnostic,
+    HardeningValidationResult,
+)
 from .project_documents import (
     PROFILE_COMPLETE,
     PROFILE_CURRENT,
@@ -12,6 +17,9 @@ from .project_documents import (
 )
 
 __all__ = [
+    "HardeningContractValidator",
+    "HardeningDiagnostic",
+    "HardeningValidationResult",
     "PROFILE_COMPLETE",
     "PROFILE_CURRENT",
     "PROFILE_HISTORY",

@@ -80,10 +80,10 @@ def _document() -> PublicationUnitDocument:
     claim_ref = _ref("claim", "CLM-ARBITRARY-OMEGA")
     manifest = {
         "document_type": "knowledge_object_publication_unit",
-        "template_ref": "CPKS-TPL-KM-PU@0.1",
+        "template_ref": "CPKS-TPL-KM-PU@0.2",
         "knowledge_object_id": object_ref["stable_id"],
         "knowledge_object_version": object_ref["version"],
-        "schema_ref": "CPKS-SPEC-KM-PU@0.1",
+        "schema_ref": "CPKS-SPEC-KM-PU@0.2",
         "semantic_model_ref": "CPKS-SPEC-KM@0.20",
         "vocabulary_set_ref": "CPKS-SPEC-KM-VOC@0.1",
         "title": "Arbitrary semantic unit",
@@ -123,9 +123,7 @@ def _document() -> PublicationUnitDocument:
             {
                 "evidence_link_id": "EL-ARBITRARY-TAU",
                 "subject_ref": claim_ref,
-                "evidence_address_ref": _ref(
-                    "evidence_address", "EVA-ARBITRARY-PHI"
-                ),
+                "evidence_address_ref": _ref("evidence_address", "EVA-ARBITRARY-PHI"),
                 "role": "reports_statement",
                 "narrative_anchor": "evidence-arbitrary",
                 "policy_anchor_ids": ["PA-ARBITRARY"],
@@ -161,6 +159,7 @@ def _document() -> PublicationUnitDocument:
         "policy_decision_refs": [],
         "publication": {
             "publication_state": "unpublished",
+            "publication_finalization_plan_ref": None,
             "publication_record_ref": None,
             "published_at": None,
             "publisher_ref": None,
@@ -295,7 +294,7 @@ def _applicable_profile_manifest(
             {"rule_source": source, "compatibility_mode": "exact"}
             for source in (
                 "CPKS-SPEC-KM@0.20",
-                "CPKS-SPEC-KM-PU@0.1",
+                "CPKS-SPEC-KM-PU@0.2",
                 "CPKS-SPEC-KM-VOC@0.1",
             )
         ],
@@ -327,9 +326,7 @@ def _event_document(
     ]
     document.manifest["event_participations"] = [
         {
-            "participation_ref": _ref(
-                "event_participation", "PART-ARBITRARY-IOTA"
-            ),
+            "participation_ref": _ref("event_participation", "PART-ARBITRARY-IOTA"),
             "event_ref": event_ref,
             "entity_ref": _ref("entity", "ENT-ARBITRARY-KAPPA"),
             "role": role,
@@ -368,6 +365,21 @@ def _raw_inputs() -> tuple[dict[str, object], ...]:
     core_payload = {
         "profile_ref": CORE_PROFILE[0],
         "profile_version": CORE_PROFILE[1],
+        "compatible_core_versions": [
+            {"rule_source": source, "compatibility_mode": "exact"}
+            for source in (
+                "CPKS-SPEC-KM@0.20",
+                "CPKS-SPEC-KM-VOC@0.1",
+                "CPKS-SPEC-KM-PU@0.2",
+                "CPKS-TPL-KM-PU@0.2",
+            )
+        ],
+        "compatible_contract_versions": [
+            {
+                "rule_source": "CPKS-SPEC-KPR@0.3",
+                "compatibility_mode": "exact",
+            }
+        ],
         "required_profiles": [
             {
                 "profile_ref": CONTRACT_PROFILE[0],
@@ -496,9 +508,9 @@ def test_input_integrity_rejects_tampered_corpus_and_missing_profile() -> None:
     ("mutation", "expected_code"),
     [
         (
-            lambda core, _corpus, _payload, _contract: core[
-                "manifest_hash"
-            ].update({"value": "0" * 64}),
+            lambda core, _corpus, _payload, _contract: core["manifest_hash"].update(
+                {"value": "0" * 64}
+            ),
             "core_knowledge_profile_integrity_failed",
         ),
         (
@@ -542,6 +554,40 @@ def test_input_integrity_rejects_wrong_status_versions_binding_and_hash(
         )
 
     assert failure.value.code == expected_code
+
+
+def test_core_profile_stale_km_pu_or_kpr_compatibility_is_rejected() -> None:
+    core, corpus, payload, contract, canonical = _raw_inputs()
+    for item in core["payload"]["compatible_core_versions"]:
+        if item.get("rule_source") == "CPKS-SPEC-KM-PU@0.2":
+            item["rule_source"] = "CPKS-SPEC-KM-PU@0.1"
+            break
+    digest = canonical_json_hash(core["payload"])
+    core["manifest_hash"]["value"] = digest
+    core["content_hash"]["value"] = digest
+    with pytest.raises(CoreValidationInputError) as stale_core:
+        prepare_core_inputs(
+            profile_manifest=core,
+            corpus_manifest=corpus,
+            corpus_payload=payload,
+            required_profile_manifests=[contract, canonical],
+        )
+    assert stale_core.value.code == "core_knowledge_profile_resolution_failed"
+    core, corpus, payload, contract, canonical = _raw_inputs()
+    core["payload"]["compatible_contract_versions"] = [
+        {"rule_source": "CPKS-SPEC-KPR@0.2", "compatibility_mode": "exact"}
+    ]
+    digest = canonical_json_hash(core["payload"])
+    core["manifest_hash"]["value"] = digest
+    core["content_hash"]["value"] = digest
+    with pytest.raises(CoreValidationInputError) as stale_kpr:
+        prepare_core_inputs(
+            profile_manifest=core,
+            corpus_manifest=corpus,
+            corpus_payload=payload,
+            required_profile_manifests=[contract, canonical],
+        )
+    assert stale_kpr.value.code == "core_knowledge_profile_resolution_failed"
 
 
 def test_canonical_json_loader_rejects_negative_zero(tmp_path: Path) -> None:
@@ -615,8 +661,7 @@ def test_corpus_harness_executes_all_cases_exactly_and_deterministically() -> No
     assert first["cases_failed"] == 0
     assert first["required_profile_resolution"] == "resolved"
     assert (
-        first["contract_conformance_corpus_execution"]
-        == "not_in_scope_for_this_slice"
+        first["contract_conformance_corpus_execution"] == "not_in_scope_for_this_slice"
     )
     assert [case["case_id"] for case in first["case_results"]] == sorted(
         case["case_id"] for case in first["case_results"]
@@ -625,9 +670,7 @@ def test_corpus_harness_executes_all_cases_exactly_and_deterministically() -> No
         case["output_fingerprint"] for case in second["case_results"]
     ]
     assert first["report_fingerprint"] == second["report_fingerprint"]
-    assert not any(
-        case["input_mutation_detected"] for case in first["case_results"]
-    )
+    assert not any(case["input_mutation_detected"] for case in first["case_results"])
 
 
 def test_generic_claim_identity_epistemic_and_participation_defects() -> None:
@@ -659,9 +702,7 @@ def test_generic_claim_identity_epistemic_and_participation_defects() -> None:
     participation["events"] = [{"event_ref": event_ref}]
     participation["event_participations"] = [
         {
-            "participation_ref": _ref(
-                "event_participation", "PART-ARBITRARY-IOTA"
-            ),
+            "participation_ref": _ref("event_participation", "PART-ARBITRARY-IOTA"),
             "event_ref": event_ref,
             "entity_ref": _ref("entity", "ENT-ARBITRARY-KAPPA"),
             "role": None,
@@ -672,6 +713,17 @@ def test_generic_claim_identity_epistemic_and_participation_defects() -> None:
         ["CK-EVT-001"],
     )
     assert _codes(result) == {"event_participation_role_missing"}
+
+
+def test_km_pu_02_requires_publication_finalization_plan_field() -> None:
+    validator = CoreKnowledgeValidator(_prepared())
+    document = _document()
+    invalid = deepcopy(document.manifest)
+    invalid["publication"].pop("publication_finalization_plan_ref")
+    result = validator.validate_input(
+        {"manifest": invalid, "markdown_body": document.markdown_body}, ["CK-SCH-001"]
+    )
+    assert _codes(result) == {"core_knowledge_schema_conformance_failed"}
 
 
 def test_generic_cross_view_namespace_policy_schema_and_time_defects() -> None:
@@ -789,9 +841,7 @@ def test_diagnostics_follow_profile_sort_order() -> None:
     assert diagnostics == sorted(
         diagnostics,
         key=lambda item: (
-            {"fatal": 0, "error": 1, "warning": 2, "info": 3}[
-                item["severity"]
-            ],
+            {"fatal": 0, "error": 1, "warning": 2, "info": 3}[item["severity"]],
             item["code"],
             item["path"],
             item["message"],
@@ -836,6 +886,69 @@ def test_publication_report_marks_applicable_rules_and_uses_caller_path(
     assert "CK-POL-001" in report["not_applicable_rule_refs"]
     assert report["output_fingerprint"] == repeated["output_fingerprint"]
     assert output.is_file()
+
+
+def test_core_publication_validation_enforces_canonical_hardening_fields() -> None:
+    document = _document()
+    manifest = document.manifest
+    manifest["schema_ref"] = "CPKS-SPEC-KM-PU@0.3"
+    manifest["semantic_model_ref"] = "CPKS-SPEC-KM@0.21"
+    manifest["template_ref"] = "CPKT-TEST-TPL-KM-PU@0.1"
+    manifest["evidence_assessments"] = [
+        {
+            "assessment_ref": "EVA-ARBITRARY",
+            "claim_ref": "CLM-ARBITRARY-OMEGA",
+            "purpose": "publication_validation",
+            "evidence_link_ids": ["EL-ARBITRARY-TAU"],
+            "dimensions": {
+                "independence": "unknown",
+                "directness": "direct",
+                "source_role": "reporter",
+                "formality": "formal",
+                "competence": "unknown",
+                "claim_authority": "reported_statement",
+                "specificity": "claim_specific",
+                "temporal_proximity": "unknown",
+                "perspective": "reporter",
+            },
+            "method": "explicit_assessment",
+            "assessed_by": "validator:test",
+            "assessed_at": "2026-08-20T10:00:00+02:00",
+            "uncertainty": "unknown",
+        }
+    ]
+    manifest["temporal_constraints"] = []
+    manifest["claims"][0].update(
+        {
+            "epistemic_context": {
+                "source_role_refs": ["EL-ARBITRARY-TAU"],
+                "perspective_refs": ["reporter"],
+                "evidence_assessment_refs": ["EVA-ARBITRARY"],
+                "qualification_claim_refs": [],
+                "observation_context_refs": [],
+                "confidence_dimensions": {},
+            },
+            "evidence_assessment_refs": ["EVA-ARBITRARY"],
+            "qualification_claim_refs": [],
+        }
+    )
+    validator = CoreKnowledgeValidator(_prepared())
+
+    valid = validator.validate_publication_unit(document)
+    invalid_document = PublicationUnitDocument(
+        manifest=deepcopy(manifest),
+        markdown_body=document.markdown_body,
+    )
+    invalid_document.manifest["claims"][0].pop("epistemic_context")
+    invalid = validator.validate_publication_unit(invalid_document)
+
+    assert valid["conformance_status"] == "pass"
+    assert valid["artifacts"]["hardening_contract"] == {
+        "canonical_shape": "CPKS-SPEC-KM-PU@0.3",
+        "status": "pass",
+    }
+    assert invalid["conformance_status"] == "fail"
+    assert "canonical_epistemic_context_invalid" in _codes(invalid)
 
 
 def test_core_role_passes_without_an_applicable_profile() -> None:
@@ -886,9 +999,7 @@ def test_applicable_profile_roles_pass_through_effective_vocabulary(
         "accepted_values"
     ]
     assert "organizer" in accepted
-    assert (
-        f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.{role}" in accepted
-    )
+    assert f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.{role}" in accepted
 
 
 def test_cli_accepts_an_explicit_applicable_profile_manifest(
@@ -900,9 +1011,7 @@ def test_cli_accepts_an_explicit_applicable_profile_manifest(
     document = _event_document(
         profile_refs=[profile_ref],
         event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.decision",
-        role=(
-            f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"
-        ),
+        role=(f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"),
     )
     paths: dict[str, Path] = {}
     for name, manifest in (
@@ -952,16 +1061,12 @@ def test_cli_accepts_an_explicit_applicable_profile_manifest(
 
     exit_code = run_core_knowledge_conformance.main()
     corpus_report = json.loads(report_path.read_text(encoding="utf-8"))
-    publication_report = json.loads(
-        publication_report_path.read_text(encoding="utf-8")
-    )
+    publication_report = json.loads(publication_report_path.read_text(encoding="utf-8"))
 
     assert exit_code == 0
     assert corpus_report["cases_passed_exactly"] == 16
     assert publication_report["conformance_status"] == "pass"
-    assert publication_report["applicable_profile_resolution"]["status"] == (
-        "resolved"
-    )
+    assert publication_report["applicable_profile_resolution"]["status"] == ("resolved")
 
 
 def test_applicable_profile_composition_is_independent_of_caller_input_order() -> None:
@@ -982,9 +1087,7 @@ def test_applicable_profile_composition_is_independent_of_caller_input_order() -
     document = _event_document(
         profile_refs=profile_refs,
         event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.decision",
-        role=(
-            f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"
-        ),
+        role=(f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"),
     )
 
     first = CoreKnowledgeValidator(
@@ -1017,9 +1120,7 @@ def test_profile_role_constraints_and_unknown_role_fail_closed(
 ) -> None:
     profile = _applicable_profile_manifest()
     document = _event_document(
-        profile_refs=[
-            f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
-        ],
+        profile_refs=[f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"],
         event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.{event_type}",
         role=f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.{role}",
     )
@@ -1035,9 +1136,7 @@ def test_profile_role_constraints_and_unknown_role_fail_closed(
 def test_unknown_event_type_in_applicable_profile_namespace_fails_closed() -> None:
     profile = _applicable_profile_manifest()
     document = _event_document(
-        profile_refs=[
-            f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"
-        ],
+        profile_refs=[f"{ORGANIZATIONAL_PROFILE[0]}@{ORGANIZATIONAL_PROFILE[1]}"],
         event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.super_event",
         role="organizer",
     )
@@ -1054,9 +1153,7 @@ def test_profile_role_without_supplied_profile_fails_closed() -> None:
     document = _event_document(
         profile_refs=[],
         event_type=f"{ORGANIZATIONAL_NAMESPACE}.event_type.decision",
-        role=(
-            f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"
-        ),
+        role=(f"{ORGANIZATIONAL_NAMESPACE}.event_participation_role.decision_maker"),
     )
 
     report = CoreKnowledgeValidator(_prepared()).validate_publication_unit(document)
@@ -1123,8 +1220,7 @@ def test_production_code_has_no_golden_or_scenario_dispatch() -> None:
         / "scripts/cp_tools/validator/run_core_knowledge_conformance.py"
     )
     source = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted(source_root.glob("*.py"))
+        path.read_text(encoding="utf-8") for path in sorted(source_root.glob("*.py"))
     ) + script.read_text(encoding="utf-8")
 
     assert "CK-" + "POS-" not in source

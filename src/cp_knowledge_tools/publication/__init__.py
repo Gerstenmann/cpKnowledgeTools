@@ -10,6 +10,7 @@ from .codec import (
     parse_publication_unit,
     render_publication_unit,
 )
+from .hardening import HardeningPublicationContext
 from .models import (
     PublicationApplicability,
     PublicationAssemblyPlan,
@@ -36,6 +37,7 @@ __all__ = [
     "PublicationUnitAssembler",
     "PublicationUnitCodecError",
     "PublicationUnitDocument",
+    "HardeningPublicationContext",
     "load_publication_manifest",
     "load_publication_unit",
     "parse_publication_unit",

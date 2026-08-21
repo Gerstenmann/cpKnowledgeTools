@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from cp_knowledge_tools.platform.hashing import canonical_json_hash
 
-PolicyEffect = Literal["permit", "deny"]
-PolicyOperation = Literal["claim_read", "evidence_resolution"]
+PolicyEffect = Literal["permit", "conditions", "review", "escalate", "deny"]
+PolicyOperation = Literal["claim_read", "evidence_resolution", "publish"]
 ProfileResolutionStatus = Literal["resolved", "unresolved"]
 
-SUPPORTED_OPERATIONS = frozenset({"claim_read", "evidence_resolution"})
+SUPPORTED_OPERATIONS = frozenset({"claim_read", "evidence_resolution", "publish"})
 PROFILE_VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+(?:\.[0-9]+)?$")
 
 
@@ -57,6 +57,81 @@ class PolicyEvaluationInput:
     policy_anchor_ids: tuple[str, ...]
     requested_at: str
     context_valid_at: str
+    requested_action: str | None = None
+    actor_roles: tuple[str, ...] = ()
+    requested_data_operations: tuple[str, ...] = ()
+    requested_effect_scope: str | None = None
+    candidate_revision_ref: str | None = None
+    resolution_decision_ref: str | None = None
+    publication_change_set_ref: str | None = None
+    publication_change_set_version_ref: str | None = None
+    publication_change_set_hash: str | None = None
+    publication_package_version_ref: str | None = None
+    publication_package_hash: str | None = None
+    publication_finalization_plan_ref: str | None = None
+    publication_unit_refs: tuple[str, ...] = ()
+    knowledge_content_hash_refs: tuple[str, ...] = ()
+    prepublication_representation_hash_refs: tuple[str, ...] = ()
+    target_refs: tuple[str, ...] = ()
+    publication_authority_ref: str | None = None
+    publication_review_record_ref: str | None = None
+    review_record_refs: tuple[str, ...] = ()
+    conformance_report_refs: tuple[str, ...] = ()
+    risk_input_refs: tuple[str, ...] = ()
+    quality_input_refs: tuple[str, ...] = ()
+    agent_authority_context: str | None = None
+
+    @property
+    def effective_requested_action(self) -> str:
+        return self.requested_action or self.requested_operation
+
+    def context_payload(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @property
+    def context_fingerprint(self) -> str:
+        return canonical_json_hash(self.context_payload())
+
+
+@dataclass(frozen=True, slots=True)
+class PolicyCondition:
+    condition_ref: str
+    condition_type: str
+    subject_refs: tuple[PolicySubject, ...]
+    responsible_context: str
+    required_evidence_refs: tuple[str, ...]
+    fulfilment_evidence_refs: tuple[str, ...]
+    enforcement_point: str
+    valid_from: str
+    valid_until: str
+    failure_action: str
+    state: str
+
+    def contract_failure(self) -> str | None:
+        if not self.condition_ref or not self.condition_type:
+            return "policy_condition_type_missing"
+        if not self.subject_refs:
+            return "policy_condition_subject_missing"
+        if not self.responsible_context:
+            return "policy_condition_responsible_context_missing"
+        if not self.required_evidence_refs:
+            return "policy_condition_required_evidence_missing"
+        if not self.enforcement_point:
+            return "policy_condition_enforcement_point_missing"
+        if not self.valid_from or not self.valid_until:
+            return "policy_condition_validity_missing"
+        if not self.failure_action:
+            return "policy_condition_failure_action_missing"
+        if self.state not in {
+            "open",
+            "satisfied",
+            "failed",
+            "waived_by_authorized_override",
+            "expired",
+            "not_applicable",
+        }:
+            return "policy_condition_state_invalid"
+        return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +144,8 @@ class PolicyRule:
     required_policy_anchor_ids: tuple[str, ...]
     effect: PolicyEffect
     reason: str
+    conditions: tuple[PolicyCondition, ...] = ()
+    authorized_scope: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +154,10 @@ class PolicyConfiguration:
     version: str
     status: str
     rules: tuple[PolicyRule, ...]
+    decision_authority_ref: str | None = None
+    valid_from: str | None = None
+    valid_until: str | None = None
+    synthetic_test_fixture: bool = False
 
     @property
     def concrete_ref(self) -> str:
@@ -97,18 +178,83 @@ class PolicyDecision:
     policy_rule_refs: tuple[str, ...]
     decision_reasons: tuple[str, ...]
     decision_authority_ref: str
+    policy_configuration_ref: str | None = None
+    requested_action: str | None = None
+    requested_data_operations: tuple[str, ...] = ()
+    conditions: tuple[PolicyCondition, ...] = ()
+    review_record_refs: tuple[str, ...] = ()
+    risk_input_refs: tuple[str, ...] = ()
+    quality_input_refs: tuple[str, ...] = ()
+    agent_authority_context: str | None = None
+    valid_from: str | None = None
+    valid_until: str | None = None
+    context_fingerprint: str = ""
+    synthetic_test_fixture: bool = False
+    publication_record_created: bool = False
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
 
 
-class PolicyEvaluator:
-    """Evaluate the two delivery operations required by the Core MVP.
+@dataclass(frozen=True, slots=True)
+class PolicyDecisionBindingEvaluation:
+    disposition: Literal["valid", "stale"]
+    reason_code: str
 
-    This is deliberately an exact-match evaluator, not a general policy engine.
-    A permit exists only when one active, concrete configuration contains an
-    applicable permit rule, the Profile context is complete, and no applicable
-    deny or unresolved conflict exists.
+
+class PolicyDecisionValidator:
+    """Require exact, immutable reuse of the evaluated policy context."""
+
+    def validate(
+        self,
+        decision: PolicyDecision,
+        evaluation: PolicyEvaluationInput,
+    ) -> PolicyDecisionBindingEvaluation:
+        if (
+            decision.policy_evaluation_ref != evaluation.policy_evaluation_ref
+            or decision.context_fingerprint != evaluation.context_fingerprint
+            or (decision.policy_configuration_ref or "") != evaluation.policy_config_ref
+            or decision.actor_or_consumer_ref != evaluation.actor_or_consumer_ref
+            or decision.purpose != evaluation.purpose
+            or decision.processing_zone != evaluation.processing_zone
+            or decision.requested_action != evaluation.effective_requested_action
+            or decision.requested_data_operations
+            != evaluation.requested_data_operations
+            or decision.review_record_refs != evaluation.review_record_refs
+            or decision.risk_input_refs != evaluation.risk_input_refs
+            or decision.quality_input_refs != evaluation.quality_input_refs
+            or decision.agent_authority_context != evaluation.agent_authority_context
+        ):
+            return self._stale()
+        if decision.valid_from and evaluation.context_valid_at < decision.valid_from:
+            return self._stale()
+        if decision.valid_until and evaluation.context_valid_at > decision.valid_until:
+            return self._stale()
+        if decision.result in {"permit", "conditions"}:
+            if (
+                decision.authorized_actions != (evaluation.effective_requested_action,)
+                or decision.authorized_subject_refs != evaluation.subject_refs
+                or decision.authorized_scope != evaluation.requested_effect_scope
+            ):
+                return self._stale()
+        return PolicyDecisionBindingEvaluation(
+            disposition="valid",
+            reason_code="policy_decision_context_current",
+        )
+
+    @staticmethod
+    def _stale() -> PolicyDecisionBindingEvaluation:
+        return PolicyDecisionBindingEvaluation(
+            disposition="stale",
+            reason_code="policy_decision_context_stale",
+        )
+
+
+class PolicyEvaluator:
+    """Exact-match, deny-by-default evaluation for delivery and publication.
+
+    Publication support generalizes the existing contracts; it does not infer
+    policy, Profile applicability, review status, or publication authority.
     """
 
     def evaluate(
@@ -122,9 +268,7 @@ class PolicyEvaluator:
 
         assert configuration is not None
         applicable = tuple(
-            rule
-            for rule in configuration.rules
-            if self._applies(rule, evaluation)
+            rule for rule in configuration.rules if self._applies(rule, evaluation)
         )
         if not applicable:
             return self._decision(
@@ -153,16 +297,19 @@ class PolicyEvaluator:
                 applicable,
                 ("unresolved_policy_rule_conflict",),
             )
+        scopes = {rule.authorized_scope for rule in applicable}
+        if len(scopes) > 1:
+            return self._decision(
+                evaluation,
+                configuration,
+                "deny",
+                applicable,
+                ("unresolved_policy_scope_conflict",),
+            )
 
         effect = effects.pop()
         reasons = tuple(rule.reason for rule in applicable)
-        return self._decision(
-            evaluation,
-            configuration,
-            effect,
-            applicable,
-            reasons,
-        )
+        return self._decision(evaluation, configuration, effect, applicable, reasons)
 
     def _input_failure(
         self,
@@ -175,10 +322,18 @@ class PolicyEvaluator:
             return "policy_purpose_missing"
         if evaluation.requested_operation not in SUPPORTED_OPERATIONS:
             return "requested_operation_unsupported"
+        if evaluation.requested_action and (
+            evaluation.requested_action != evaluation.requested_operation
+        ):
+            return "requested_action_operation_mismatch"
         if not evaluation.subject_refs:
             return "policy_subject_missing"
         if not evaluation.processing_zone:
             return "processing_zone_unknown"
+        if evaluation.requested_operation == "publish":
+            publish_failure = self._publication_input_failure(evaluation)
+            if publish_failure:
+                return publish_failure
         profile_failure = self._profile_failure(evaluation)
         if profile_failure is not None:
             return profile_failure
@@ -190,6 +345,86 @@ class PolicyEvaluator:
             return "policy_configuration_unresolved"
         if evaluation.policy_config_ref != configuration.concrete_ref:
             return "policy_configuration_not_applicable"
+        if configuration.valid_from and (
+            evaluation.context_valid_at < configuration.valid_from
+        ):
+            return "policy_configuration_not_yet_valid"
+        if configuration.valid_until and (
+            evaluation.context_valid_at > configuration.valid_until
+        ):
+            return "policy_configuration_expired"
+        return None
+
+    @staticmethod
+    def _publication_input_failure(
+        evaluation: PolicyEvaluationInput,
+    ) -> str | None:
+        if evaluation.requested_data_operations != ("publish",):
+            return "publish_data_operation_context_invalid"
+        required_scalars = (
+            ("requested_effect_scope_missing", evaluation.requested_effect_scope),
+            ("candidate_revision_ref_missing", evaluation.candidate_revision_ref),
+            ("resolution_decision_ref_missing", evaluation.resolution_decision_ref),
+            (
+                "publication_change_set_ref_missing",
+                evaluation.publication_change_set_ref,
+            ),
+            (
+                "publication_change_set_version_ref_missing",
+                evaluation.publication_change_set_version_ref,
+            ),
+            (
+                "publication_change_set_hash_missing",
+                evaluation.publication_change_set_hash,
+            ),
+            (
+                "publication_package_version_ref_missing",
+                evaluation.publication_package_version_ref,
+            ),
+            (
+                "publication_package_hash_missing",
+                evaluation.publication_package_hash,
+            ),
+            (
+                "publication_review_record_ref_missing",
+                evaluation.publication_review_record_ref,
+            ),
+            (
+                "publication_finalization_plan_ref_missing",
+                evaluation.publication_finalization_plan_ref,
+            ),
+            (
+                "publication_authority_ref_missing",
+                evaluation.publication_authority_ref,
+            ),
+            ("agent_authority_context_missing", evaluation.agent_authority_context),
+        )
+        for reason, value in required_scalars:
+            if not value:
+                return reason
+        if not evaluation.actor_roles:
+            return "policy_actor_roles_missing"
+        if not evaluation.publication_unit_refs:
+            return "publication_unit_refs_missing"
+        if not evaluation.knowledge_content_hash_refs:
+            return "knowledge_content_hash_refs_missing"
+        if not evaluation.prepublication_representation_hash_refs:
+            return "prepublication_representation_hash_refs_missing"
+        if not evaluation.target_refs:
+            return "publication_target_refs_missing"
+        if not evaluation.review_record_refs:
+            return "review_inputs_missing"
+        if (
+            evaluation.publication_review_record_ref
+            not in evaluation.review_record_refs
+        ):
+            return "publication_review_input_mismatch"
+        if not evaluation.conformance_report_refs:
+            return "conformance_inputs_missing"
+        if not evaluation.risk_input_refs:
+            return "risk_inputs_missing"
+        if not evaluation.quality_input_refs:
+            return "quality_inputs_missing"
         return None
 
     def _profile_failure(self, evaluation: PolicyEvaluationInput) -> str | None:
@@ -211,8 +446,7 @@ class PolicyEvaluator:
         expected_refs = required_refs | {
             resolution.concrete_ref
             for resolution in context.reference_resolutions
-            if resolution.applicable
-            and resolution.artifact_type == "profile_manifest"
+            if resolution.applicable and resolution.artifact_type == "profile_manifest"
         }
 
         for concrete_ref in supplied_refs | expected_refs:
@@ -245,11 +479,8 @@ class PolicyEvaluator:
             and PROFILE_VERSION_PATTERN.fullmatch(profile_version)
         )
 
-    def _applies(
-        self,
-        rule: PolicyRule,
-        evaluation: PolicyEvaluationInput,
-    ) -> bool:
+    @staticmethod
+    def _applies(rule: PolicyRule, evaluation: PolicyEvaluationInput) -> bool:
         return (
             rule.actor_or_consumer_ref == evaluation.actor_or_consumer_ref
             and rule.purpose == evaluation.purpose
@@ -268,35 +499,68 @@ class PolicyEvaluator:
         rules: tuple[PolicyRule, ...],
         reasons: tuple[str, ...],
     ) -> PolicyDecision:
-        authorized = result == "permit"
+        conditionally_authorized = result in {"permit", "conditions"}
+        scopes = {rule.authorized_scope for rule in rules}
+        if conditionally_authorized and scopes == {None}:
+            authorized_scope = (
+                evaluation.requested_effect_scope
+                if evaluation.requested_operation == "publish"
+                else configuration.concrete_ref
+                if configuration is not None
+                else None
+            )
+        elif conditionally_authorized and len(scopes) == 1:
+            authorized_scope = scopes.pop()
+        else:
+            authorized_scope = None
+        conditions = tuple(condition for rule in rules for condition in rule.conditions)
         payload = {
-            "evaluation": asdict(evaluation),
+            "evaluation": evaluation.context_payload(),
             "configuration_ref": (
                 configuration.concrete_ref if configuration else None
             ),
             "result": result,
             "rule_refs": [rule.policy_rule_ref for rule in rules],
+            "conditions": [asdict(item) for item in conditions],
             "reasons": list(reasons),
         }
         return PolicyDecision(
             policy_decision_ref=f"PDEC-{canonical_json_hash(payload)[:24].upper()}",
             policy_evaluation_ref=evaluation.policy_evaluation_ref,
             result=result,
-            authorized_actions=(evaluation.requested_operation,) if authorized else (),
-            authorized_subject_refs=evaluation.subject_refs if authorized else (),
-            authorized_scope=(
-                configuration.concrete_ref
-                if authorized and configuration is not None
-                else None
+            authorized_actions=(
+                (evaluation.effective_requested_action,)
+                if conditionally_authorized
+                else ()
             ),
+            authorized_subject_refs=(
+                evaluation.subject_refs if conditionally_authorized else ()
+            ),
+            authorized_scope=authorized_scope,
             actor_or_consumer_ref=evaluation.actor_or_consumer_ref,
             purpose=evaluation.purpose,
             processing_zone=evaluation.processing_zone,
             policy_rule_refs=tuple(rule.policy_rule_ref for rule in rules),
             decision_reasons=reasons,
             decision_authority_ref=(
-                configuration.concrete_ref
+                configuration.decision_authority_ref or configuration.concrete_ref
                 if configuration is not None
                 else "fail-closed-policy-boundary"
+            ),
+            policy_configuration_ref=(
+                configuration.concrete_ref if configuration is not None else None
+            ),
+            requested_action=evaluation.effective_requested_action,
+            requested_data_operations=evaluation.requested_data_operations,
+            conditions=conditions,
+            review_record_refs=evaluation.review_record_refs,
+            risk_input_refs=evaluation.risk_input_refs,
+            quality_input_refs=evaluation.quality_input_refs,
+            agent_authority_context=evaluation.agent_authority_context,
+            valid_from=configuration.valid_from if configuration else None,
+            valid_until=configuration.valid_until if configuration else None,
+            context_fingerprint=evaluation.context_fingerprint,
+            synthetic_test_fixture=(
+                configuration.synthetic_test_fixture if configuration else False
             ),
         )

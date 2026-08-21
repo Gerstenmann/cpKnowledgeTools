@@ -1,0 +1,208 @@
+{
+  "scenario_ref": "GT-S2K-POSTR5-HARDENING-01",
+  "scenario_version": "0.1",
+  "scenario_role": "frontier",
+  "baseline_scenario_ref": "GT-S2K-ENRICHMENT-01",
+  "baseline_scenario_version": "0.8",
+  "project_key": "communications-knowledge-pilot",
+  "rule_basis": [
+    "CPKS-DEC-037@1.0",
+    "CPKS-DEC-038@1.0",
+    "CPKS-SPEC-KM@0.21",
+    "CPKS-SPEC-KM-PU@0.3",
+    "CPKS-SPEC-VAL@0.3",
+    "cpks.profile.organizational-context@0.3",
+    "CPKS-SPEC-KPR@0.4",
+    "CPKS-SPEC-SRC@0.3",
+    "CPKS-SPEC-MEM@0.4",
+    "CPKS-SPEC-SEC@0.3",
+    "CPKS-SPEC-TST@0.2",
+    "CPKT-SPEC-ARCH@1.6"
+  ],
+  "fixtures": {
+    "semantic_cases": "tests/fixtures/source_to_knowledge/minecraft_esports/hardening/semantic_cases.v0.1.json",
+    "human_enrichment": "tests/fixtures/source_to_knowledge/minecraft_esports/hardening/human_enrichment.v0.1.json",
+    "assurance_records": "tests/fixtures/source_to_knowledge/minecraft_esports/hardening/assurance_records.v0.1.json"
+  },
+  "coverage": {
+    "semantic_fidelity": [
+      "SF-01",
+      "SF-02",
+      "SF-03",
+      "SF-04",
+      "SF-05",
+      "SF-06",
+      "SF-07",
+      "SF-08"
+    ],
+    "human_enrichment": [
+      "HEQ-01",
+      "HEQ-02",
+      "HEQ-03",
+      "HEQ-04",
+      "HEQ-05",
+      "HEQ-06",
+      "HEQ-07"
+    ],
+    "human_source": [
+      "SRC-HUM-01",
+      "SRC-HUM-02",
+      "SRC-HUM-03"
+    ],
+    "negative_assertions": [
+      "NEG-01",
+      "NEG-02",
+      "NEG-03",
+      "NEG-04",
+      "NEG-05",
+      "NEG-06",
+      "NEG-07",
+      "NEG-08",
+      "NEG-09",
+      "NEG-10",
+      "NEG-11",
+      "NEG-12",
+      "NEG-13",
+      "NEG-14",
+      "NEG-15"
+    ]
+  },
+  "expectations": {
+    "SF-01": {
+      "claim_refs": ["CLM-TECHNICAL-RELIABILITY", "CLM-TECHNICAL-SCOPE"],
+      "relationship": "qualifies",
+      "atomic_identity_preserved": true,
+      "drill_down_preserved": true
+    },
+    "SF-02": {
+      "reason_claim_ref": "CLM-SUPPORT-REASON",
+      "target_ref": "CLM-SUPPORT-NEED",
+      "relationship": "rationale_for",
+      "profile_ref": "cpks.profile.organizational-context@0.3",
+      "causality_asserted": false
+    },
+    "SF-03": {
+      "program_ref": "PRG-SYNTHETIC-EDUCATION",
+      "occurrence_ref": "EVT-SYNTHETIC-PILOT-CYCLE",
+      "relationship": "part_of",
+      "identities_distinct": true
+    },
+    "SF-04": {
+      "historical_claim_ref": "CLM-HISTORICAL-OPENNESS",
+      "currentness": "historical_only",
+      "current_opportunity": false
+    },
+    "SF-05": {
+      "claim_ref": "CLM-SECOND-CYCLE-APPROVED",
+      "evidence_link_ids": ["EL-DOC-05-APPROVAL", "EL-DOC-07-APPROVAL"],
+      "independence": "shared_origin",
+      "global_score_required": false,
+      "required_dimensions": [
+        "independence",
+        "directness",
+        "source_role",
+        "formality",
+        "competence",
+        "claim_authority",
+        "specificity",
+        "temporal_proximity",
+        "perspective"
+      ]
+    },
+    "SF-06": {
+      "constraint_ref": "TC-EVALUATION-WINDOW",
+      "subject_ref": "EVT-EVALUATION",
+      "event_time_exact": null,
+      "lower_bound": "2024-10-01",
+      "upper_bound": "2024-12-18",
+      "certainty": "deterministic",
+      "rule_ref": "RULE-AFTER-PILOT-BEFORE-REPORT"
+    },
+    "SF-07": {
+      "claim_refs": ["CLM-DOC04-TECHNICAL", "CLM-DOC08-TECHNICAL"],
+      "compatibility_checks": [
+        "time",
+        "context",
+        "perspective",
+        "observation_granularity",
+        "qualification"
+      ],
+      "outcome": "qualification_or_compatible_difference"
+    },
+    "SF-08": {
+      "primary_claim_ref": "CLM-CAPACITY-14",
+      "correction_history_refs": ["CLM-CAPACITY-16"],
+      "equivalent_unresolved_alternatives": false
+    },
+    "HEQ-01": {"evidence_sufficient": true, "request_created": false},
+    "HEQ-02": {
+      "eligibility": "eligible",
+      "candidate_created": true,
+      "accepted": false,
+      "published": false
+    },
+    "HEQ-03": {
+      "disposition": "revise",
+      "old_revision": 1,
+      "new_revision": 2,
+      "old_revision_immutable": true,
+      "human_source_required": true
+    },
+    "HEQ-04": {
+      "owner_answer": "unknown",
+      "request_state": "closed",
+      "frontier_outcome": "unchanged"
+    },
+    "HEQ-05": {
+      "blocked_candidate_refs": ["LLC-SYNTHETIC-01"],
+      "global_pipeline_blocked": false
+    },
+    "HEQ-06": {
+      "regular_non_blocking_batch_max": 3,
+      "priority_order": ["P1", "P2"],
+      "proactively_presented_priorities": ["P1", "P2"]
+    },
+    "HEQ-07": {
+      "opportunity_created_by": "agent_interaction",
+      "request_decided_by": "knowledge_lifecycle_and_curation",
+      "opportunity_is_request": false
+    },
+    "SRC-HUM-01": {
+      "new_source_record": true,
+      "new_evidence_address": true,
+      "older_source_mutated": false
+    },
+    "SRC-HUM-02": {
+      "response_content_separate_from_interpretation": true
+    },
+    "SRC-HUM-03": {
+      "retrospective_recollection": true,
+      "automatic_quality_downgrade": false
+    }
+  },
+  "negative_expectations": {
+    "NEG-01": "atomic_claim_identity_collapsed",
+    "NEG-02": "rationale_not_structured_or_causality_invented",
+    "NEG-03": "program_occurrence_identity_collapsed",
+    "NEG-04": "historical_openness_projected_as_current",
+    "NEG-05": "independence_inferred_from_source_count",
+    "NEG-06": "evidence_dimensions_replaced_by_global_score",
+    "NEG-07": "probabilistic_inference_marked_deterministic",
+    "NEG-08": "hard_conflict_without_compatibility_checks",
+    "NEG-09": "correction_history_rendered_as_equal_alternative",
+    "NEG-10": "human_input_mutated_older_source",
+    "NEG-11": "candidate_revision_mutated_in_place",
+    "NEG-12": "request_completion_resolved_frontier_implicitly",
+    "NEG-13": "candidate_review_blocked_global_pipeline",
+    "NEG-14": "opportunity_persisted_without_kpr_eligibility",
+    "NEG-15": "eligibility_treated_as_acceptance"
+  },
+  "assurance": {
+    "cumulative_state_required": true,
+    "preserve_entities_roles_relationships": true,
+    "golden_is_runtime_input": false,
+    "synthetic_records_isolated": true,
+    "production_scenario_hardcodes_allowed": false,
+    "historical_baseline_must_remain_green": true
+  }
+}
