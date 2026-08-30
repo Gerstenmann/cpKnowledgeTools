@@ -3,13 +3,16 @@
 Read-only managed-artifact validator for cp-wiki — revision 3.2.
 
 Validation basis:
-- CPKS-SPEC-ART@0.3 (active)
-- CPKS-SPEC-PROC@0.3 (active)
-- CPKS-POL-GOV-AUTH@1.0
-- CPKS-DEC-021@0.2
+- CPKS-SPEC-ART@0.5 (active)
+- CPKS-SPEC-OPS@0.8 (active; technical event-time and execution boundary)
+- CPKS-SPEC-PROC@0.4 (active)
+- CPKS-POL-GOV-AUTH@1.1
+- CPKS-DEC-021@0.1
 - CPKS-DEC-026@1.0
 
-Revision 3.2 retains the existing validator capabilities and adds ART 0.3 support:
+Revision 3.2 retains the existing validator capabilities. Its current rule
+basis includes the ART 0.5 temporal clarification in addition to the earlier
+ART 0.3 capabilities:
 - acknowledgement metadata for reviewed historical and legacy findings;
 - suppression of explicitly accepted warning/info codes only;
 - continued enforcement of YAML, identity, path, duplicate and lifecycle errors;
@@ -25,6 +28,9 @@ Revision 3.2 retains the existing validator capabilities and adds ART 0.3 suppor
 - semantic review diagnostics where evidence role cannot be established mechanically;
 - ART 0.3 initial-version and monotonic version-sequence checks where lifecycle evidence is sufficient;
 - expanded current architecture, template and component lifecycle scan coverage.
+- ART 0.5 semantic lifecycle-time validation for dates and timezone-aware timestamps;
+- precision-independent ``revised >= created`` validation;
+- explicit separation from schema-driven technical event timestamps.
 
 The validator never modifies the Vault. Reports are written outside the Vault.
 
@@ -53,6 +59,11 @@ import tempfile
 from typing import Any, Iterable
 import unicodedata
 
+from cp_knowledge_tools.validation.temporal import (
+    lifecycle_temporal_precedes,
+    parse_lifecycle_temporal,
+)
+
 try:
     import yaml
 except ImportError as exc:  # pragma: no cover
@@ -63,7 +74,11 @@ except ImportError as exc:  # pragma: no cover
 
 
 VALIDATOR_REVISION = "3.2"
-VALIDATION_BASIS = ["CPKS-SPEC-ART@0.3", "CPKS-SPEC-PROC@0.3"]
+VALIDATION_BASIS = [
+    "CPKS-SPEC-ART@0.5",
+    "CPKS-SPEC-OPS@0.8",
+    "CPKS-SPEC-PROC@0.4",
+]
 EVIDENCE_CLASS_EFFECTIVE_DATE = dt.date(2026, 7, 30)
 VERSION_RULE_EFFECTIVE_DATE = dt.date(2026, 7, 27)
 DEFAULT_VAULT = Path("/Users/cp/Documents/cp-wiki")
@@ -193,6 +208,13 @@ APPROVED_ALIAS_MAPPINGS = {
 
 ID_RE = re.compile(r"^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$")
 PROCESS_ID_RE = re.compile(r"^[A-Z][A-Z0-9]*-P[0-9]{2,3}$")
+PROCESS_DOMAIN_RULES = {
+    "governance": ("GOV", "Governance"),
+    "knowledge_management": ("KM", "Knowledge Management"),
+    "development": ("DEV", "Development"),
+    "operations": ("OPS", "Operations"),
+    "ai_working": ("AIW", "Agent Integration"),
+}
 VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+(?:\.[0-9]+)?$")
 VERSIONED_REF_RE = re.compile(
     r"^([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)@([0-9]+\.[0-9]+(?:\.[0-9]+)?)$"
@@ -376,9 +398,29 @@ def split_frontmatter(text: str) -> tuple[str | None, str]:
     raise FrontmatterError("YAML frontmatter is not closed with '---'.")
 
 
+class ManagedArtifactLoader(yaml.SafeLoader):
+    """Keep invalid temporal lexemes available for structured field diagnostics."""
+
+    def construct_managed_timestamp(self, node: yaml.ScalarNode) -> Any:
+        match = self.timestamp_regexp.match(node.value)
+        # PyYAML normalizes overflowing offset minutes instead of rejecting them.
+        if match is None or int(match.group("tz_minute") or 0) > 59:
+            return self.construct_scalar(node)
+        try:
+            return self.construct_yaml_timestamp(node)
+        except (ValueError, OverflowError):
+            return self.construct_scalar(node)
+
+
+ManagedArtifactLoader.add_constructor(
+    "tag:yaml.org,2002:timestamp",
+    ManagedArtifactLoader.construct_managed_timestamp,
+)
+
+
 def parse_yaml_frontmatter(raw: str) -> dict[str, Any]:
     try:
-        parsed = yaml.safe_load(raw)
+        parsed = yaml.load(raw, Loader=ManagedArtifactLoader)
     except yaml.YAMLError as exc:
         mark = getattr(exc, "problem_mark", None)
         location = ""
@@ -429,6 +471,8 @@ def scan_zone(relative: str) -> str:
         return "work_package_development"
     if relative.startswith("Development/cpKnowledgeSystem/Governance/"):
         return "governance_development"
+    if relative.startswith("Development/cpKnowledgeSystem/Processes/"):
+        return "process_development"
     if relative.startswith("Development/cpKnowledgeSystem/Specifications/"):
         return "governance_development"
     if relative.startswith("Development/cpKnowledgeSystem/Architecture/"):
@@ -540,6 +584,7 @@ def iter_candidate_paths(vault: Path) -> Iterable[Path]:
         vault / "Systems/cpKnowledgeTools/Architecture",
         vault / "Templates",
         vault / "Development/cpKnowledgeSystem/Governance",
+        vault / "Development/cpKnowledgeSystem/Processes",
         vault / "Development/cpKnowledgeSystem/Specifications",
         vault / "Development/cpKnowledgeSystem/Architecture",
         vault / "Development/cp-wiki Vault/Specifications",
@@ -1296,39 +1341,40 @@ def validate_date_fields(
                 f"Required field {field!r} is missing.",
                 field=field,
             )
+    parsed_values = {}
     for field in ("created", "revised", "approved_at", "effective_from"):
         if field not in doc.frontmatter or is_empty(doc.frontmatter.get(field)):
             continue
-        value = scalar_text(doc.frontmatter[field])
-        if value and not DATE_RE.fullmatch(value):
+        value = doc.frontmatter[field]
+        parsed = parse_lifecycle_temporal(value)
+        if parsed is None:
             add(
                 findings,
                 doc,
                 "error",
-                "invalid_date",
-                "Date must use YYYY-MM-DD.",
+                "invalid_lifecycle_temporal_value",
+                (
+                    "Lifecycle temporal value must be an ISO date or a complete "
+                    "timezone-aware ISO-8601 timestamp."
+                ),
                 field=field,
-                actual=value,
+                actual=scalar_text(value),
             )
-    created = scalar_text(doc.frontmatter.get("created"))
-    revised = scalar_text(doc.frontmatter.get("revised"))
-    if (
-        created
-        and revised
-        and DATE_RE.fullmatch(created)
-        and DATE_RE.fullmatch(revised)
-    ):
-        if revised < created:
-            add(
-                findings,
-                doc,
-                "error",
-                "revised_before_created",
-                "revised date is earlier than created date.",
-                field="revised",
-                actual=revised,
-                expected=f">= {created}",
-            )
+            continue
+        parsed_values[field] = parsed
+    created = parsed_values.get("created")
+    revised = parsed_values.get("revised")
+    if created and revised and lifecycle_temporal_precedes(revised, created):
+        add(
+            findings,
+            doc,
+            "error",
+            "revised_before_created",
+            "revised lifecycle time is earlier than created lifecycle time.",
+            field="revised",
+            actual=scalar_text(doc.frontmatter.get("revised")),
+            expected=f">= {scalar_text(doc.frontmatter.get('created'))}",
+        )
 
 
 def validate_identity_and_version(
@@ -1462,13 +1508,8 @@ def status_group(status: str | None) -> str | None:
 
 
 def frontmatter_date(doc: Document, field: str) -> dt.date | None:
-    value = scalar_text(doc.frontmatter.get(field))
-    if not value or not DATE_RE.fullmatch(value):
-        return None
-    try:
-        return dt.date.fromisoformat(value)
-    except ValueError:
-        return None
+    value = parse_lifecycle_temporal(doc.frontmatter.get(field))
+    return value.calendar_date if value else None
 
 
 def evidence_class_requirement(doc: Document) -> tuple[bool, str | None, bool]:
@@ -1699,7 +1740,9 @@ def validate_lifecycle(doc: Document, findings: list[Finding]) -> None:
 
 
 def validate_process(doc: Document, findings: list[Finding], *, full: bool) -> None:
-    if full and is_empty(doc.frontmatter.get("process_domain")):
+    process_domain = scalar_text(doc.frontmatter.get("process_domain"))
+    process_id = doc.artifact_id
+    if full and not process_domain:
         add(
             findings,
             doc,
@@ -1707,6 +1750,79 @@ def validate_process(doc: Document, findings: list[Finding], *, full: bool) -> N
             "missing_process_domain",
             "Process requires process_domain.",
             field="process_domain",
+        )
+    if full and process_domain:
+        domain_rule = PROCESS_DOMAIN_RULES.get(process_domain)
+        if domain_rule is None:
+            add(
+                findings,
+                doc,
+                "error",
+                "unknown_process_domain",
+                "Process domain is not registered by CPKS-SPEC-PROC.",
+                field="process_domain",
+                actual=process_domain,
+                expected=sorted(PROCESS_DOMAIN_RULES),
+            )
+        else:
+            expected_prefix, directory = domain_rule
+            if process_id and not process_id.startswith(f"{expected_prefix}-P"):
+                add(
+                    findings,
+                    doc,
+                    "error",
+                    "process_domain_id_prefix_mismatch",
+                    "Process ID prefix does not match process_domain.",
+                    field="process_id",
+                    actual=process_id,
+                    expected=f"{expected_prefix}-P<NN>",
+                )
+            if doc.status == "active":
+                expected_root = f"Processes/{directory}/"
+                if not doc.relative_path.startswith(expected_root) or is_closed_path(
+                    doc.relative_path
+                ):
+                    add(
+                        findings,
+                        doc,
+                        "error",
+                        "active_process_outside_processes",
+                        "Active process is outside its canonical process domain.",
+                        actual=doc.relative_path,
+                        expected=expected_root,
+                    )
+            elif doc.validation_profile in {
+                "current_development_managed",
+                "closed_development_managed",
+            }:
+                if process_domain == "governance":
+                    expected_root = (
+                        "Development/cpKnowledgeSystem/Governance/Draft Processes/"
+                    )
+                else:
+                    expected_root = (
+                        f"Development/cpKnowledgeSystem/Processes/{directory}/"
+                    )
+                if not doc.relative_path.startswith(expected_root):
+                    add(
+                        findings,
+                        doc,
+                        "error",
+                        "invalid_process_development_path",
+                        "Process draft is outside its governed Development domain.",
+                        actual=doc.relative_path,
+                        expected=expected_root,
+                    )
+    if full and doc.scan_zone == "active_processes" and doc.status != "active":
+        add(
+            findings,
+            doc,
+            "error",
+            "inactive_process_in_processes",
+            "Inactive process is located in the active Processes zone.",
+            field="status",
+            actual=doc.status,
+            expected="active",
         )
     if full:
         for section in PROCESS_SECTIONS:
@@ -2309,12 +2425,16 @@ def render_markdown(
         if doc.document_type == "process" and doc.status == "active"
     ]
 
+    validation_basis_text = ", ".join(
+        f"`{item}`" for item in VALIDATION_BASIS
+    )
+
     lines = [
         "# Managed Artifact Validation Report — Revision 3.2",
         "",
         f"- Generated: `{generated_at}`",
         f"- Vault: `{vault}`",
-        f"- Validation basis: `{VALIDATION_BASIS[0]}` and `{VALIDATION_BASIS[1]}` (active)",
+        f"- Validation basis: {validation_basis_text} (active)",
         "- Mode: read-only",
         f"- Files inventoried: **{len(documents)}**",
         f"- Managed artifacts: **{scope_counts['managed']}**",
