@@ -67,3 +67,15 @@ def test_src_hum_02_direct_response_has_no_interpretation_field() -> None:
 
     assert "interpretation" not in record.to_dict()
     assert "system_interpretation" not in record.to_dict()
+
+
+def test_real_human_source_capture_fails_closed_without_policy_references() -> None:
+    fixture = _interaction()
+    fixture["human_enrichment_request_ref"] = None
+    fixture["knowledge_frontier_ref"] = None
+    fixture["access_policy_refs"] = []
+    fixture["processing_policy_refs"] = []
+    context = HumanSourceContext.from_mapping(fixture.pop("source_context"))
+
+    with pytest.raises(ValueError, match="requires explicit Policy references"):
+        capture_human_interaction_source(**fixture, source_context=context)

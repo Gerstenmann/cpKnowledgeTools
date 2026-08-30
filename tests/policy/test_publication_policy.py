@@ -50,7 +50,7 @@ def _evaluation(**changes: object) -> PolicyEvaluationInput:
         "context_valid_at": "2026-08-15T10:03:00+02:00",
         "requested_action": "publish",
         "actor_roles": ("synthetic_test_publisher",),
-        "requested_data_operations": ("publish",),
+        "requested_data_operations": ("read_content", "transform", "create"),
         "requested_effect_scope": "publication_package_version",
         "candidate_revision_ref": "LCR-TEST@0.1",
         "resolution_decision_ref": "RDL-TEST",
@@ -94,6 +94,8 @@ def _configuration(
                 actor_or_consumer_ref="SYNTHETIC-PUBLISHER",
                 purpose="controlled_knowledge_publication",
                 requested_operation="publish",
+                requested_action="publish",
+                requested_data_operations=("read_content", "transform", "create"),
                 subject_ref=SUBJECT,
                 required_policy_anchor_ids=("PA-SYNTHETIC",),
                 effect=effect,
@@ -263,4 +265,4 @@ def test_publish_is_not_write_back() -> None:
     decision = PolicyEvaluator().evaluate(evaluation, _configuration())
 
     assert decision.result == "deny"
-    assert decision.decision_reasons == ("requested_operation_unsupported",)
+    assert decision.decision_reasons == ("policy_data_operation_unknown",)

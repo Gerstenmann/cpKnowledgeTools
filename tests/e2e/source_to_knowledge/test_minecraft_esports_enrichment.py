@@ -525,7 +525,11 @@ def test_hr005_enrichment_frontier(tmp_path: Path) -> None:
         assert publication_review["synthetic_test_fixture"] is True
         assert publication_review["real_human_review_claimed"] is False
         assert evaluation["requested_action"] == "publish"
-        assert evaluation["requested_data_operations"] == ["publish"]
+        assert evaluation["requested_data_operations"] == [
+            "read_content",
+            "transform",
+            "create",
+        ]
         assert (
             evaluation["publication_package_version_ref"]
             == (package["package_version_ref"])

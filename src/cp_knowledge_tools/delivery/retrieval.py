@@ -186,7 +186,7 @@ class KnowledgeRetriever:
     ) -> str | None:
         if decision.result != "permit":
             return "request_denied"
-        if "claim_read" not in decision.authorized_actions:
+        if not decision.authorizes_legacy_operation("claim_read"):
             return "request_denied"
         if decision.actor_or_consumer_ref != request.consumer_ref:
             return "request_denied"
@@ -423,7 +423,7 @@ class EvidenceResolver:
     ) -> EvidenceResolutionResult:
         authorized = (
             decision.result == "permit"
-            and "evidence_resolution" in decision.authorized_actions
+            and decision.authorizes_legacy_operation("evidence_resolution")
             and decision.actor_or_consumer_ref == request.consumer_ref
             and decision.purpose == request.purpose
             and request.evidence_ref in decision.authorized_subject_refs

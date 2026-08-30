@@ -131,10 +131,13 @@ def test_resolved_empty_profile_set_keeps_policy_operations_independent() -> Non
     )
 
     assert claim_decision.result == "permit"
-    assert claim_decision.authorized_actions == ("claim_read",)
+    assert claim_decision.authorized_actions == ()
+    assert claim_decision.authorized_legacy_operations == ("claim_read",)
+    assert claim_decision.requested_action is None
     assert claim_decision.authorized_subject_refs == (KO,)
     assert evidence_decision.result == "deny"
     assert evidence_decision.authorized_actions == ()
+    assert evidence_decision.authorized_legacy_operations == ()
     assert evidence_decision.authorized_subject_refs == ()
 
 

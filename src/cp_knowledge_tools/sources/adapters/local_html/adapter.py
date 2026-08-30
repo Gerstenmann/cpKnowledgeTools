@@ -19,6 +19,18 @@ class LocalHtmlAdapter:
 
     media_type = "text/html"
 
+    @staticmethod
+    def _header_values(article: Tag, label: str) -> tuple[str, ...]:
+        values: list[str] = []
+        for term in article.find_all("dt"):
+            if " ".join(term.stripped_strings).casefold() != label.casefold():
+                continue
+            value = term.find_next_sibling("dd")
+            if isinstance(value, Tag):
+                text = " ".join(value.stripped_strings)
+                values.extend(part.strip() for part in text.split(";") if part.strip())
+        return tuple(values)
+
     def capture(self, source_key: str, path: Path) -> SourceRecord:
         raw_bytes = path.read_bytes()
         raw_html = raw_bytes.decode("utf-8")
@@ -38,6 +50,17 @@ class LocalHtmlAdapter:
             if isinstance(source_time_node, Tag):
                 source_time = source_time_node.get("content")
         normalized_text = "\n".join(article.stripped_strings)
+        creator_values = (
+            self._header_values(article, "From") if isinstance(article, Tag) else ()
+        )
+        recipient_values = (
+            (
+                *self._header_values(article, "To"),
+                *self._header_values(article, "Cc"),
+            )
+            if isinstance(article, Tag)
+            else ()
+        )
 
         raw_hash = sha256_bytes(raw_bytes)
         source_ref = stable_token("SRC", source_key)
@@ -57,6 +80,8 @@ class LocalHtmlAdapter:
             raw_html=raw_html,
             normalized_text=normalized_text,
             captured_at=datetime.now().astimezone().isoformat(),
+            creator_label=creator_values[0] if creator_values else None,
+            recipient_labels=recipient_values,
         )
 
     def capture_many(self, bindings: Iterable[tuple[str, Path]]) -> list[SourceRecord]:

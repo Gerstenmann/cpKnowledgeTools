@@ -46,6 +46,15 @@ _CORRECTION_VALUES = re.compile(
     r"\b(?P<current>\d{1,4})\b[^.]{0,100}\bnot\s+(?P<historical>\d{1,4})\b",
     re.IGNORECASE,
 )
+_ORIGINATOR_LANGUAGE = re.compile(
+    r"\b(?:i|we)\s+(?:would\s+like\s+to\s+)?(?:propose|initiate|suggest)\b",
+    re.IGNORECASE,
+)
+_DELIVERY_LANGUAGE = re.compile(
+    r"\b(?:i|we)\s+(?:have\s+been\s+running|run|deliver|operate|teach|"
+    r"normally\s+(?:reduce|prepare)|can\s+prepare)\b",
+    re.IGNORECASE,
+)
 
 
 def _normalized(value: str) -> str:
@@ -58,6 +67,11 @@ def _has_any(text: str, terms: Sequence[str]) -> bool:
 
 def _score(text: str, terms: Sequence[str]) -> int:
     return sum(term in text for term in terms)
+
+
+def _affiliation(label: str) -> str | None:
+    parts = [part.strip().casefold() for part in label.split(",") if part.strip()]
+    return parts[-1] if len(parts) > 1 else None
 
 
 def _best_address(
@@ -340,6 +354,8 @@ class SourceBackedSemanticInterpreter:
             "external_competition_current_commitment": False,
             "ownership_status": "unconfirmed",
             "programme_slot_status": "not_scheduled",
+            "ownership_evidence_address_ref": ownership.evidence_address_ref,
+            "programme_schedule_evidence_address_ref": schedule.evidence_address_ref,
             "current_lead": False,
             "permanent_rejection": False,
             "historical_cause_established": False,
@@ -378,34 +394,49 @@ class SourceBackedSemanticInterpreter:
             if "evaluation summary" in title or "across the group" in document_text:
                 perspective = "aggregate_evaluation"
                 granularity = "cycle_summary"
+                actor_context = None
             elif "facilitator" in title or "facilitator note" in document_text:
                 perspective = "facilitator_observation"
                 granularity = "incident_observation"
+                actor_context = None
             elif "my experience" in document_text and _has_any(
                 document_text, ("courses", "camps", "operations")
             ):
-                perspective = "external_operations_practitioner"
+                actor_context = self._actor_context(record, records, addresses)
+                if all(
+                    actor_context[key]
+                    for key in (
+                        "external",
+                        "program_originator_or_initiator",
+                        "delivery_provider",
+                    )
+                ):
+                    perspective = "external_program_lead"
+                else:
+                    perspective = "external_operations_practitioner"
                 granularity = "cross_session_operational_observation"
             else:
                 perspective = "technical_observer"
                 granularity = "bounded_technical_observation"
+                actor_context = None
             claim_ref = stable_token(
                 "CLM", "technical_observation", evidence.evidence_address_ref
             )
-            views.append(
-                {
-                    "claim_ref": claim_ref,
-                    "statement": evidence.text,
-                    "perspective": perspective,
-                    "observation_granularity": granularity,
-                    "qualification": "source_bounded_observation",
-                    "evidence_link_ids": [
-                        _link_id(claim_ref, evidence.evidence_address_ref)
-                    ],
-                    "evidence_address_refs": [evidence.evidence_address_ref],
-                    "source_time": record.source_time,
-                }
-            )
+            view = {
+                "claim_ref": claim_ref,
+                "statement": evidence.text,
+                "perspective": perspective,
+                "observation_granularity": granularity,
+                "qualification": "source_bounded_observation",
+                "evidence_link_ids": [
+                    _link_id(claim_ref, evidence.evidence_address_ref)
+                ],
+                "evidence_address_refs": [evidence.evidence_address_ref],
+                "source_time": record.source_time,
+            }
+            if actor_context is not None:
+                view["actor_context"] = actor_context
+            views.append(view)
             if (
                 "overall" in document_text
                 and "while" in document_text
@@ -430,6 +461,82 @@ class SourceBackedSemanticInterpreter:
             outcome="qualification_or_compatible_difference",
         )
         return {"views": views, "assessment": assessment.to_dict()}
+
+    def _actor_context(
+        self,
+        focal_record: SourceRecord,
+        records: dict[str, SourceRecord],
+        addresses: Sequence[EvidenceAddress],
+    ) -> dict[str, Any]:
+        creator_label = focal_record.creator_label
+        if not creator_label:
+            return {
+                "actor_ref": None,
+                "external": False,
+                "program_originator_or_initiator": False,
+                "delivery_provider": False,
+                "source_record_refs": [focal_record.record_ref],
+                "role_evidence_address_refs": [],
+                "business_interest_inferred": False,
+            }
+
+        creator_key = _normalized(creator_label)
+        actor_records = tuple(
+            record
+            for record in records.values()
+            if record.creator_label and _normalized(record.creator_label) == creator_key
+        )
+        actor_record_refs = {record.record_ref for record in actor_records}
+        actor_addresses = tuple(
+            address for address in addresses if address.record_ref in actor_record_refs
+        )
+        originator_evidence = tuple(
+            address
+            for address in actor_addresses
+            if _ORIGINATOR_LANGUAGE.search(address.text)
+        )
+        delivery_evidence = tuple(
+            address
+            for address in actor_addresses
+            if _DELIVERY_LANGUAGE.search(address.text)
+            and _has_any(
+                _normalized(address.text),
+                ("activit", "course", "camp", "session", "support", "setup"),
+            )
+        )
+        creator_affiliations = {
+            affiliation
+            for record in actor_records
+            if record.creator_label
+            and (affiliation := _affiliation(record.creator_label))
+        }
+        recipient_affiliations = {
+            affiliation
+            for record in actor_records
+            for label in record.recipient_labels
+            if (affiliation := _affiliation(label))
+        }
+        external = bool(
+            creator_affiliations
+            and recipient_affiliations
+            and creator_affiliations.isdisjoint(recipient_affiliations)
+        )
+        role_evidence_refs = list(
+            dict.fromkeys(
+                address.evidence_address_ref
+                for address in (*originator_evidence, *delivery_evidence)
+            )
+        )
+        return {
+            "actor_ref": stable_token("ACTOR", creator_key),
+            "actor_label": creator_label,
+            "external": external,
+            "program_originator_or_initiator": bool(originator_evidence),
+            "delivery_provider": bool(delivery_evidence),
+            "source_record_refs": sorted(actor_record_refs),
+            "role_evidence_address_refs": role_evidence_refs,
+            "business_interest_inferred": False,
+        }
 
     def _correction(
         self,
@@ -540,13 +647,37 @@ class SourceBackedSemanticInterpreter:
             "evidence_checked_refs": checked_refs,
             "possible_factors": [
                 {
-                    "factor": "ownership_or_programme_slot",
+                    "factor": "internal_responsibility_or_ownership_uncertainty",
                     "causal_status": "not_established",
-                    "evidence_address_refs": currentness["evidence_address_refs"],
+                    "description": (
+                        "No confirmed internal owner or responsibility is established; "
+                        "later responsibility remains uncertain."
+                    ),
+                    "evidence_address_refs": [
+                        currentness["ownership_evidence_address_ref"]
+                    ],
+                },
+                {
+                    "factor": (
+                        "organisational_integration_or_programme_scheduling_"
+                        "not_established"
+                    ),
+                    "causal_status": "not_established",
+                    "description": (
+                        "No recurring programme container or schedule is established; "
+                        "format and timing would need renewed planning."
+                    ),
+                    "evidence_address_refs": [
+                        currentness["programme_schedule_evidence_address_ref"]
+                    ],
                 },
                 {
                     "factor": "technical_operational_requirements",
                     "causal_status": "not_established",
+                    "description": (
+                        "Group delivery can require additional technical preparation "
+                        "and troubleshooting, without establishing a historical cause."
+                    ),
                     "evidence_address_refs": [
                         evidence_ref
                         for view in technical["views"]

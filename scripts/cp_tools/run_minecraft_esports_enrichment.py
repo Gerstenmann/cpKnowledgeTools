@@ -88,6 +88,7 @@ from cp_knowledge_tools.lifecycle import (  # noqa: E402
 )
 from cp_knowledge_tools.lifecycle._common import local_ref  # noqa: E402
 from cp_knowledge_tools.policy import (  # noqa: E402
+    PUBLICATION_DATA_OPERATIONS,
     PolicyConfiguration,
     PolicyEvaluationInput,
     PolicyEvaluator,
@@ -2497,7 +2498,7 @@ def _run_d6_case(
         context_valid_at="2026-08-15T10:03:00+02:00",
         requested_action="publish",
         actor_roles=("synthetic_test_publisher",),
-        requested_data_operations=("publish",),
+        requested_data_operations=PUBLICATION_DATA_OPERATIONS,
         requested_effect_scope="publication_package_version",
         candidate_revision_ref=package.candidate_revision_ref,
         resolution_decision_ref=package.resolution_decision_ref,
@@ -2536,6 +2537,8 @@ def _run_d6_case(
                 actor_or_consumer_ref=policy_evaluation.actor_or_consumer_ref,
                 purpose=policy_evaluation.purpose,
                 requested_operation="publish",
+                requested_action="publish",
+                requested_data_operations=PUBLICATION_DATA_OPERATIONS,
                 subject_ref=policy_subject,
                 required_policy_anchor_ids=package.policy_anchor_refs,
                 effect="permit",
@@ -2968,6 +2971,8 @@ def _run_source_backed_extension(
                     "captured_at": record.captured_at,
                     "media_type": record.media_type,
                     "title": record.title,
+                    "creator_label": record.creator_label,
+                    "recipient_labels": list(record.recipient_labels),
                     "raw_sha256": record.raw_sha256,
                     "normalized_text": record.normalized_text,
                 },
@@ -3067,18 +3072,34 @@ def _run_source_backed_extension(
             "knowledge": result["knowledge"],
             "knowledge_frontier": result["knowledge_frontier"],
             "human_enrichment_opportunity": result["human_enrichment"]["opportunity"],
+            "human_enrichment_request": result["human_enrichment"]["request"],
             "kpr_disposition": result["human_enrichment"]["kpr_disposition"],
             "human_response_present": False,
         },
         "owner_review_questions": [
-            "Is the represented Program and Pilot Cycle distinction plausible?",
-            "Is the Rationale representation faithful to the documentary Source?",
             (
-                "Are Currentness, perspective, and observation granularity "
-                "represented plausibly?"
+                "Is the external actor now represented appropriately as Program "
+                "Originator/Initiator and Delivery Provider?"
             ),
-            "Is the remaining Knowledge Frontier correctly left unresolved?",
-            "Is the proposed Human Enrichment question useful and proportionate?",
+            (
+                "If separately policy-conformant Human Evidence becomes available, "
+                "is business interest retained as context without a global "
+                "credibility judgment?"
+            ),
+            (
+                "Are technical operability and institutional technical "
+                "acceptability kept meaningfully separate?"
+            ),
+            (
+                "Are internal responsibility and organisational scheduling "
+                "understandable as separate possible factors?"
+            ),
+            ("Does every possible factor remain explicitly non-causal?"),
+            (
+                "Is the Human Enrichment Request correctly P1, retrospective, "
+                "non-blocking, and queued?"
+            ),
+            "Does the actual non-continuation reason remain unresolved?",
         ],
     }
     review_path = human_review_output or (

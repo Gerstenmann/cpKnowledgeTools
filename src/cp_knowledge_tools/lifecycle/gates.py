@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from cp_knowledge_tools.policy import (
+    PUBLICATION_DATA_OPERATIONS,
     PolicyDecision,
     PolicyDecisionValidator,
     PolicyEvaluationInput,
@@ -157,8 +158,7 @@ class G5PolicyGate:
         return bool(
             plan.integrity_ok()
             and evaluation.effective_requested_action == "publish"
-            and evaluation.requested_operation == "publish"
-            and evaluation.requested_data_operations == ("publish",)
+            and evaluation.requested_data_operations == PUBLICATION_DATA_OPERATIONS
             and evaluation.candidate_revision_ref == package.candidate_revision_ref
             and evaluation.resolution_decision_ref == package.resolution_decision_ref
             and evaluation.publication_change_set_ref

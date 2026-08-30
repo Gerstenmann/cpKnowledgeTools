@@ -262,7 +262,7 @@ def run_source_backed_post_r5(
             "bounded_answer_recorded_as_new_human_interaction_source",
         ),
         trigger_stage="post_r5_source_backed_interpretation",
-        mode="regular",
+        mode="retrospective",
         gain_justifies_human_cost=True,
         evidence_sufficient=False,
     )

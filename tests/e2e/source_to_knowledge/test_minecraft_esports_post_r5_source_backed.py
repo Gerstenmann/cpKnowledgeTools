@@ -150,6 +150,27 @@ def test_three_technical_views_preserve_perspective_before_conflict(
     }
 
 
+def test_external_originator_delivery_role_uses_cross_document_actor_context(
+    source_backed_result: dict[str, object],
+) -> None:
+    expected = _json(EXPECTED)["expectations"]["perspective_and_granularity"]
+    views = source_backed_result["knowledge"]["technical_perspectives"]
+    specialist = next(
+        item
+        for item in views
+        if item["perspective"] == expected["external_actor_perspective"]
+    )
+
+    assert specialist["actor_context"]["external"] is True
+    assert specialist["actor_context"]["program_originator_or_initiator"] is True
+    assert specialist["actor_context"]["delivery_provider"] is True
+    assert len(specialist["actor_context"]["source_record_refs"]) >= 2
+    assert (
+        specialist["actor_context"]["business_interest_inferred"]
+        is (expected["business_interest_inferred_from_documentary_sources"])
+    )
+
+
 def test_correction_frontier_and_kpr_request_remain_separate(
     source_backed_result: dict[str, object],
 ) -> None:
@@ -172,3 +193,37 @@ def test_correction_frontier_and_kpr_request_remain_separate(
     )
     assert enrichment["human_response_present"] is False
     assert "human_response" not in enrichment
+
+
+def test_noncontinuation_frontier_factors_are_precise(
+    source_backed_result: dict[str, object],
+) -> None:
+    expected = _json(EXPECTED)["expectations"]["frontier"]
+    frontier = source_backed_result["knowledge_frontier"]
+    factors = {item["factor"]: item for item in frontier["possible_factors"]}
+
+    assert "ownership_or_programme_slot" not in factors
+    assert set(expected["possible_factor_names"]) == set(factors)
+    assert all(
+        item["causal_status"] == expected["possible_factor_causal_status"]
+        for item in factors.values()
+    )
+    assert all(item["description"] for item in factors.values())
+    assert frontier["status"] == "unresolved"
+    assert frontier["actual_noncontinuation_reason_known"] is False
+
+
+def test_noncontinuation_request_is_retrospective_queued_and_nonblocking(
+    source_backed_result: dict[str, object],
+) -> None:
+    expected = _json(EXPECTED)["expectations"]["human_enrichment"]
+    frontier = source_backed_result["knowledge_frontier"]
+    enrichment = source_backed_result["human_enrichment"]
+
+    assert frontier["status"] == "unresolved"
+    assert frontier["actual_noncontinuation_reason_known"] is False
+    assert enrichment["opportunity"]["mode"] == expected["mode"]
+    assert enrichment["request"]["mode"] == expected["mode"]
+    assert enrichment["request"]["priority"] == expected["priority"]
+    assert enrichment["request"]["blocking"] is expected["blocking"]
+    assert enrichment["request"]["state"] == expected["request_state"]

@@ -110,7 +110,7 @@ class ExperienceRetriever:
     ) -> Literal["request_denied"] | None:
         authorized = (
             decision.result == "permit"
-            and "claim_read" in decision.authorized_actions
+            and decision.authorizes_legacy_operation("claim_read")
             and decision.actor_or_consumer_ref == request.consumer_ref
             and decision.purpose == request.purpose
             and request.knowledge_object_ref in decision.authorized_subject_refs

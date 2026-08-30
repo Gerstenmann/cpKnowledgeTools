@@ -19,6 +19,8 @@ class SourceRecord:
     raw_html: str
     normalized_text: str
     captured_at: str
+    creator_label: str | None = None
+    recipient_labels: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

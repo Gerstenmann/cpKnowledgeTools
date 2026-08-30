@@ -1,6 +1,9 @@
 from .evaluation import (
+    PUBLICATION_DATA_OPERATIONS,
+    PolicyAction,
     PolicyCondition,
     PolicyConfiguration,
+    PolicyDataOperation,
     PolicyDecision,
     PolicyDecisionBindingEvaluation,
     PolicyDecisionValidator,
@@ -14,7 +17,9 @@ from .evaluation import (
 
 __all__ = [
     "PolicyCondition",
+    "PolicyAction",
     "PolicyConfiguration",
+    "PolicyDataOperation",
     "PolicyDecision",
     "PolicyDecisionBindingEvaluation",
     "PolicyDecisionValidator",
@@ -24,4 +29,5 @@ __all__ = [
     "PolicySubject",
     "ProfileApplicability",
     "ProfileReferenceResolution",
+    "PUBLICATION_DATA_OPERATIONS",
 ]

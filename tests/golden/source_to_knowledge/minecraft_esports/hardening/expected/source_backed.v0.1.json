@@ -28,7 +28,9 @@
       "hard_conflict": false,
       "universal_technical_failure": false,
       "school_accepted_specialist_mitigation": false,
-      "specialist_has_universal_authority": false
+      "specialist_has_universal_authority": false,
+      "external_actor_perspective": "external_program_lead",
+      "business_interest_inferred_from_documentary_sources": false
     },
     "correction": {
       "primary_capacity": 14,
@@ -37,13 +39,23 @@
     },
     "frontier": {
       "status": "unresolved",
-      "actual_noncontinuation_reason_known": false
+      "actual_noncontinuation_reason_known": false,
+      "possible_factor_names": [
+        "internal_responsibility_or_ownership_uncertainty",
+        "organisational_integration_or_programme_scheduling_not_established",
+        "technical_operational_requirements"
+      ],
+      "possible_factor_causal_status": "not_established"
     },
     "human_enrichment": {
       "opportunity_may_arise": true,
       "opportunity_is_request": false,
       "kpr_eligibility_required": true,
-      "human_response_present": false
+      "human_response_present": false,
+      "mode": "retrospective",
+      "priority": "P1",
+      "blocking": false,
+      "request_state": "queued"
     }
   }
 }

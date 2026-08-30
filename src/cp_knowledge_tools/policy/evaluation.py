@@ -2,15 +2,64 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from cp_knowledge_tools.platform.hashing import canonical_json_hash
 
 PolicyEffect = Literal["permit", "conditions", "review", "escalate", "deny"]
 PolicyOperation = Literal["claim_read", "evidence_resolution", "publish"]
+PolicyAction = Literal[
+    "register",
+    "capture",
+    "process",
+    "resolve_evidence",
+    "retrieve",
+    "store_in_memory",
+    "export",
+    "publish",
+    "communicate_external",
+    "write_back",
+    "delete",
+    "archive",
+    "override",
+]
+PolicyDataOperation = Literal[
+    "discover",
+    "read_metadata",
+    "read_content",
+    "resolve_evidence",
+    "create",
+    "update",
+    "transform",
+    "classify",
+    "derive",
+    "index",
+    "retrieve",
+    "include_in_context_package",
+    "store_in_memory",
+    "export",
+    "redact",
+    "delete",
+    "archive",
+]
 ProfileResolutionStatus = Literal["resolved", "unresolved"]
 
-SUPPORTED_OPERATIONS = frozenset({"claim_read", "evidence_resolution", "publish"})
+# CPKS-SPEC-SEC-VOC@0.1 is the sole semantic rule home for these closed sets.
+POLICY_ACTIONS_VOCABULARY_REF = "CPKS-SPEC-SEC-VOC@0.1#cpks.vocab.policy.action"
+POLICY_DATA_OPERATIONS_VOCABULARY_REF = (
+    "CPKS-SPEC-SEC-VOC@0.1#cpks.vocab.policy.data_operation"
+)
+SUPPORTED_ACTIONS = frozenset(get_args(PolicyAction))
+SUPPORTED_DATA_OPERATIONS = frozenset(get_args(PolicyDataOperation))
+PUBLICATION_DATA_OPERATIONS: tuple[PolicyDataOperation, ...] = (
+    "read_content",
+    "transform",
+    "create",
+)
+LEGACY_SUPPORTED_OPERATIONS = frozenset({"claim_read", "evidence_resolution"})
+CONTRACT_OPERATION_CODES = frozenset(
+    {"capture_snapshot", "revise_registration", "detect_source_drift"}
+)
 PROFILE_VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+(?:\.[0-9]+)?$")
 
 
@@ -48,7 +97,7 @@ class PolicyEvaluationInput:
     policy_evaluation_ref: str
     actor_or_consumer_ref: str
     purpose: str
-    requested_operation: str
+    requested_operation: str | None
     subject_refs: tuple[PolicySubject, ...]
     policy_config_ref: str
     processing_zone: str
@@ -82,8 +131,10 @@ class PolicyEvaluationInput:
     agent_authority_context: str | None = None
 
     @property
-    def effective_requested_action(self) -> str:
-        return self.requested_action or self.requested_operation
+    def effective_requested_action(self) -> str | None:
+        """Return only the canonical action; legacy operations never become one."""
+
+        return self.requested_action
 
     def context_payload(self) -> dict[str, Any]:
         return asdict(self)
@@ -139,11 +190,13 @@ class PolicyRule:
     policy_rule_ref: str
     actor_or_consumer_ref: str
     purpose: str
-    requested_operation: PolicyOperation
+    requested_operation: PolicyOperation | None
     subject_ref: PolicySubject
     required_policy_anchor_ids: tuple[str, ...]
     effect: PolicyEffect
     reason: str
+    requested_action: PolicyAction | None = None
+    requested_data_operations: tuple[PolicyDataOperation, ...] = ()
     conditions: tuple[PolicyCondition, ...] = ()
     authorized_scope: str | None = None
 
@@ -191,9 +244,18 @@ class PolicyDecision:
     context_fingerprint: str = ""
     synthetic_test_fixture: bool = False
     publication_record_created: bool = False
+    requested_operation: str | None = None
+    authorized_legacy_operations: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
+
+    def authorizes_legacy_operation(self, operation: str) -> bool:
+        """Compatibility check that cannot grant a canonical global action."""
+
+        return operation in self.authorized_legacy_operations or (
+            self.requested_action is None and operation in self.authorized_actions
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,7 +279,8 @@ class PolicyDecisionValidator:
             or decision.actor_or_consumer_ref != evaluation.actor_or_consumer_ref
             or decision.purpose != evaluation.purpose
             or decision.processing_zone != evaluation.processing_zone
-            or decision.requested_action != evaluation.effective_requested_action
+            or decision.requested_action != evaluation.requested_action
+            or decision.requested_operation != evaluation.requested_operation
             or decision.requested_data_operations
             != evaluation.requested_data_operations
             or decision.review_record_refs != evaluation.review_record_refs
@@ -232,7 +295,18 @@ class PolicyDecisionValidator:
             return self._stale()
         if decision.result in {"permit", "conditions"}:
             if (
-                decision.authorized_actions != (evaluation.effective_requested_action,)
+                decision.authorized_actions
+                != (
+                    (evaluation.requested_action,)
+                    if evaluation.requested_action
+                    else ()
+                )
+                or decision.authorized_legacy_operations
+                != (
+                    ()
+                    if evaluation.requested_action
+                    else (evaluation.requested_operation,)
+                )
                 or decision.authorized_subject_refs != evaluation.subject_refs
                 or decision.authorized_scope != evaluation.requested_effect_scope
             ):
@@ -320,17 +394,33 @@ class PolicyEvaluator:
             return "policy_actor_or_consumer_missing"
         if not evaluation.purpose:
             return "policy_purpose_missing"
-        if evaluation.requested_operation not in SUPPORTED_OPERATIONS:
-            return "requested_operation_unsupported"
-        if evaluation.requested_action and (
-            evaluation.requested_action != evaluation.requested_operation
-        ):
-            return "requested_action_operation_mismatch"
+        if evaluation.requested_action is None:
+            if evaluation.requested_operation not in LEGACY_SUPPORTED_OPERATIONS:
+                return "requested_operation_unsupported"
+            if evaluation.requested_data_operations:
+                return "legacy_operation_data_operation_context_invalid"
+        else:
+            if evaluation.requested_action not in SUPPORTED_ACTIONS:
+                if evaluation.requested_action in CONTRACT_OPERATION_CODES:
+                    return "contract_operation_used_as_policy_action"
+                return "policy_action_unknown"
+            if (
+                evaluation.requested_operation is not None
+                and evaluation.requested_operation != evaluation.requested_action
+            ):
+                return "legacy_operation_action_context_ambiguous"
+            if not evaluation.requested_data_operations:
+                return "policy_data_operations_missing"
+            if any(
+                operation not in SUPPORTED_DATA_OPERATIONS
+                for operation in evaluation.requested_data_operations
+            ):
+                return "policy_data_operation_unknown"
         if not evaluation.subject_refs:
             return "policy_subject_missing"
         if not evaluation.processing_zone:
             return "processing_zone_unknown"
-        if evaluation.requested_operation == "publish":
+        if evaluation.requested_action == "publish":
             publish_failure = self._publication_input_failure(evaluation)
             if publish_failure:
                 return publish_failure
@@ -353,13 +443,41 @@ class PolicyEvaluator:
             evaluation.context_valid_at > configuration.valid_until
         ):
             return "policy_configuration_expired"
+        configuration_failure = self._configuration_failure(configuration)
+        if configuration_failure is not None:
+            return configuration_failure
+        return None
+
+    @staticmethod
+    def _configuration_failure(configuration: PolicyConfiguration) -> str | None:
+        for rule in configuration.rules:
+            if rule.requested_action is None:
+                if rule.requested_operation not in LEGACY_SUPPORTED_OPERATIONS:
+                    return "policy_configuration_operation_unsupported"
+                if rule.requested_data_operations:
+                    return "policy_configuration_legacy_data_operations_invalid"
+                continue
+            if rule.requested_action not in SUPPORTED_ACTIONS:
+                return "policy_configuration_action_unknown"
+            if (
+                rule.requested_operation is not None
+                and rule.requested_operation != rule.requested_action
+            ):
+                return "policy_configuration_legacy_action_context_ambiguous"
+            if not rule.requested_data_operations:
+                return "policy_configuration_data_operations_missing"
+            if any(
+                operation not in SUPPORTED_DATA_OPERATIONS
+                for operation in rule.requested_data_operations
+            ):
+                return "policy_configuration_data_operation_unknown"
         return None
 
     @staticmethod
     def _publication_input_failure(
         evaluation: PolicyEvaluationInput,
     ) -> str | None:
-        if evaluation.requested_data_operations != ("publish",):
+        if evaluation.requested_data_operations != PUBLICATION_DATA_OPERATIONS:
             return "publish_data_operation_context_invalid"
         required_scalars = (
             ("requested_effect_scope_missing", evaluation.requested_effect_scope),
@@ -481,14 +599,25 @@ class PolicyEvaluator:
 
     @staticmethod
     def _applies(rule: PolicyRule, evaluation: PolicyEvaluationInput) -> bool:
-        return (
+        shared_context_matches = (
             rule.actor_or_consumer_ref == evaluation.actor_or_consumer_ref
             and rule.purpose == evaluation.purpose
-            and rule.requested_operation == evaluation.requested_operation
             and rule.subject_ref in evaluation.subject_refs
             and set(rule.required_policy_anchor_ids).issubset(
                 evaluation.policy_anchor_ids
             )
+        )
+        if not shared_context_matches:
+            return False
+        if evaluation.requested_action is not None:
+            return (
+                rule.requested_action == evaluation.requested_action
+                and rule.requested_data_operations
+                == evaluation.requested_data_operations
+            )
+        return (
+            rule.requested_action is None
+            and rule.requested_operation == evaluation.requested_operation
         )
 
     def _decision(
@@ -504,7 +633,7 @@ class PolicyEvaluator:
         if conditionally_authorized and scopes == {None}:
             authorized_scope = (
                 evaluation.requested_effect_scope
-                if evaluation.requested_operation == "publish"
+                if evaluation.requested_action == "publish"
                 else configuration.concrete_ref
                 if configuration is not None
                 else None
@@ -529,8 +658,8 @@ class PolicyEvaluator:
             policy_evaluation_ref=evaluation.policy_evaluation_ref,
             result=result,
             authorized_actions=(
-                (evaluation.effective_requested_action,)
-                if conditionally_authorized
+                (evaluation.requested_action,)
+                if conditionally_authorized and evaluation.requested_action
                 else ()
             ),
             authorized_subject_refs=(
@@ -550,7 +679,7 @@ class PolicyEvaluator:
             policy_configuration_ref=(
                 configuration.concrete_ref if configuration is not None else None
             ),
-            requested_action=evaluation.effective_requested_action,
+            requested_action=evaluation.requested_action,
             requested_data_operations=evaluation.requested_data_operations,
             conditions=conditions,
             review_record_refs=evaluation.review_record_refs,
@@ -562,5 +691,13 @@ class PolicyEvaluator:
             context_fingerprint=evaluation.context_fingerprint,
             synthetic_test_fixture=(
                 configuration.synthetic_test_fixture if configuration else False
+            ),
+            requested_operation=evaluation.requested_operation,
+            authorized_legacy_operations=(
+                (evaluation.requested_operation,)
+                if conditionally_authorized
+                and evaluation.requested_action is None
+                and evaluation.requested_operation is not None
+                else ()
             ),
         )
