@@ -18,6 +18,7 @@ dependencies = [
 cp-template = "cp_knowledge_tools.template_generator.cli:main"
 cp-wiki-mcp = "cp_knowledge_tools.mcp.cp_wiki.server:main"
 cp-tools-mcp = "cp_knowledge_tools.mcp.cp_tools.server:main"
+cpks = "cp_knowledge_tools.cli.cpks:main"
 
 [project.optional-dependencies]
 dev = [
@@ -38,6 +39,9 @@ namespaces = true
 
 [tool.black]
 line-length = 88
+
+[tool.pytest.ini_options]
+norecursedirs = [".git", ".venv", "artifacts"]
 
 [tool.ruff]
 line-length = 88

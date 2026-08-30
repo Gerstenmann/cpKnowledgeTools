@@ -345,6 +345,32 @@ def resolve_active_artifact(
     return _resolve_from_index(_build_index(vault), requested_id)
 
 
+def inspect_artifact_line(vault: Vault, stable_id: str) -> tuple[dict[str, Any], ...]:
+    """Return non-authoritative lifecycle diagnostics from the canonical index.
+
+    This intentionally reuses the same index and identity resolution as the active
+    resolver.  It is used only to distinguish a missing line from an existing but
+    inactive line after active resolution has already failed.
+    """
+
+    requested_id = _validate_requested_id(stable_id)
+    index = _build_index(vault)
+    return tuple(
+        {
+            "stable_id": record.stable_id,
+            "document_type": record.document_type,
+            "version": record.document.frontmatter.get("version"),
+            "status": record.document.frontmatter.get("status"),
+            "relative_path": record.document.relative_path,
+            "resolved_via": resolved_via,
+        }
+        for record, resolved_via in sorted(
+            _candidate_records(index, requested_id),
+            key=lambda item: item[0].document.relative_path,
+        )
+    )
+
+
 def read_active_artifact(
     vault: Vault,
     stable_id: str,

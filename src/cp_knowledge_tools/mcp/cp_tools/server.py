@@ -11,6 +11,7 @@ from mcp.types import ToolAnnotations
 
 from .config import MCPConfig
 from .git import GitReader
+from .operations import resolve_standard_operation as resolve_operation_capability
 from .repository import Repository
 from .search import search_text
 
@@ -241,6 +242,16 @@ def git_log(
             limit=limit,
         )
     ]
+
+
+@mcp.tool(annotations=read_only_annotations("Resolve standard operation"))
+def resolve_standard_operation(
+    operation_id: str,
+    operation_version: str = "0.1",
+) -> dict[str, Any]:
+    """Resolve capability, version, surfaces and supported scope without execution."""
+
+    return resolve_operation_capability(operation_id, operation_version)
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
