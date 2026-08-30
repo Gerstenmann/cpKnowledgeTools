@@ -25,6 +25,8 @@ STABLE_RELATION_FIELDS = (
     "depends_on",
     "aligned_with",
     "related_decisions",
+    "parent_process",
+    "invokes_processes",
 )
 VERSIONED_EVIDENCE_FIELDS = ("implements_decisions", "validated_against", "supersedes")
 MIXED_RELATION_FIELDS = ("references",)

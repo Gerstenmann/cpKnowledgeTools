@@ -41,3 +41,39 @@ canonical_path: Systems/MEM.md""",
         ("CPKS-SPEC-MEM", "depends_on", None),
         ("CPKS-SPEC-MEM", "validated_against", "0.2"),
     }
+
+
+
+def test_process_relationships_are_reverse_dependencies(tmp_path: Path) -> None:
+    write_md(
+        tmp_path,
+        "Processes/Development/DEV-P01 Parent.md",
+        """document_type: process
+process_id: DEV-P01
+title: Parent
+version: "0.1"
+status: active
+evidence_class: active_constraint
+process_domain: development
+canonical_path: Processes/Development/DEV-P01 Parent.md""",
+    )
+    write_md(
+        tmp_path,
+        "Processes/Development/DEV-P02 Child.md",
+        """document_type: process
+process_id: DEV-P02
+title: Child
+version: "0.1"
+status: active
+evidence_class: active_constraint
+process_domain: development
+parent_process: DEV-P01
+invokes_processes: [DEV-P01]
+canonical_path: Processes/Development/DEV-P02 Child.md""",
+    )
+    state = build_governance_state(tmp_path, scan_roots=["Processes"])
+    edges = state.consumers_of("DEV-P01")
+    assert {(edge.consumer_id, edge.relation) for edge in edges} == {
+        ("DEV-P02", "parent_process"),
+        ("DEV-P02", "invokes_processes"),
+    }
