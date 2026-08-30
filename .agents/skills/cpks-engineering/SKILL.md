@@ -1,6 +1,6 @@
 ---
 name: cpks-engineering
-description: Operationalize DEV-P05 for material software engineering in cpKnowledgeTools, including new capabilities, bugfixes, refactorings, integrations, validators, source/processing and operations/runtime tooling, libraries/dependencies, and agent skills with code impact. A thin engineering harness that creates no authority, cannot write cp-wiki, and does not authorize push, merge, release, deployment, or external system writes.
+description: Operationalize DEV-P05 for material software engineering in cpKnowledgeTools, including new capabilities, bugfixes, refactorings, integrations, validators, source/processing and operations/runtime tooling, libraries/dependencies, and agent skills with code impact. A thin engineering harness that creates no authority and may perform authorized local cp-wiki maintenance/project-control writes; it does not authorize push, merge, release, deployment, or external system writes.
 ---
 
 # CPKS Engineering
@@ -14,7 +14,7 @@ merely to execute the loop.
 
 ```text
 GOVERN → UNDERSTAND → INSPECT → RESEARCH when justified → EVALUATE → DECIDE
-→ DESIGN → IMPLEMENT → VERIFY → REVIEW → RECORD ↺
+→ DESIGN → IMPLEMENT → VERIFY → REVIEW → RECORD / MAINTAIN / PROJECT CONTROL ↺
 ```
 
 ## GOVERN
@@ -60,8 +60,10 @@ Apply the current `DEV-P05` / OPS execution envelope to the actual task; narrowe
 instructions prevail. Local repository writes and local commits are distinct
 from push, merge, release, deployment, package publication, PR approval, and
 external system writes. These effects are outside this local harness and need
-separate authority. Never write cp-wiki or use an owner-direct path to grant
-yourself authority. Keep secrets out of code, fixtures, logs, and reports.
+separate authority. Write cp-wiki only when the live rule homes and the
+concrete resolved authority permit the target mutation; never use technical
+write capability or an owner-direct path to grant yourself authority. Keep
+secrets out of code, fixtures, logs, and reports.
 
 ## UNDERSTAND
 
@@ -200,15 +202,16 @@ Route findings back without an Owner gate merely for re-entry:
 | Wrong approach | DESIGN, revisiting DECIDE / EVALUATE when necessary |
 | Implementation defect | IMPLEMENT, then VERIFY again |
 
-## RECORD → local commit → completion
+## RECORD / MAINTAIN / PROJECT CONTROL → completion
 
 Keep only durable, relevant evidence in its proper home: significant design
 choices, reuse/dependency/copied-code provenance when relevant, actual verification,
 remaining findings, and the local commit reference. Do not create a document for
 every iteration. If useful, place a non-canonical handover under
 `artifacts/handovers/<task-id>/`; apply active OPS classification, retention, and
-promotion rules. Generated handovers are not automatically Git artifacts or
-governance. No cp-wiki mutation.
+promotion rules. Generated handovers are not automatically Git artifacts or governance.
+cp-wiki mutation is permitted only under resolved Vault-write authority and
+the applicable MAINTAIN / PROJECT CONTROL envelope.
 
 When the live DEV-P05 / OPS envelope and actual task allow `local_commit`, complete
 it without another Owner microgate. Recheck root, shared integration line, branch,
@@ -250,3 +253,19 @@ findings or revisable designs; unrelated existing validator/lint/test findings;
 missing optional failure records; non-material open supply-chain assurance points;
 a rejected research candidate; or BUILD as the best overall research strategy.
 Keep such evidence visible without inventing a Human gate or hiding a hard block.
+
+## RECORD / MAINTAIN / PROJECT CONTROL
+
+### RECORD
+Persist engineering evidence and local results. Local commits require resolved engineering authority; push/merge/release/deployment remain separate.
+
+### MAINTAIN
+Use the live Vault as writable canonical workspace only when the active governance and concrete authority make the target state derivable. Resolve rules/target/scope, verify fingerprints, preserve recovery evidence, apply the smallest mutation, reread and validate. Stop for genuinely new normative decisions, authority expansion, unresolved policy/security/privacy/legal choices or scope expansion.
+
+### PROJECT CONTROL
+When the Project Home grants standing `ai_autonomy_level: bounded_execute`, consume its tolerances as execution boundary. Keep Work Items flowing, update project-control records, execute linked DEV-P05 work and perform authorized local Vault maintenance until a Human-Gate trigger occurs.
+
+```text
+local full-vault read/write capability != authority
+standing bounded_execute + tolerances + no human-gate trigger = autonomous bounded project flow
+```

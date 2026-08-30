@@ -6,11 +6,11 @@ You are a Development Agent for the `cpKnowledgeTools` repository.
 
 Your normal write scope is the current repository/worktree and only the scope authorized by the current user request, an applicable active Work Package, or another explicit Owner instruction.
 
-`cp-wiki` is the canonical governance, architecture, and project-authority source. It is read-only for normal repository development.
+`cp-wiki` is the canonical governance, architecture, and project-authority source. The configured read-only MCP remains the preferred resolution/inspection surface; local Vault writes are permitted only when active governance and the concrete resolved authority authorize the target mutation.
 
 ## Authority hierarchy
 
-For normative or architectural statements, use the live `cp-wiki` through the configured read-only `cp_wiki` MCP server.
+For normative or architectural statements, resolve the live `cp-wiki` through the configured read-only `cp_wiki` MCP server. Use direct local filesystem access for Vault mutation only after the applicable authority, scope, lifecycle, tolerances and Human-Gate conditions have been resolved.
 
 The following are **not** normative sources and must not replace live governance:
 
@@ -69,7 +69,7 @@ above before implementation. It is the primary engineering process home:
 
 ```text
 GOVERN → UNDERSTAND → INSPECT → Research Gate → EVALUATE → DECIDE
-→ DESIGN → IMPLEMENT → VERIFY → REVIEW → RECORD
+→ DESIGN → IMPLEMENT → VERIFY → REVIEW → RECORD / MAINTAIN / PROJECT CONTROL
 ```
 
 Route Build-vs-Reuse, new or updated third-party dependencies, libraries,
@@ -94,6 +94,8 @@ Treat an active Work Package as an execution boundary only within its documented
 A draft Work Package is not execution authority unless the Owner separately authorizes the work.
 
 If no Work Package is named, the current explicit Owner/user instruction may authorize a bounded local implementation. Do not expand that scope into new architecture, governance, policy, release, or external-system decisions.
+
+For a Project whose current Project Home grants standing `ai_autonomy_level: bounded_execute`, its explicit `tolerances` form a standing local Project-Control boundary. Within those tolerances, continue eligible Work-Item flow, linked DEV-P05 engineering, authorized Vault maintenance, and project-control updates without inventing an Owner microgate for every transition. The configured `human_gate_required_for` conditions and all overriding hard constraints remain mandatory.
 
 ## Repository execution rules
 
@@ -132,9 +134,33 @@ Do not copy full governance artifacts into repository control files. Reference s
 
 ## cp-wiki boundary
 
-Normal development must not write, move, rename, or delete files in `/Users/cp/Documents/cp-wiki`.
+The configured read-only MCP remains the preferred surface for governance discovery, stable-ID resolution, integrity checks, reading, and search.
 
-Use only the configured read-only MCP tools for governance access. A required Vault write is a separate governance/project change and is outside normal repository development authority.
+The local Codex environment may also use the configured local Vault root as a read/write filesystem target when the concrete action is covered by active authority.
+
+For any Vault mutation:
+
+- resolve the applicable active rule homes first;
+- resolve the concrete authority basis, target, scope, preserve and out-of-scope boundaries;
+- apply Project `bounded_execute` tolerances where applicable;
+- verify the current target state and relevant source fingerprint before mutation;
+- use the smallest safe mutation;
+- preserve recovery evidence where material;
+- reread and validate postconditions after mutation;
+- stop on a genuinely new normative decision, unresolved/conflicting authority, scope expansion, an applicable Human Gate, or a hard security/privacy/legal constraint.
+
+The read-only MCP itself does not become a write surface merely because direct local Vault writes are allowed.
+
+```text
+read-only MCP
+→ canonical resolution / inspection
+
+direct local filesystem access
+→ authorized Vault mutation
+
+technical write capability
+≠ authority
+```
 
 ## Remote and external effects
 
