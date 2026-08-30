@@ -61,6 +61,30 @@ Apply the active `CPKS-SPEC-OPS` to the classification, placement, retention, an
 
 After reading `CPKT-SPEC-ARCH`, resolve any stable IDs in its active `depends_on`, `related_decisions`, or other relationships that are materially relevant to the files you will change. Do not preload unrelated governance.
 
+## Engineering process routing
+
+Use `CPKS-FWK-AIW` for primary rule-home resolution. For material software
+engineering, resolve and read `DEV-P05` through the active-artifact workflow
+above before implementation. It is the primary engineering process home:
+
+```text
+GOVERN → UNDERSTAND → INSPECT → Research Gate → EVALUATE → DECIDE
+→ DESIGN → IMPLEMENT → VERIFY → REVIEW → RECORD
+```
+
+Route Build-vs-Reuse, new or updated third-party dependencies, libraries,
+frameworks, SDKs, plugins or skills, new parsing or infrastructure capabilities,
+and fork, vendor or copied-code paths through that Research Gate. When it is
+`required`, resolve and read `DEV-P06` and `CPKS-POL-SW-SUPPLY`.
+
+Before integrating new or updated third-party software, also resolve and read
+`CPKS-POL-SW-SUPPLY`; research or evaluation alone does not authorize
+installation, copying or integration.
+
+For testing and continuous improvement, resolve and read `CPKS-SPEC-TST` and
+`DEV-P04` when its triggers apply. Details remain in the live rule homes;
+this section is non-normative routing only.
+
 ## Work Packages and Owner instructions
 
 If the task names a Work Package, resolve it by stable ID with the same active-artifact workflow and read it before implementation.
@@ -89,6 +113,12 @@ Prefer:
 - tests that prove the contract being changed;
 - existing package boundaries unless active architecture requires a change;
 - synthetic, non-sensitive test fixtures.
+
+Before creating a new one-shot exec or helper script for a deterministic
+routine operation, resolve the Standard Operation Registry. If a tested
+standard operation supports the concrete scope, use it. Reimplementation is
+allowed only for actually unsupported scope, and the deviation reason must be
+stated.
 
 Do not put secrets in Git, fixtures, reports, `AGENTS.md`, `.codex/`, or `cp-wiki`.
 
