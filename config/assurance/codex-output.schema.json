@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Local CPKT engineering handover; not authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "scope", "repository_state", "applicable_rules", "checks", "findings", "blockers", "warnings", "evidence_refs", "changed_paths", "commit_state", "next_action"],
+  "properties": {
+    "status": {"type": "string", "enum": ["passed", "failed", "incomplete"]},
+    "scope": {"type": "array", "items": {"type": "string"}},
+    "repository_state": {"type": "object", "additionalProperties": false, "required": ["root", "branch", "head", "fingerprint"], "properties": {"root": {"type": "string"}, "branch": {"type": "string"}, "head": {"type": "string"}, "fingerprint": {"type": "string"}}},
+    "applicable_rules": {"type": "array", "items": {"type": "string"}},
+    "checks": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["name", "status", "evidence_kind", "evidence_ref"], "properties": {"name": {"type": "string"}, "status": {"type": "string", "enum": ["passed", "failed", "incomplete", "not_applicable"]}, "evidence_kind": {"type": "string", "enum": ["self_check", "independent_agent_challenge", "human_review_required", "external_tool_finding"]}, "evidence_ref": {"type": "string"}}}},
+    "findings": {"type": "array", "items": {"type": "string"}},
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "changed_paths": {"type": "array", "items": {"type": "string"}},
+    "commit_state": {"type": "string"},
+    "next_action": {"type": "string"}
+  }
+}

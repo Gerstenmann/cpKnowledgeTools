@@ -1,0 +1,5 @@
+# Also pass --sandbox read-only -c web_search='"live"' to override project defaults.
+sandbox_mode = "read-only"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+web_search = "live"

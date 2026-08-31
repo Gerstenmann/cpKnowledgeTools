@@ -1,0 +1,6 @@
+# Native named-profile template for $CODEX_HOME/cpks-audit.config.toml.
+# Project configuration has higher precedence: also pass --sandbox read-only.
+sandbox_mode = "read-only"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+web_search = "disabled"

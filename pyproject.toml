@@ -24,6 +24,9 @@ cpks = "cp_knowledge_tools.cli.cpks:main"
 dev = [
     "pytest>=9,<10",
     "ruff>=0.16",
+    "coverage==7.16.0",
+    "mypy==2.3.1",
+    "hypothesis==6.167.1",
 ]
 
 [tool.setuptools]
@@ -41,7 +44,7 @@ namespaces = true
 line-length = 88
 
 [tool.pytest.ini_options]
-norecursedirs = [".git", ".venv", "artifacts"]
+norecursedirs = [".git", ".venv", ".hypothesis", "artifacts"]
 
 [tool.ruff]
 line-length = 88

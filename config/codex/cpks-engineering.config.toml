@@ -5,8 +5,4 @@ web_search = "disabled"
 
 [sandbox_workspace_write]
 network_access = false
-# Owner-requested local Vault capability; every mutation still needs authority.
 writable_roots = ["/Users/cp/Documents/cp-wiki"]
-
-[agents]
-max_concurrent_threads_per_session = 3

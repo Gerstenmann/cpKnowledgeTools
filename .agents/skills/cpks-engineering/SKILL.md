@@ -1,9 +1,15 @@
 ---
 name: cpks-engineering
-description: Operationalize DEV-P05 for material software engineering in cpKnowledgeTools, including new capabilities, bugfixes, refactorings, integrations, validators, source/processing and operations/runtime tooling, libraries/dependencies, and agent skills with code impact. A thin engineering harness that creates no authority and may perform authorized local cp-wiki maintenance/project-control writes; it does not authorize push, merge, release, deployment, or external system writes.
+description: Compatibility entry for earlier cpks-engineering references. Delegate authorized cpKnowledgeTools engineering to cpks-engineering-loop, including its shared assurance and independent challenge workflow. No additional authority or remote effects.
 ---
 
 # CPKS Engineering
+
+Compatibility routing: when this name is selected, read and execute
+[cpks-engineering-loop](../cpks-engineering-loop/SKILL.md) as the normal entry
+point, including its verification and independent challenge steps. The older
+detail below is supporting guidance, not a second execution path. Resolve all
+rule semantics live; this file does not freeze them.
 
 Use this thin orchestration skill for an authorized repository engineering task.
 `DEV-P05` remains the normative process rule home; this file is executable agent

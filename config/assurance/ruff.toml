@@ -1,0 +1,5 @@
+extend = "../../pyproject.toml"
+
+# Incremental admission: apply explicitly to assurance source/tests only.
+[lint]
+extend-select = ["B", "RUF", "SIM", "S102", "S103", "S105", "S106", "S107", "S307", "S602"]

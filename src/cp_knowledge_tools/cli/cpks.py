@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from cp_knowledge_tools.assurance.cli import add_parsers as add_assurance_parsers
+from cp_knowledge_tools.assurance.cli import dispatch as dispatch_assurance
+from cp_knowledge_tools.mcp.cp_wiki.errors import VaultError
 from cp_knowledge_tools.operations.application import OperationApplication
 from cp_knowledge_tools.operations.contracts import OperationRequest
 from cp_knowledge_tools.operations.registry import build_standard_registry
@@ -53,6 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"cpks {VERSION}")
     root = parser.add_subparsers(dest="group", required=True)
+    add_assurance_parsers(root)
 
     operation = root.add_parser("operation", help="Resolve standard operations.")
     operation_sub = operation.add_subparsers(dest="command", required=True)
@@ -304,9 +309,7 @@ def _dispatch(args: argparse.Namespace) -> dict[str, Any]:
                     str(args.prepared_file) if args.prepared_file else None
                 ),
                 "completion_evidence_file": (
-                    str(args.completion_evidence)
-                    if args.completion_evidence
-                    else None
+                    str(args.completion_evidence) if args.completion_evidence else None
                 ),
                 "archive_path": args.archive_path,
                 "vault_root": str(args.vault_root),
@@ -346,10 +349,23 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     try:
         args = parser.parse_args(argv)
+        if args.group in {"assurance", "drift"}:
+            return dispatch_assurance(args)
         payload = _dispatch(args)
     except SystemExit as exc:
-        return int(exc.code)
-    except (KeyError, OSError, ValueError) as exc:
+        if exc.code is None:
+            return 0
+        if isinstance(exc.code, int):
+            return exc.code
+        print(exc.code, file=sys.stderr)
+        return 1
+    except (
+        KeyError,
+        OSError,
+        ValueError,
+        VaultError,
+        subprocess.TimeoutExpired,
+    ) as exc:
         print(
             json.dumps({"disposition": "blocked", "error": str(exc)}), file=sys.stderr
         )
