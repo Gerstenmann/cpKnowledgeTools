@@ -6,7 +6,7 @@ from collections.abc import Iterable, Sequence
 from typing import Any
 
 from cp_knowledge_tools.platform.hashing import stable_token
-from cp_knowledge_tools.sources.models import EvidenceAddress, SourceRecord
+from cp_knowledge_tools.sources.models import EvidenceAddress, NormalizedRecord
 
 from .hardening import (
     CompatibilityChecks,
@@ -126,7 +126,7 @@ class SourceBackedSemanticInterpreter:
 
     def interpret(
         self,
-        records: Iterable[SourceRecord],
+        records: Iterable[NormalizedRecord],
         evidence_addresses: Iterable[EvidenceAddress],
         *,
         as_of: str,
@@ -139,6 +139,11 @@ class SourceBackedSemanticInterpreter:
             )
 
         record_by_ref = {record.record_ref: record for record in record_list}
+        if len(record_by_ref) != len(record_list):
+            raise ValueError(
+                "Document interpretation requires one normalized record "
+                "per Source Record"
+            )
         if any(address.record_ref not in record_by_ref for address in addresses):
             raise ValueError(
                 "Evidence Address is not bound to the supplied Source Records"
@@ -284,7 +289,7 @@ class SourceBackedSemanticInterpreter:
 
     def _currentness(
         self,
-        records: Sequence[SourceRecord],
+        records: Sequence[NormalizedRecord],
         addresses: Sequence[EvidenceAddress],
         *,
         as_of: str,
@@ -372,7 +377,7 @@ class SourceBackedSemanticInterpreter:
 
     def _technical_perspectives(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         addresses: Sequence[EvidenceAddress],
     ) -> dict[str, Any]:
         grouped: dict[str, list[EvidenceAddress]] = defaultdict(list)
@@ -385,7 +390,7 @@ class SourceBackedSemanticInterpreter:
         compatibility_qualification_found = False
         for record_ref, items in grouped.items():
             record = records[record_ref]
-            document_text = _normalized(record.normalized_text)
+            document_text = _normalized(record.content)
             title = _normalized(record.title)
             evidence = max(
                 items,
@@ -464,8 +469,8 @@ class SourceBackedSemanticInterpreter:
 
     def _actor_context(
         self,
-        focal_record: SourceRecord,
-        records: dict[str, SourceRecord],
+        focal_record: NormalizedRecord,
+        records: dict[str, NormalizedRecord],
         addresses: Sequence[EvidenceAddress],
     ) -> dict[str, Any]:
         creator_label = focal_record.creator_label
@@ -697,7 +702,7 @@ class SourceBackedSemanticInterpreter:
 
 
 def source_accounting(
-    records: Iterable[SourceRecord],
+    records: Iterable[NormalizedRecord],
     evidence_addresses: Iterable[EvidenceAddress],
 ) -> dict[str, Any]:
     """Build a deterministic, non-authoritative accounting projection."""

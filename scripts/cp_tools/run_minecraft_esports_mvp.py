@@ -70,6 +70,7 @@ from cp_knowledge_tools.semantics import (  # noqa: E402
 from cp_knowledge_tools.sources.adapters.local_html import (  # noqa: E402
     LocalHtmlAdapter,
 )
+from cp_knowledge_tools.sources.storage import SourceStore  # noqa: E402
 
 SOURCE_BINDINGS = {
     "proposal": REPO_ROOT / "tests/fixtures/source_to_knowledge/minecraft_esports/html/01-program-proposal.html",
@@ -1381,60 +1382,28 @@ def main() -> int:
     output_root.mkdir(parents=True, exist_ok=True)
 
     adapter = LocalHtmlAdapter()
-    records_list = adapter.capture_many(SOURCE_BINDINGS.items())
-    records = {record.source_key: record for record in records_list}
+    captures = adapter.capture_many(SOURCE_BINDINGS.items())
+    captures_by_key = {captured.record.source_key: captured for captured in captures}
+    representations = [adapter.normalize(captured) for captured in captures]
+    records = {record.source_key: record for rep in representations for record in rep.records}
 
     evidence = {}
     for rule_key, (source_key, fragments) in EVIDENCE_RULES.items():
-        address = adapter.evidence_address(records[source_key], fragments)
-        if not adapter.resolve(records[source_key], address):
+        address = adapter.evidence_address(captures_by_key[source_key], fragments)
+        if not adapter.resolve(captures_by_key[source_key], address):
             raise RuntimeError(f"Evidence Address is not reproducible: {rule_key}")
         evidence[rule_key] = address
 
-    # Materialize immutable test snapshots and normalized Source Records. These
-    # are run artifacts, not canonical knowledge and not Repository fixtures.
+    # Shared immutable Source store; only normalized records cross to semantics.
     source_artifact_root = output_root / "source"
-    snapshot_dir = source_artifact_root / "snapshots"
-    record_dir = source_artifact_root / "records"
-    snapshot_dir.mkdir(parents=True, exist_ok=True)
-    record_dir.mkdir(parents=True, exist_ok=True)
-    for record in records.values():
-        (snapshot_dir / f"{record.snapshot_ref}.html").write_text(
-            record.raw_html, encoding="utf-8"
-        )
-        (record_dir / f"{record.record_ref}.json").write_text(
-            json.dumps(
-                {
-                    "source_key": record.source_key,
-                    "source_ref": record.source_ref,
-                    "snapshot_ref": record.snapshot_ref,
-                    "record_ref": record.record_ref,
-                    "source_time": record.source_time,
-                    "captured_at": record.captured_at,
-                    "media_type": record.media_type,
-                    "title": record.title,
-                    "raw_sha256": record.raw_sha256,
-                    "normalized_text": record.normalized_text,
-                },
-                indent=2,
-                ensure_ascii=False,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+    source_store = SourceStore(source_artifact_root)
+    for captured, representation in zip(captures, representations, strict=True):
+        source_store.put_capture(captured)
+        source_store.put_representation(representation)
     (source_artifact_root / "evidence_addresses.json").write_text(
         json.dumps(
             [
-                {
-                    "rule_key": key,
-                    "evidence_address_ref": address.evidence_address_ref,
-                    "source_ref": address.source_ref,
-                    "snapshot_ref": address.snapshot_ref,
-                    "record_ref": address.record_ref,
-                    "selector": address.selector,
-                    "content_hash": address.content_hash,
-                    "restricted": address.restricted,
-                }
+                {"rule_key": key, **address.to_dict()}
                 for key, address in evidence.items()
             ],
             indent=2,
@@ -1757,10 +1726,10 @@ def main() -> int:
                     "actual_evidence_address_ref": address.evidence_address_ref,
                     "snapshot_ref": address.snapshot_ref,
                     "record_ref": address.record_ref,
-                    "selector": address.selector,
+                    "selector": address.selector.to_dict(),
                     "content_hash": address.content_hash,
                     "restricted": address.restricted,
-                    "resolvable": adapter.resolve(records[address.source_key], address),
+                    "resolvable": adapter.resolve(captures_by_key[address.source_key], address),
                 }
                 for key, address in evidence.items()
             ],

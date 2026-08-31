@@ -82,7 +82,9 @@ def test_all_twelve_sources_enter_the_productive_processing_path(
 
     assert source_backed_result["source_processing_path"] == [
         "local_html_adapter",
-        "immutable_source_record",
+        "immutable_source_snapshot",
+        "raw_content_reference",
+        "normalized_records_and_segments",
         "passage_evidence_addressing",
         "source_backed_semantic_interpretation",
         "knowledge_frontier_derivation",

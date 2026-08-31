@@ -30,7 +30,7 @@ from cp_knowledge_tools.sources.human_interaction import (
     HumanSourceContext,
     capture_human_interaction_source,
 )
-from cp_knowledge_tools.sources.models import EvidenceAddress, SourceRecord
+from cp_knowledge_tools.sources.models import EvidenceAddress, NormalizedRecord
 
 
 def _mapping(value: Any, field: str) -> Mapping[str, Any]:
@@ -183,7 +183,7 @@ def run_post_r5_hardening(
 
 def run_source_backed_post_r5(
     *,
-    source_records: Iterable[SourceRecord],
+    source_records: Iterable[NormalizedRecord],
     evidence_addresses: Iterable[EvidenceAddress],
     as_of: str,
     requested_owner_ref: str,
@@ -201,7 +201,7 @@ def run_source_backed_post_r5(
     knowledge = interpretation["knowledge"]
     frontier = interpretation["knowledge_frontier"]
     owner_appears_in_dossier = any(
-        requested_owner_label.casefold() in record.normalized_text.casefold()
+        requested_owner_label.casefold() in record.content.casefold()
         for record in records
     )
     if not owner_appears_in_dossier:
@@ -277,7 +277,9 @@ def run_source_backed_post_r5(
         ),
         "source_processing_path": [
             "local_html_adapter",
-            "immutable_source_record",
+            "immutable_source_snapshot",
+            "raw_content_reference",
+            "normalized_records_and_segments",
             "passage_evidence_addressing",
             "source_backed_semantic_interpretation",
             "knowledge_frontier_derivation",

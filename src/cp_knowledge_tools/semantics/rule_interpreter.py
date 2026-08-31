@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from cp_knowledge_tools.sources.models import EvidenceAddress, SourceRecord
+from cp_knowledge_tools.sources.models import EvidenceAddress, NormalizedRecord
 
 from .candidates import (
     Applicability,
@@ -45,7 +45,7 @@ class RuleBasedSemanticInterpreter:
 
     def interpret(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rules: dict[str, Any],
     ) -> SemanticInterpretationResult:
@@ -104,7 +104,7 @@ class RuleBasedSemanticInterpreter:
 
     def _entity_candidate(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
     ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
@@ -140,7 +140,7 @@ class RuleBasedSemanticInterpreter:
 
     def _claim_candidate(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
         link_rules: list[dict[str, Any]],
@@ -225,7 +225,7 @@ class RuleBasedSemanticInterpreter:
 
     def _event_candidate(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
         link_rules: list[dict[str, Any]],
@@ -303,7 +303,7 @@ class RuleBasedSemanticInterpreter:
 
     def _participation_candidate(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
         link_rules: list[dict[str, Any]],
@@ -342,7 +342,7 @@ class RuleBasedSemanticInterpreter:
 
     def _relationship_candidate(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
         link_rules: list[dict[str, Any]],
@@ -411,7 +411,7 @@ class RuleBasedSemanticInterpreter:
 
     def _pattern_claim_candidate(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
     ) -> tuple[SemanticCandidatePayload | None, KnownGap | None]:
@@ -464,7 +464,7 @@ class RuleBasedSemanticInterpreter:
 
     def _addresses(
         self,
-        records: dict[str, SourceRecord],
+        records: dict[str, NormalizedRecord],
         evidence: dict[str, EvidenceAddress],
         rule: dict[str, Any],
     ) -> tuple[EvidenceAddress, ...]:

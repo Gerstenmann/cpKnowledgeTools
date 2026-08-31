@@ -129,6 +129,7 @@ from cp_knowledge_tools.semantics import (  # noqa: E402
 from cp_knowledge_tools.sources.adapters.local_html import (  # noqa: E402
     LocalHtmlAdapter,
 )
+from cp_knowledge_tools.sources.storage import SourceStore  # noqa: E402
 
 BASELINE_SOURCE_ROOT = (
     REPO_ROOT / "tests/fixtures/source_to_knowledge/minecraft_esports/html"
@@ -2936,69 +2937,31 @@ def _run_source_backed_extension(
     human_review_output: Path | None = None,
 ) -> dict[str, Any]:
     adapter = LocalHtmlAdapter()
-    records = tuple(adapter.capture_many(POST_R5_SOURCE_BINDINGS))
+    captures = tuple(adapter.capture_many(POST_R5_SOURCE_BINDINGS))
+    representations = tuple(adapter.normalize(captured) for captured in captures)
+    records = tuple(record for rep in representations for record in rep.records)
     evidence_addresses = tuple(
         address
-        for record in records
-        for address in adapter.passage_evidence_addresses(record)
+        for captured in captures
+        for address in adapter.passage_evidence_addresses(captured)
     )
-    records_by_ref = {record.record_ref: record for record in records}
+    captures_by_ref = {captured.record.record_ref: captured for captured in captures}
     for address in evidence_addresses:
-        if not adapter.resolve(records_by_ref[address.record_ref], address):
+        if not adapter.resolve(captures_by_ref[address.record_ref], address):
             raise RuntimeError(
                 "Source-backed passage Evidence is not reproducible: "
                 f"{address.evidence_address_ref}"
             )
 
     artifact_root = output_root / "source-backed"
-    snapshot_root = artifact_root / "source/snapshots"
-    record_root = artifact_root / "source/records"
-    snapshot_root.mkdir(parents=True, exist_ok=True)
-    record_root.mkdir(parents=True, exist_ok=True)
-    for record in records:
-        (snapshot_root / f"{record.snapshot_ref}.html").write_text(
-            record.raw_html,
-            encoding="utf-8",
-        )
-        (record_root / f"{record.record_ref}.json").write_text(
-            json.dumps(
-                {
-                    "source_key": record.source_key,
-                    "source_ref": record.source_ref,
-                    "snapshot_ref": record.snapshot_ref,
-                    "record_ref": record.record_ref,
-                    "source_time": record.source_time,
-                    "captured_at": record.captured_at,
-                    "media_type": record.media_type,
-                    "title": record.title,
-                    "creator_label": record.creator_label,
-                    "recipient_labels": list(record.recipient_labels),
-                    "raw_sha256": record.raw_sha256,
-                    "normalized_text": record.normalized_text,
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+    source_store = SourceStore(artifact_root / "source")
+    for captured, representation in zip(captures, representations, strict=True):
+        source_store.put_capture(captured)
+        source_store.put_representation(representation)
     evidence_path = artifact_root / "source/evidence_addresses.json"
     evidence_path.write_text(
         json.dumps(
-            [
-                {
-                    "evidence_address_ref": address.evidence_address_ref,
-                    "source_key": address.source_key,
-                    "source_ref": address.source_ref,
-                    "snapshot_ref": address.snapshot_ref,
-                    "record_ref": address.record_ref,
-                    "selector": address.selector,
-                    "content_hash": address.content_hash,
-                    "text": address.text,
-                    "restricted": address.restricted,
-                }
-                for address in evidence_addresses
-            ],
+            [address.to_dict() for address in evidence_addresses],
             ensure_ascii=False,
             indent=2,
         )

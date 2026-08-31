@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from cp_knowledge_tools.platform.hashing import sha256_text
@@ -9,23 +7,35 @@ from cp_knowledge_tools.semantics import (
     RuleBasedSemanticInterpreter,
     SemanticStateMaterializer,
 )
-from cp_knowledge_tools.sources.models import EvidenceAddress, SourceRecord
+from cp_knowledge_tools.sources.models import (
+    EvidenceAddress,
+    Fingerprint,
+    NormalizedRecord,
+    Selector,
+    SourceMapping,
+)
 
 
-def _record() -> SourceRecord:
-    return SourceRecord(
-        source_key="status",
-        path=Path("synthetic-status.txt"),
-        source_ref="SRC-STATUS",
-        snapshot_ref="SNAP-STATUS",
-        record_ref="REC-STATUS",
+def _record() -> NormalizedRecord:
+    return NormalizedRecord(
+        normalized_record_ref="NREC-STATUS",
+        content="Synthetic status",
+        inputs=(
+            SourceMapping(
+                source_key="status",
+                source_ref="SRC-STATUS",
+                snapshot_ref="SNAP-STATUS",
+                record_ref="REC-STATUS",
+                raw_content_ref="RAW-STATUS",
+                raw_fingerprint=Fingerprint(
+                    "raw_content", sha256_text("Synthetic status")
+                ),
+                selector=Selector("text_fragments", "1", ("Synthetic status",)),
+                stage_ref="NORM-STATUS",
+            ),
+        ),
         source_time="2024-09-06T15:30:00+02:00",
-        media_type="text/plain",
         title="Synthetic status",
-        raw_sha256="synthetic",
-        raw_html="",
-        normalized_text="Synthetic status",
-        captured_at="2026-08-10T00:00:00+02:00",
     )
 
 
@@ -37,12 +47,7 @@ def _evidence(key: str, text: str) -> EvidenceAddress:
         source_ref="SRC-STATUS",
         snapshot_ref="SNAP-STATUS",
         record_ref="REC-STATUS",
-        selector={
-            "selector_type": "text_quote",
-            "selector_version": "test",
-            "selector_value": "context-only",
-            "target_type": "source_passage",
-        },
+        selector=Selector("text_fragments", "1", ("context-only",)),
         content_hash=content_hash,
         text=text,
         restricted=False,
@@ -190,9 +195,7 @@ def test_reported_statement_is_not_automatically_confirmed() -> None:
     assert candidate.epistemic_context is not None
     assert candidate.epistemic_context.status == "reported"
     assert candidate.epistemic_context.status != "confirmed"
-    assert [link.role for link in candidate.evidence_links] == [
-        "reports_statement"
-    ]
+    assert [link.role for link in candidate.evidence_links] == ["reports_statement"]
 
 
 def test_competing_values_survive_as_separate_candidates() -> None:
@@ -336,8 +339,7 @@ def _organizational_rules() -> dict:
             {
                 "rule_key": "communication",
                 "event_type_ref": (
-                    "cpks.vocab.profile.organizational-context."
-                    "event_type.communication"
+                    "cpks.vocab.profile.organizational-context.event_type.communication"
                 ),
                 "label": "Example communication",
                 "time_precision": "minute",
@@ -416,11 +418,7 @@ def test_relationship_candidate_and_generic_evidence_subjects_materialize() -> N
 
     semantic = SemanticStateMaterializer().materialize(
         interpretation,
-        {
-            "claim_states": {
-                "person_affiliation": {"current": True, "preserved": True}
-            }
-        },
+        {"claim_states": {"person_affiliation": {"current": True, "preserved": True}}},
     )
     claim = semantic["claims"][0]
     assert claim["relationship"] is True
@@ -458,8 +456,7 @@ def test_missing_relationship_extraction_emits_gap_without_stale_candidate() -> 
     )
 
     assert not any(
-        item.proposed_relationship is not None
-        for item in result.candidate_payloads
+        item.proposed_relationship is not None for item in result.candidate_payloads
     )
     assert any(
         gap.interpretation_rule_ref == "person_affiliation"
