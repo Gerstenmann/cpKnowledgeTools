@@ -32,6 +32,24 @@ IDENTITY = (
     "'gil_disabled':bool(sysconfig.get_config_var('Py_GIL_DISABLED'))}))"
 )
 
+BUILD_EVIDENCE = (
+    "import json,tomllib; from email.parser import Parser; "
+    "from importlib.metadata import distribution; from pathlib import Path; "
+    "data=tomllib.loads(Path('pyproject.toml').read_text()); "
+    "build=data['build-system']; project=data['project']; "
+    "wheel=distribution(project['name']).read_text('WHEEL') or ''; "
+    "generator=Parser().parsestr(wheel).get('Generator'); "
+    "print(json.dumps({"
+    "'declared_build_backend':build['build-backend'],"
+    "'declared_build_requires':build['requires'],"
+    "'installed_distribution':project['name'],"
+    "'installed_wheel_generator':generator,"
+    "'generator_observation':"
+    "'installed_distribution_metadata' if generator else 'unknown_not_recorded',"
+    "'wheel_build_dependency_version':None,"
+    "'wheel_build_dependency_observation':'unknown_not_directly_observed'}))"
+)
+
 
 def commands(uv: str, base: str, python: str, *, existing: bool) -> list[list[str]]:
     common = [
@@ -56,6 +74,7 @@ def commands(uv: str, base: str, python: str, *, existing: bool) -> list[list[st
         common + ["lock", "--check", "--offline"] + selection,
         common + sync + selection,
         common + ["pip", "check", "--python", python, "--offline"],
+        [python, "-I", "-B", "-c", BUILD_EVIDENCE],
         [python, "-I", "-B", "-c", IDENTITY],
         [python, "-B", "scripts/ci/check_workflow.py"],
         [python, "-B", FIXTURE_RUNNER, "--output-root", BASELINE],
@@ -145,6 +164,50 @@ def verify_identity(identity: dict, pin: str, host: str) -> None:
         raise ValueError("Python patch/implementation/architecture/ABI mismatch")
 
 
+def verify_build_evidence(evidence: dict) -> None:
+    expected = {
+        "declared_build_backend",
+        "declared_build_requires",
+        "installed_distribution",
+        "installed_wheel_generator",
+        "generator_observation",
+        "wheel_build_dependency_version",
+        "wheel_build_dependency_observation",
+    }
+    strings = [
+        evidence.get("declared_build_backend"),
+        evidence.get("installed_distribution"),
+    ]
+    requirements = evidence.get("declared_build_requires")
+    generator = evidence.get("installed_wheel_generator")
+    generator_observation = evidence.get("generator_observation")
+    if (
+        set(evidence) != expected
+        or not all(
+            isinstance(value, str) and 0 < len(value) <= 200 for value in strings
+        )
+        or not isinstance(requirements, list)
+        or not requirements
+        or len(requirements) > 20
+        or not all(
+            isinstance(value, str) and 0 < len(value) <= 200
+            for value in requirements
+        )
+        or generator is not None
+        and (not isinstance(generator, str) or not 0 < len(generator) <= 200)
+        or generator_observation
+        != (
+            "installed_distribution_metadata"
+            if generator is not None
+            else "unknown_not_recorded"
+        )
+        or evidence.get("wheel_build_dependency_version") is not None
+        or evidence.get("wheel_build_dependency_observation")
+        != "unknown_not_directly_observed"
+    ):
+        raise ValueError("Build evidence is incomplete or unbounded")
+
+
 def run(args: argparse.Namespace, root: Path) -> None:
     pin = (root / ".python-version").read_text().strip()
     if not re.fullmatch(r"3\.14\.\d+", pin):
@@ -211,7 +274,14 @@ def run(args: argparse.Namespace, root: Path) -> None:
         print(version, flush=True)
         for argv in commands(uv, sys.executable, python, existing=args.existing):
             print("+ " + shlex.join(argv), flush=True)
-            if (
+            if argv[1:5] == ["-I", "-B", "-c", BUILD_EVIDENCE]:
+                output = subprocess.check_output(
+                    argv, cwd=root, env=env, text=True, timeout=30
+                )
+                evidence = json.loads(output)
+                verify_build_evidence(evidence)
+                print(json.dumps({"build_evidence": evidence}), flush=True)
+            elif (
                 len(argv) > 2
                 and argv[2] == FIXTURE_RUNNER
                 and (root / BASELINE).exists()

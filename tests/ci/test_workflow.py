@@ -7,6 +7,7 @@ import json
 import os
 import runpy
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -220,10 +221,17 @@ def test_same_repository_commands_for_ci_and_local_consistency():
         "no:cacheprovider",
     ] in fresh
     assert not any("--fix" in c or "--upgrade" in c for c in fresh)
-    assert "--ignore-missing-imports" not in fresh[8]
-    assert fresh[8][-1] == "tests/frontier"
-    assert fresh[9][-2:] == ["src/cp_knowledge_tools/assurance", "scripts/ci"]
-    assert fresh[5] == [
+    assert fresh[3] == [
+        "project-python",
+        "-I",
+        "-B",
+        "-c",
+        RUNNER["BUILD_EVIDENCE"],
+    ]
+    assert "--ignore-missing-imports" not in fresh[9]
+    assert fresh[9][-1] == "tests/frontier"
+    assert fresh[10][-2:] == ["src/cp_knowledge_tools/assurance", "scripts/ci"]
+    assert fresh[6] == [
         "project-python",
         "-B",
         "scripts/cp_tools/run_minecraft_esports_mvp.py",
@@ -231,6 +239,40 @@ def test_same_repository_commands_for_ci_and_local_consistency():
         "artifacts/tests/source_to_knowledge/experience-v1-2-final-validated",
     ]
     assert fresh[-1] == ["git", "diff", "--check"]
+
+
+def test_build_evidence_uses_installed_standard_metadata():
+    output = subprocess.check_output(
+        [sys.executable, "-I", "-B", "-c", RUNNER["BUILD_EVIDENCE"]],
+        cwd=ROOT,
+        text=True,
+    )
+    evidence = json.loads(output)
+    RUNNER["verify_build_evidence"](evidence)
+    assert evidence["declared_build_backend"] == "setuptools.build_meta"
+    assert evidence["declared_build_requires"] == ["setuptools>=68", "wheel"]
+    assert evidence["installed_distribution"] == "cp-knowledge-tools"
+    assert evidence["installed_wheel_generator"].startswith("setuptools (")
+    assert evidence["generator_observation"] == "installed_distribution_metadata"
+    assert evidence["wheel_build_dependency_version"] is None
+    assert (
+        evidence["wheel_build_dependency_observation"]
+        == "unknown_not_directly_observed"
+    )
+
+
+def test_build_evidence_rejects_invented_wheel_dependency_version():
+    evidence = {
+        "declared_build_backend": "setuptools.build_meta",
+        "declared_build_requires": ["setuptools>=68", "wheel"],
+        "installed_distribution": "cp-knowledge-tools",
+        "installed_wheel_generator": "setuptools (84.0.0)",
+        "generator_observation": "installed_distribution_metadata",
+        "wheel_build_dependency_version": "0.48.0",
+        "wheel_build_dependency_observation": "installed_distribution_metadata",
+    }
+    with pytest.raises(ValueError, match="evidence"):
+        RUNNER["verify_build_evidence"](evidence)
 
 
 @pytest.mark.parametrize(
