@@ -1,0 +1,15 @@
+{
+  "scenario_id": "wi017-html-pdf-equivalent-content",
+  "scenario_version": "1",
+  "scenario_role": "adapter_conformance",
+  "open": {
+    "claim_values": {"capacity": 16, "training_date": "2024-09-26"},
+    "candidate_count": 2,
+    "gap_count": 0
+  },
+  "restricted": {
+    "claim_values": {"budget": 3200},
+    "candidate_count": 1,
+    "gap_count": 0
+  }
+}

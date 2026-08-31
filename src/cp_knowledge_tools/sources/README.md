@@ -172,3 +172,12 @@ candidate decision, recorded in `config/sources/pdf-dependency-admission.md`;
 its tests live in `tests/sources/test_local_pdf.py`. OCR, STT, Vision, Office/mail adapters,
 federation, LLM generation and new Knowledge/publication semantics are outside this
 checkpoint.
+
+WI-017 adds a separate `adapter_conformance` checkpoint in
+`tests/sources/test_cross_format_conformance.py`, using open and source-policy
+protected synthetic HTML/PDF pairs. It compares full normalized content and
+grounded candidate payloads through the existing deterministic interpreter while
+preserving separate identities, selectors, lineage and rebuilds. Its projections
+are test-only; the existing HTML regression baseline and product contracts are
+unchanged. See the [fixture description](../../../tests/fixtures/source_to_knowledge/cross_format_html_pdf/README.md)
+for the exact comparison limits and synthetic policy context.

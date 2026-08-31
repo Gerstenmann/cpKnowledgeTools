@@ -1,0 +1,16 @@
+{
+  "scenario_id": "wi017-html-pdf-equivalent-content",
+  "scenario_version": "1",
+  "scenario_role": "adapter_conformance",
+  "synthetic": true,
+  "cases": {
+    "open": {
+      "inputs": {"html": "open.html", "pdf": "open.pdf"},
+      "policy_anchor": "PA-WI017-OPEN"
+    },
+    "restricted": {
+      "inputs": {"html": "restricted.html", "pdf": "restricted.pdf"},
+      "policy_anchor": "PA-WI017-RESTRICTED"
+    }
+  }
+}
