@@ -14,6 +14,11 @@ import yaml
 from cp_knowledge_tools.assurance.cli import add_parsers as add_assurance_parsers
 from cp_knowledge_tools.assurance.cli import dispatch as dispatch_assurance
 from cp_knowledge_tools.mcp.cp_wiki.errors import VaultError
+from cp_knowledge_tools.mcp.cp_wiki.projects import (
+    ProjectAuthorityError,
+    resolve_project_authority,
+)
+from cp_knowledge_tools.mcp.cp_wiki.vault import Vault
 from cp_knowledge_tools.operations.application import OperationApplication
 from cp_knowledge_tools.operations.contracts import OperationRequest
 from cp_knowledge_tools.operations.registry import build_standard_registry
@@ -58,6 +63,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"cpks {VERSION}")
     root = parser.add_subparsers(dest="group", required=True)
     add_assurance_parsers(root)
+
+    project = root.add_parser("project", help="Read-only Project authority evidence.")
+    project_sub = project.add_subparsers(dest="command", required=True)
+    project_authority = project_sub.add_parser("authority")
+    authority_sub = project_authority.add_subparsers(
+        dest="authority_command", required=True
+    )
+    authority_resolve = authority_sub.add_parser(
+        "resolve",
+        help="Resolve a Project Home source; does not grant execution authority.",
+    )
+    authority_resolve.add_argument("reference")
+    authority_resolve.add_argument("--kind", default="project_home")
+    authority_resolve.add_argument("--vault-root", required=True, type=Path)
 
     operation = root.add_parser("operation", help="Resolve standard operations.")
     operation_sub = operation.add_subparsers(dest="command", required=True)
@@ -229,6 +248,12 @@ def _request(
 
 
 def _dispatch(args: argparse.Namespace) -> dict[str, Any]:
+    if args.group == "project":
+        return to_primitive(
+            resolve_project_authority(
+                Vault(args.vault_root), args.reference, kind=args.kind
+            )
+        )
     if args.group == "operation":
         registered = build_standard_registry().resolve(
             args.operation_id, args.operation_version
@@ -359,6 +384,12 @@ def main(argv: list[str] | None = None) -> int:
             return exc.code
         print(exc.code, file=sys.stderr)
         return 1
+    except ProjectAuthorityError as exc:
+        print(
+            json.dumps({"disposition": "blocked", "code": exc.code, "error": str(exc)}),
+            file=sys.stderr,
+        )
+        return 2
     except (
         KeyError,
         OSError,

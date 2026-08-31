@@ -19,6 +19,7 @@ from .governance import (
 from .governance import (
     resolve_governance_bundle as resolve_governance_bundle_from_vault,
 )
+from .projects import resolve_project_authority as resolve_project_authority_from_vault
 from .search import (
     resolve_wikilink,
     search_frontmatter,
@@ -159,6 +160,16 @@ def read_vault_note(
     document = vault.read_document(relative_path)
 
     return asdict(document)
+
+
+@mcp.tool(annotations=read_only_annotations("Resolve Project Home authority source"))
+def resolve_project_authority(
+    reference: str, kind: str = "project_home"
+) -> dict[str, Any]:
+    """Read a current Project Home and its controls; never grant authority."""
+    return asdict(
+        resolve_project_authority_from_vault(get_vault(), reference, kind=kind)
+    )
 
 
 @mcp.tool(annotations=read_only_annotations("Read vault JSON"))
