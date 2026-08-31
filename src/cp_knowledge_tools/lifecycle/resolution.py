@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Literal
 
+from cp_knowledge_tools.semantics.candidates import SemanticCandidatePayload
 from cp_knowledge_tools.semantics.change_candidates import ChangeCandidateRevision
+from cp_knowledge_tools.semantics.generic_producer import InvocationProvenance
+from cp_knowledge_tools.semantics.hardening import EvidenceAssessment
 
 from ._common import (
     canonical_json,
@@ -71,10 +74,10 @@ class LifecycleCandidateRevision:
     lifecycle_candidate_ref: str
     lifecycle_candidate_revision_ref: str
     candidate_revision: str
-    source_change_candidate_ref: str
-    source_change_candidate_revision_ref: str
+    source_change_candidate_ref: str | None
+    source_change_candidate_revision_ref: str | None
     semantic_unit_kind: str
-    semantic_change_operation: str
+    semantic_change_operation: str | None
     target_refs: tuple[str, ...]
     target_version_refs: tuple[str, ...]
     source_finding_refs: tuple[str, ...]
@@ -90,9 +93,22 @@ class LifecycleCandidateRevision:
     contract_version: str = "0.1"
     non_canonical: bool = True
     identity_scope: str = "implementation_local_non_canonical"
+    source_semantic_payload_ref: str | None = None
+    _source_semantic_payload: SemanticCandidatePayload | None = None
+    invocation_provenance: InvocationProvenance | None = None
+    evidence_assessments: tuple[EvidenceAssessment, ...] = ()
+
+    @property
+    def semantic_payload(self) -> dict[str, Any] | None:
+        """Detached projection; Source proposals never become fake changes."""
+        return (
+            self._source_semantic_payload.to_dict()
+            if self._source_semantic_payload is not None
+            else None
+        )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        result: dict[str, Any] = {
             "contract_name": "Candidate Registration and Revision Contract",
             "contract_version": self.contract_version,
             "message_kind": "record",
@@ -120,9 +136,125 @@ class LifecycleCandidateRevision:
             "non_canonical": self.non_canonical,
             "identity_scope": self.identity_scope,
         }
+        if self.source_semantic_payload_ref is not None:
+            result["source_semantic_payload_ref"] = self.source_semantic_payload_ref
+            result["semantic_payload"] = self.semantic_payload
+            from dataclasses import asdict
+
+            result["invocation_provenance"] = (
+                asdict(self.invocation_provenance)
+                if self.invocation_provenance is not None
+                else None
+            )
+            result["evidence_assessments"] = [
+                a.to_dict() for a in self.evidence_assessments
+            ]
+        return result
 
 
 class LifecycleCandidateRegistrar:
+    def register_semantic(
+        self,
+        source: SemanticCandidatePayload,
+        *,
+        invocation_provenance: InvocationProvenance,
+        evidence_assessments: tuple[EvidenceAssessment, ...] = (),
+        registered_by: str,
+        registered_at: str,
+        rule_basis_refs: tuple[str, ...],
+        idempotency_key: str,
+    ) -> LifecycleCandidateRevision:
+        """Register a host-validated Source proposal, with no identity decision.
+
+        This trusted intake consumes the common payload after transport and
+        grounding checks. It does not decode model JSON, authorize processing,
+        evaluate Same-Object, review or publish. Rich payload context is retained.
+        """
+        from datetime import datetime
+
+        provenance = source.producer_provenance
+        if (
+            provenance is None
+            or not provenance.evidence
+            or not provenance.invocation_ref
+            or not source.semantic_task_ref
+            or not source.evidence_links
+            or not registered_by
+            or not idempotency_key
+            or not rule_basis_refs
+            or datetime.fromisoformat(registered_at).tzinfo is None
+        ):
+            raise ValueError("semantic registration context/provenance missing")
+        kinds = ("entity", "claim", "event", "participation", "relationship")
+        if (
+            source.candidate_payload_kind not in kinds
+            or sum(getattr(source, f"proposed_{kind}") is not None for kind in kinds)
+            != 1
+            or getattr(source, f"proposed_{source.candidate_payload_kind}") is None
+        ):
+            raise ValueError("semantic registration requires one proposal kind")
+        payload_hash = content_hash(source.to_dict())
+        if (
+            payload_hash not in invocation_provenance.candidate_payload_fingerprints
+            or invocation_provenance.invocation_ref != provenance.invocation_ref
+            or invocation_provenance.task.concrete_ref != source.semantic_task_ref
+            or not invocation_provenance.policy_decision_ref
+        ):
+            raise ValueError("semantic registration invocation binding mismatch")
+        for assessment in evidence_assessments:
+            if (
+                source.proposed_claim is None
+                or assessment.claim_ref != source.proposed_claim.claim_key
+                or not set(assessment.evidence_link_ids)
+                <= {link.evidence_link_key for link in source.evidence_links}
+                or content_hash(assessment.to_dict())
+                not in invocation_provenance.evidence_assessment_fingerprints
+            ):
+                raise ValueError("semantic registration assessment binding mismatch")
+        source_ref = f"SCP-{payload_hash[:24]}"
+        request_fingerprint = content_hash(
+            {
+                "source_semantic_payload": source.to_dict(),
+                "registered_by": registered_by,
+                "rule_basis_refs": ordered_unique(rule_basis_refs),
+                "invocation_provenance": asdict(invocation_provenance),
+                "evidence_assessments": [a.to_dict() for a in evidence_assessments],
+            }
+        )
+        candidate_ref = local_ref("LCC", {"source_semantic_payload_ref": source_ref})
+        revision_hash = content_hash(
+            {
+                "candidate_ref": candidate_ref,
+                "request_fingerprint": request_fingerprint,
+                "idempotency_key": idempotency_key,
+            }
+        )
+        return LifecycleCandidateRevision(
+            candidate_ref,
+            f"LCR-{revision_hash[:24]}",
+            f"local-{revision_hash[:12]}",
+            None,
+            None,
+            source.candidate_payload_kind,
+            None,
+            (),
+            (),
+            (),
+            ordered_unique(e.source_ref for e in provenance.evidence),
+            ordered_unique(e.evidence_address_ref for e in provenance.evidence),
+            (provenance.producer_ref, provenance.invocation_ref, registered_by),
+            registered_by,
+            registered_at,
+            ordered_unique(rule_basis_refs),
+            idempotency_key,
+            request_fingerprint,
+            revision_hash,
+            source_semantic_payload_ref=source_ref,
+            _source_semantic_payload=source,
+            invocation_provenance=invocation_provenance,
+            evidence_assessments=evidence_assessments,
+        )
+
     def register(
         self,
         source: ChangeCandidateRevision,
@@ -542,6 +674,7 @@ class ResolutionEngine:
             in {
                 candidate.lifecycle_candidate_ref,
                 candidate.source_change_candidate_ref,
+                candidate.source_semantic_payload_ref,
             }
             for ref in plan.target_canonical_refs
         ):
@@ -560,14 +693,20 @@ class ResolutionEngine:
         rule_basis_refs = ordered_unique(
             (*assessment.rule_basis_refs, *authority.decision_basis_refs)
         )
+        source_candidate_refs = tuple(
+            ref
+            for ref in (
+                candidate.source_change_candidate_ref,
+                candidate.source_semantic_payload_ref,
+                candidate.lifecycle_candidate_ref,
+            )
+            if ref is not None
+        )
         decision_payload = {
             "candidate_ref": candidate.lifecycle_candidate_ref,
             "candidate_revision_ref": candidate.lifecycle_candidate_revision_ref,
             "resolution_type": plan.resolution_type,
-            "source_candidate_refs": [
-                candidate.source_change_candidate_ref,
-                candidate.lifecycle_candidate_ref,
-            ],
+            "source_candidate_refs": list(source_candidate_refs),
             "target_canonical_refs": list(ordered_unique(plan.target_canonical_refs)),
             "planned_target_versions": list(
                 ordered_unique(plan.planned_target_versions)
@@ -589,12 +728,7 @@ class ResolutionEngine:
             candidate_ref=candidate.lifecycle_candidate_ref,
             candidate_revision_ref=candidate.lifecycle_candidate_revision_ref,
             resolution_type=plan.resolution_type,
-            source_candidate_refs=ordered_unique(
-                (
-                    candidate.source_change_candidate_ref,
-                    candidate.lifecycle_candidate_ref,
-                )
-            ),
+            source_candidate_refs=ordered_unique(source_candidate_refs),
             target_canonical_refs=ordered_unique(plan.target_canonical_refs),
             planned_target_versions=ordered_unique(plan.planned_target_versions),
             identity_rationale=plan.identity_rationale,

@@ -336,6 +336,16 @@ def test_n13_capture_normalization_and_inventory_cannot_read_golden(
 def test_baseline_distinguishes_missing_producer_from_success_and_stale_audit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # Exercise the reporting branches against their historical inspection input.
+    # Product evolution must not require rewriting authored WI-018 audit evidence
+    # or reasserting its missing-capability finding about current product bytes.
+    inspected = harness.product_inventory()
+    audited_hash = json.loads(harness.AUDIT.read_text())["product_tree_sha256"]
+    monkeypatch.setattr(
+        harness,
+        "product_inventory",
+        lambda: {**inspected, "product_tree_sha256": audited_hash},
+    )
     report = harness.baseline()
     assert report["source_boundary_status"] == "green"
     assert report["generation_status"] == "not_executed_missing_capability"

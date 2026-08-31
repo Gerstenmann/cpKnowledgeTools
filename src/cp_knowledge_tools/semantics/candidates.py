@@ -42,7 +42,9 @@ class ProducerProvenance:
     method: str
     evidence: tuple[EvidenceProvenance, ...]
     extraction: ExtractionProvenance | None
-    semantic_mapping: SemanticMappingProvenance
+    semantic_mapping: SemanticMappingProvenance | None
+    invocation_ref: str | None = None
+    semantic_task_ref: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,9 +122,10 @@ class Applicability:
 @dataclass(frozen=True, slots=True)
 class KnownGap:
     gap_code: str
-    interpretation_rule_ref: str
+    interpretation_rule_ref: str | None
     detail: str
     evidence_address_refs: tuple[str, ...]
+    semantic_task_ref: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,7 +138,7 @@ class SemanticCandidatePayload:
     """
 
     candidate_payload_kind: str
-    interpretation_rule_ref: str
+    interpretation_rule_ref: str | None
     proposed_entity: ProposedEntity | None = None
     proposed_claim: ProposedClaim | None = None
     proposed_event: ProposedEvent | None = None
@@ -149,6 +152,8 @@ class SemanticCandidatePayload:
     known_conflicts: tuple[str, ...] = ()
     known_gaps: tuple[KnownGap, ...] = ()
     producer_provenance: ProducerProvenance | None = None
+    semantic_task_ref: str | None = None
+    unresolved_identity_questions: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
