@@ -123,7 +123,7 @@ def project_environment(
     The wrapper is not an OS sandbox and does not make a hermetic-build claim.
     """
     if (
-        mode not in {"check", "rebuild"}
+        mode not in {"check", "routine_check", "rebuild"}
         or type(timeout) is not int
         or not 1 <= timeout <= 3600
         or type(allow_network) is not bool
@@ -132,6 +132,8 @@ def project_environment(
         raise ValueError("unsupported environment mode or execution timeout")
     if offline_frozen and (mode != "rebuild" or allow_network):
         raise ValueError("--offline-frozen requires offline rebuild mode")
+    if mode == "routine_check" and allow_network:
+        raise ValueError("routine_check is network-off")
     state = repository_state(root)
     root = Path(state["root"])
     report = Report(
@@ -140,7 +142,9 @@ def project_environment(
             "mode": mode,
             "offline_frozen": offline_frozen,
             "network_allowed": allow_network,
-            "fresh_rebuild": "unobserved",
+            "fresh_rebuild": "not_applicable"
+            if mode == "routine_check"
+            else "unobserved",
         },
         state,
         changed_paths=state["changed_paths"],
@@ -185,7 +189,7 @@ def project_environment(
             raise ValueError(
                 "rebuild target must be absent; existing environments are preserved"
             )
-        if mode == "check" and not environment.is_dir():
+        if mode in {"check", "routine_check"} and not environment.is_dir():
             raise ValueError("check target must be an existing environment")
         cache_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         with tempfile.TemporaryDirectory(prefix="cpks-uv-home-") as home:
@@ -269,7 +273,7 @@ def project_environment(
                 "dev",
                 "--no-build",
             ]
-            if mode == "check":
+            if mode in {"check", "routine_check"}:
                 sync.append("--check")
             else:
                 # Recheck immediately before the only environment-creating command.
@@ -342,5 +346,14 @@ def project_environment(
                 "fresh_rebuild",
                 "incomplete",
                 reason="Fresh target creation was not observed.",
+            )
+        elif mode == "routine_check":
+            report.check(
+                "fresh_rebuild",
+                "not_applicable",
+                reason=(
+                    "Routine checks inspect an existing environment; "
+                    "no rebuild requested."
+                ),
             )
     return report

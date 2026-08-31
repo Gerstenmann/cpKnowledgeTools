@@ -19,7 +19,15 @@ def git(root: Path, *args: str) -> str:
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     env.update(GIT_OPTIONAL_LOCKS="0", GIT_TERMINAL_PROMPT="0")
     result = subprocess.run(
-        ["git", "--no-optional-locks", "-C", str(root), *args],
+        [
+            "git",
+            "--no-optional-locks",
+            "-c",
+            "core.fsmonitor=false",
+            "-C",
+            str(root),
+            *args,
+        ],
         capture_output=True,
         timeout=20,
         env=env,

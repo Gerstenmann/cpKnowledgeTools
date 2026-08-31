@@ -85,10 +85,28 @@ passes. It never accepts an arbitrary receipt as proof. Rebuild reports record
 the actual absent-to-created observation and interpreter/prefix/base/ABI identity.
 Generated reports are evidence, not an authority or a durable attestation.
 
+`--mode routine_check` explicitly checks only the existing environment's
+consistency, offline, with fresh rebuild `not_applicable`. It does not weaken the
+freshness claim of `check` or `rebuild` and never performs a mutating sync.
+
 Isolated setuptools build dependencies and host Python are outside the complete
 project artifact-hash lock. A warm-cache offline run is not a hermetic-build
 claim. The generated dependencies-only `pylock.toml` export remains ignored,
 noncanonical evidence; it is not another committed project lock.
+
+## Unattended routine
+
+`assurance unattended` composes finite offline checks with live governance and
+read-only Project Home/Ready/Doing observation. It requires explicit roots and
+the selected existing locked interpreter. Its separate report adds `changed`
+(exit 0), materiality, protected-input fingerprints and a validated prior-run
+hash chain under ignored `artifacts/assurance/scheduled/`.
+
+It never schedules itself, fixes inputs, installs packages, writes the Vault,
+processes Work Items or stages/commits. See the
+[host operation guide](../../../config/assurance/unattended.md) for the manual
+command, daily native scheduling, review delivery, budgets and honest limits of
+the native sandbox and observed nonmutation evidence.
 
 ## Admitted local scanner stack
 

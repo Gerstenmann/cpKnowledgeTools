@@ -11,6 +11,8 @@ from .project_environment import project_environment
 from .report import Report, persist
 from .repository import repository_state
 from .supply import supply_chain
+from .unattended import unattended
+from .unattended_evidence import persist as persist_unattended
 from .verify import verify
 
 
@@ -85,7 +87,9 @@ def add_parsers(root):
         help="Check uv lock consistency or observe an authorized fresh rebuild.",
     )
     _common(environment)
-    environment.add_argument("--mode", choices=("check", "rebuild"), default="check")
+    environment.add_argument(
+        "--mode", choices=("check", "routine_check", "rebuild"), default="check"
+    )
     environment.add_argument("--uv", required=True, type=Path)
     environment.add_argument("--python", required=True, type=Path)
     environment.add_argument("--environment", required=True, type=Path)
@@ -94,6 +98,20 @@ def add_parsers(root):
     environment.add_argument("--allow-network", action="store_true")
     environment.add_argument("--offline-frozen", action="store_true")
     environment.add_argument("--timeout", type=int, default=300)
+    routine = commands.add_parser(
+        "unattended",
+        help="Observe bounded routine assurance; never repair or schedule.",
+    )
+    _common(routine)
+    routine.add_argument("--vault-root", required=True, type=Path)
+    routine.add_argument("--project-path", required=True)
+    for name in ("uv", "python", "environment", "cache-dir"):
+        routine.add_argument(f"--{name}", required=True, type=Path)
+    routine.add_argument("--timeout", type=int, default=240)
+    routine.add_argument("--command-timeout", type=int, default=45)
+    routine.add_argument("--task-id")
+    routine.add_argument("--automation-id")
+    routine.add_argument("--codex-version")
     drift = root.add_parser("drift", help="Read-only current-state audit.")
     command = drift.add_subparsers(dest="command", required=True).add_parser("audit")
     _common(command)
@@ -105,6 +123,46 @@ def add_parsers(root):
 
 
 def dispatch(args: argparse.Namespace) -> int:
+    if args.group == "assurance" and args.command == "unattended":
+        result = unattended(
+            args.repo_root,
+            vault_root=args.vault_root,
+            project_path=args.project_path,
+            uv=args.uv,
+            python=args.python,
+            environment=args.environment,
+            cache_dir=args.cache_dir,
+            timeout=args.timeout,
+            command_timeout=args.command_timeout,
+            task_id=args.task_id,
+            automation_id=args.automation_id,
+            codex_version=args.codex_version,
+        )
+        payload = result.payload()
+        evidence = None
+        if not args.no_evidence:
+            evidence = persist_unattended(
+                payload, Path(payload["observation"]["repository"]["root"])
+            )
+        if args.format == "json":
+            print(
+                json.dumps(
+                    {**payload, "evidence_path": str(evidence) if evidence else None},
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            )
+        else:
+            print(f"{result.status}: {result.materiality} ({payload['comparison']})")
+            print(f"  run: {payload['run_id']}")
+            print(f"  input stability: {payload['input_stability']}")
+            if payload["material_delta"]:
+                print("  material delta: " + ", ".join(payload["material_delta"]))
+            for finding in payload["findings"]:
+                print(f"  {finding['status']}: {finding['code']}")
+            if evidence:
+                print(f"  evidence: {evidence}")
+        return result.exit_code
     if args.group == "drift":
         report = audit(
             args.repo_root,

@@ -286,6 +286,27 @@ def test_check_is_nonmutating_and_cannot_claim_rebuild_freshness(context, proces
     )
 
 
+def test_routine_check_is_nonmutating_without_freshness_requirement(context, processes):
+    target = context["environment"]
+    target.mkdir(parents=True)
+    report = run(context, mode="routine_check")
+    assert report.status == "passed"
+    assert report.scope["fresh_rebuild"] == "not_applicable"
+    assert (
+        next(c for c in report.checks if c["name"] == "fresh_rebuild")["status"]
+        == "not_applicable"
+    )
+    command = next(argv for argv, _ in processes.calls if "sync" in argv)
+    assert "--check" in command and "--offline" in command and "--locked" in command
+    assert list(target.iterdir()) == []
+
+
+def test_routine_check_cannot_enable_network(context, processes):
+    with pytest.raises(ValueError, match="network-off"):
+        run(context, mode="routine_check", allow_network=True)
+    assert processes.calls == []
+
+
 @pytest.mark.parametrize(
     "path",
     [
