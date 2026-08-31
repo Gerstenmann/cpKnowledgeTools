@@ -1,0 +1,1809 @@
+{
+  "schema_version": "cpks.scanner-admission/1",
+  "information_class": "repository_engineering_evidence",
+  "authority": "none; consumes the separately resolved Owner task and live rule homes",
+  "verified_at": "2026-08-31T09:05:21.321314+00:00",
+  "tools": [
+    {
+      "tool_id": "cyclonedx",
+      "name": "cyclonedx-bom",
+      "version": "7.3.1",
+      "upstream": "https://github.com/CycloneDX/cyclonedx-python",
+      "source_commit": "5172a90df84874171a6866f632d0882cabc84b69",
+      "artifact": {
+        "filename": "cyclonedx_bom-7.3.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/1a/8d/e464ae953209f1379e50f704fdc86b9695883e7d6f25464796981261bb1f/cyclonedx_bom-7.3.1-py3-none-any.whl",
+        "sha256": "8c5adccefd593e89c0500463649c232625cee8e38dae1a433e057dfa495eff08",
+        "form": "wheel",
+        "platform": "py3-none-any",
+        "license_files": {
+          "cyclonedx_bom-7.3.1.dist-info/licenses/LICENSE": "8d774b8e55770e19ccdbebe68a10c7505efaa6988257e87bfc58bf0c6675817b",
+          "cyclonedx_bom-7.3.1.dist-info/licenses/NOTICE": "22cfe3d5461b54aafdbcd4138f0f2d9dd16bbf70251901e22a0e5766f8c63599"
+        }
+      },
+      "platform": "darwin-arm64",
+      "executable_sha256": "b502cb4c5b46b8d4192ec6bcb600ce8922f1afc396fcf646e8765c6eba74a0bf",
+      "license": "Apache-2.0",
+      "license_source": "https://github.com/CycloneDX/cyclonedx-python/blob/v7.3.1/LICENSE",
+      "execution": {
+        "kind": "python_module",
+        "python_version": "3.14.6",
+        "site_packages_sha256": "32e54e36e159cff791a66a095ef230da5e94bdfca751980281938834f30c21bc"
+      },
+      "network_requirement": "none for admitted local input; host network boundary required",
+      "filesystem_process_privileges": "read authorized target; private temporary HOME/XDG/CWD; no credentials; no privileged writes; may spawn target Python (-S) or pip version query",
+      "native_binary": false,
+      "accepted_use_context": "local Python environment metadata to CycloneDX JSON1.6; no XML resources",
+      "disposition": "WRAP",
+      "acceptance": "accepted_with_conditions",
+      "conditions": [
+        "Exact version and byte fingerprints; separate tool environment.",
+        "No update, installation, remediation, distribution or acceptance from scans.",
+        "Explicit local inputs; minimum retained evidence; finite runtime/output/cache.",
+        "Reassess changed version, license, platform, input sensitivity or privileges."
+      ],
+      "verified_at": "2026-08-31T09:05:21.321314+00:00",
+      "assessment_ref": "config/assurance/dependency-admission.md",
+      "rule_home_refs": [
+        "DEV-P05",
+        "DEV-P06",
+        "CPKS-POL-SW-SUPPLY",
+        "CPKS-SPEC-OPS",
+        "CPKS-SPEC-SEC",
+        "CPKT-SPEC-ARCH",
+        "CPKS-DEC-042"
+      ]
+    },
+    {
+      "tool_id": "pip-audit",
+      "name": "pip_audit",
+      "version": "2.10.1",
+      "upstream": "https://github.com/pypa/pip-audit",
+      "source_commit": "8894eb8cee033531a1fbd9f2fb160892531c14e3",
+      "artifact": {
+        "filename": "pip_audit-2.10.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/a3/a7/b0c504148114047bd1bc9d97447453c6850ca176bb2f3c0038835994e8b7/pip_audit-2.10.1-py3-none-any.whl",
+        "sha256": "99ef3f600a317c1945f1e89e227ef26e1c2d618429b8bd3fa6f4f7c440c4611a",
+        "form": "wheel",
+        "platform": "py3-none-any",
+        "license_files": {
+          "pip_audit-2.10.1.dist-info/licenses/LICENSE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        }
+      },
+      "platform": "darwin-arm64",
+      "executable_sha256": "b502cb4c5b46b8d4192ec6bcb600ce8922f1afc396fcf646e8765c6eba74a0bf",
+      "license": "Apache-2.0",
+      "license_source": "https://github.com/pypa/pip-audit/blob/v2.10.1/LICENSE",
+      "execution": {
+        "kind": "python_module",
+        "python_version": "3.14.6",
+        "site_packages_sha256": "32e54e36e159cff791a66a095ef230da5e94bdfca751980281938834f30c21bc"
+      },
+      "network_requirement": "explicit PyPI advisory queries; public package names/versions only",
+      "filesystem_process_privileges": "read authorized target; private temporary HOME/XDG/CWD; no credentials; no privileged writes; may spawn target Python (-S) or pip version query",
+      "native_binary": false,
+      "accepted_use_context": "pinned public target distributions, no-deps/disable-pip; no installation/fix",
+      "disposition": "WRAP",
+      "acceptance": "accepted_with_conditions",
+      "conditions": [
+        "Exact version and byte fingerprints; separate tool environment.",
+        "No update, installation, remediation, distribution or acceptance from scans.",
+        "Explicit local inputs; minimum retained evidence; finite runtime/output/cache.",
+        "Reassess changed version, license, platform, input sensitivity or privileges."
+      ],
+      "verified_at": "2026-08-31T09:05:21.321314+00:00",
+      "assessment_ref": "config/assurance/dependency-admission.md",
+      "rule_home_refs": [
+        "DEV-P05",
+        "DEV-P06",
+        "CPKS-POL-SW-SUPPLY",
+        "CPKS-SPEC-OPS",
+        "CPKS-SPEC-SEC",
+        "CPKT-SPEC-ARCH",
+        "CPKS-DEC-042"
+      ]
+    },
+    {
+      "tool_id": "gitleaks",
+      "name": "gitleaks",
+      "version": "8.30.1",
+      "upstream": "https://github.com/gitleaks/gitleaks",
+      "source_commit": "83d9cd684c87d95d656c1458ef04895a7f1cbd8e",
+      "artifact": {
+        "filename": "gitleaks_8.30.1_darwin_arm64.tar.gz",
+        "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz",
+        "sha256": "b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5",
+        "form": "tar.gz",
+        "platform": "darwin-arm64",
+        "checksum_url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt",
+        "license_sha256": "e3884b252b3bfc045e55be43a34d1e80da070bc6f804ac95bf4660e97d62ebc6"
+      },
+      "platform": "darwin-arm64",
+      "executable_sha256": "ba52fb1bfabbcde42f032afad3d6e0b19dff8ed105229a16e7caa338bbc0e84f",
+      "license": "MIT",
+      "license_source": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/LICENSE",
+      "execution": {
+        "kind": "binary"
+      },
+      "network_requirement": "none for admitted local input; host network boundary required",
+      "filesystem_process_privileges": "read local directory/SBOM and private temp; no elevated privileges; no history, container or registry scan",
+      "native_binary": true,
+      "accepted_use_context": "directory/working-tree secret evidence with full redaction",
+      "disposition": "WRAP",
+      "acceptance": "accepted_with_conditions",
+      "conditions": [
+        "Exact version and byte fingerprints; separate tool environment.",
+        "No update, installation, remediation, distribution or acceptance from scans.",
+        "Explicit local inputs; minimum retained evidence; finite runtime/output/cache.",
+        "Reassess changed version, license, platform, input sensitivity or privileges."
+      ],
+      "verified_at": "2026-08-31T09:05:21.321314+00:00",
+      "assessment_ref": "config/assurance/dependency-admission.md",
+      "rule_home_refs": [
+        "DEV-P05",
+        "DEV-P06",
+        "CPKS-POL-SW-SUPPLY",
+        "CPKS-SPEC-OPS",
+        "CPKS-SPEC-SEC",
+        "CPKT-SPEC-ARCH",
+        "CPKS-DEC-042"
+      ]
+    },
+    {
+      "tool_id": "grant",
+      "name": "grant",
+      "version": "0.6.8",
+      "upstream": "https://github.com/anchore/grant",
+      "source_commit": "0fb3c502202139efcf4a20aa72014cf6eafab930",
+      "artifact": {
+        "filename": "grant_0.6.8_darwin_arm64.tar.gz",
+        "url": "https://github.com/anchore/grant/releases/download/v0.6.8/grant_0.6.8_darwin_arm64.tar.gz",
+        "sha256": "3d8f315f4f27d9efc8fc712ee27f10cd0df64ac794226580ea5346234f2d6806",
+        "form": "tar.gz",
+        "platform": "darwin-arm64",
+        "checksum_url": "https://github.com/anchore/grant/releases/download/v0.6.8/grant_0.6.8_checksums.txt",
+        "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "platform": "darwin-arm64",
+      "executable_sha256": "317f61edeafaff7b537abec00f448aca7d6e9faa1bd89ef6df72994ed6c70882",
+      "license": "Apache-2.0",
+      "license_source": "https://github.com/anchore/grant/blob/v0.6.8/LICENSE",
+      "execution": {
+        "kind": "binary"
+      },
+      "network_requirement": "none for admitted local input; host network boundary required",
+      "filesystem_process_privileges": "read local directory/SBOM and private temp; no elevated privileges; no history, container or registry scan",
+      "native_binary": true,
+      "accepted_use_context": "local CycloneDX1.6 SBOM license inventory, list only; no policy decision",
+      "disposition": "WRAP",
+      "acceptance": "accepted_with_conditions",
+      "conditions": [
+        "Exact version and byte fingerprints; separate tool environment.",
+        "No update, installation, remediation, distribution or acceptance from scans.",
+        "Explicit local inputs; minimum retained evidence; finite runtime/output/cache.",
+        "Reassess changed version, license, platform, input sensitivity or privileges."
+      ],
+      "verified_at": "2026-08-31T09:05:21.321314+00:00",
+      "assessment_ref": "config/assurance/dependency-admission.md",
+      "rule_home_refs": [
+        "DEV-P05",
+        "DEV-P06",
+        "CPKS-POL-SW-SUPPLY",
+        "CPKS-SPEC-OPS",
+        "CPKS-SPEC-SEC",
+        "CPKT-SPEC-ARCH",
+        "CPKS-DEC-042"
+      ]
+    }
+  ],
+  "python_packages": [
+    {
+      "name": "arrow",
+      "version": "1.4.0",
+      "filename": "arrow-1.4.0-py3-none-any.whl",
+      "sha256": "749f0769958ebdc79c173ff0b0670d59051a535fa26e8eba02953dc19eb43205",
+      "license_expression": null,
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "python-dateutil>=2.7.0",
+        "backports.zoneinfo==0.2.1;python_version<'3.9'",
+        "tzdata;python_version>='3.9'",
+        "doc8 ; extra == \"doc\"",
+        "sphinx>=7.0.0 ; extra == \"doc\"",
+        "sphinx-autobuild ; extra == \"doc\"",
+        "sphinx-autodoc-typehints ; extra == \"doc\"",
+        "sphinx_rtd_theme>=1.3.0 ; extra == \"doc\"",
+        "dateparser==1.* ; extra == \"test\"",
+        "pre-commit ; extra == \"test\"",
+        "pytest ; extra == \"test\"",
+        "pytest-cov ; extra == \"test\"",
+        "pytest-mock ; extra == \"test\"",
+        "pytz==2025.2 ; extra == \"test\"",
+        "simplejson==3.* ; extra == \"test\""
+      ],
+      "license_files": {
+        "arrow-1.4.0.dist-info/licenses/LICENSE": "b481f87296cb0abdb13fd8cbb94b14c328be880ec9e68547a61b84dacffd067a"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/arrow/1.4.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/ed/c9/d7977eaacb9df673210491da99e6a247e93df98c715fc43fd136ce1d3d33/arrow-1.4.0-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://arrow.readthedocs.io",
+        "Issues": "https://github.com/arrow-py/arrow/issues",
+        "Source": "https://github.com/arrow-py/arrow"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "filename": "attrs-26.1.0-py3-none-any.whl",
+      "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "attrs-26.1.0.dist-info/licenses/LICENSE": "882115c95dfc2af1eeb6714f8ec6d5cbcabf667caff8729f42420da63f714e9f"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/attrs/26.1.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://www.attrs.org/en/stable/changelog.html",
+        "Documentation": "https://www.attrs.org/",
+        "Funding": "https://github.com/sponsors/hynek",
+        "GitHub": "https://github.com/python-attrs/attrs",
+        "Tidelift": "https://tidelift.com/subscription/pkg/pypi-attrs?utm_source=pypi-attrs&utm_medium=pypi"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "boolean.py",
+      "version": "5.0",
+      "filename": "boolean_py-5.0-py3-none-any.whl",
+      "sha256": "ef28a70bd43115208441b53a045d1549e2f0ec6e3d08a9d142cbc41c1938e8d9",
+      "license_expression": null,
+      "license_metadata": "BSD-2-Clause",
+      "classifiers": [],
+      "requires_dist": [
+        "pytest!=7.0.0,>=6; extra == \"testing\"",
+        "pytest-xdist>=2; extra == \"testing\"",
+        "twine; extra == \"dev\"",
+        "build; extra == \"dev\"",
+        "black; extra == \"linting\"",
+        "isort; extra == \"linting\"",
+        "pycodestyle; extra == \"linting\"",
+        "Sphinx>=3.3.1; extra == \"docs\"",
+        "sphinx-rtd-theme>=0.5.0; extra == \"docs\"",
+        "doc8>=0.8.1; extra == \"docs\"",
+        "sphinxcontrib-apidoc>=0.3.0; extra == \"docs\""
+      ],
+      "license_files": {
+        "boolean_py-5.0.dist-info/licenses/LICENSE.txt": "5ea0cdf8cfc824b446cccf597ff6518c3607a659e9804bc75f1261f9c6ac4ada"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/boolean.py/5.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/e5/ca/78d423b324b8d77900030fa59c4aa9054261ef0925631cd2501dd015b7b7/boolean_py-5.0-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/bastikr/boolean.py"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "CacheControl",
+      "version": "0.14.4",
+      "filename": "cachecontrol-0.14.4-py3-none-any.whl",
+      "sha256": "b7ac014ff72ee199b5f8af1de29d60239954f223e948196fa3d84adaffc71d2b",
+      "license_expression": "Apache-2.0",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "requests>=2.16.0",
+        "msgpack>=0.5.2,<2.0.0",
+        "cachecontrol[filecache,redis] ; extra == 'dev'",
+        "cherrypy ; extra == 'dev'",
+        "cheroot>=11.1.2 ; extra == 'dev'",
+        "codespell ; extra == 'dev'",
+        "furo ; extra == 'dev'",
+        "mypy ; extra == 'dev'",
+        "pytest ; extra == 'dev'",
+        "pytest-cov ; extra == 'dev'",
+        "ruff ; extra == 'dev'",
+        "sphinx ; extra == 'dev'",
+        "sphinx-copybutton ; extra == 'dev'",
+        "types-redis ; extra == 'dev'",
+        "types-requests ; extra == 'dev'",
+        "filelock>=3.8.0 ; extra == 'filecache'",
+        "redis>=2.10.5 ; extra == 'redis'"
+      ],
+      "license_files": {
+        "cachecontrol-0.14.4.dist-info/licenses/LICENSE.txt": "86eeee87be2a43f3ff1f56496f451f69243926f025fedbb033666c304c4c161b"
+      },
+      "entry_points": {
+        "cachecontrol-0.14.4.dist-info/entry_points.txt": "[console_scripts]\ndoesitcache = cachecontrol._cmd:main\n\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/CacheControl/0.14.4/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/ef/79/c45f2d53efe6ada1110cf6f9fca095e4ff47a0454444aefdde6ac4789179/cachecontrol-0.14.4-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://pypi.org/project/CacheControl/",
+        "Issues": "https://github.com/psf/cachecontrol/issues",
+        "Source": "https://github.com/psf/cachecontrol"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22",
+      "filename": "certifi-2026.7.22-py3-none-any.whl",
+      "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+      "license_expression": null,
+      "license_metadata": "MPL-2.0",
+      "classifiers": [
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "certifi-2026.7.22.dist-info/licenses/LICENSE": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/certifi/2026.7.22/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/certifi/python-certifi",
+        "Source": "https://github.com/certifi/python-certifi"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "chardet",
+      "version": "5.2.0",
+      "filename": "chardet-5.2.0-py3-none-any.whl",
+      "sha256": "e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970",
+      "license_expression": null,
+      "license_metadata": "LGPL",
+      "classifiers": [
+        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "chardet-5.2.0.dist-info/LICENSE": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551"
+      },
+      "entry_points": {
+        "chardet-5.2.0.dist-info/entry_points.txt": "[console_scripts]\nchardetect = chardet.cli.chardetect:main\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/chardet/5.2.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/38/6f/f5fbc992a329ee4e0f288c1fe0e2ad9485ed064cac731ed2fe47dcc38cbf/chardet-5.2.0-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://chardet.readthedocs.io/",
+        "GitHub Project": "https://github.com/chardet/chardet",
+        "Homepage": "https://github.com/chardet/chardet",
+        "Issue Tracker": "https://github.com/chardet/chardet/issues"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.1",
+      "filename": "charset_normalizer-3.5.1-cp314-cp314-macosx_10_15_universal2.whl",
+      "sha256": "c428c6c31eb5f4277d7f8eccaf767fbd548ddd5ce3c8b4f4cbbfab3d96b5904c",
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "charset_normalizer-3.5.1.dist-info/licenses/LICENSE": "6d0d41bfe170ac6c7dc248c9a63e254d0fb45a60d50a8257d0af92c6e249b887"
+      },
+      "entry_points": {
+        "charset_normalizer-3.5.1.dist-info/entry_points.txt": "[console_scripts]\nnormalizer = charset_normalizer.cli:cli_detect\n"
+      },
+      "startup_files": [],
+      "native_files": [
+        "charset_normalizer/md.cpython-314-darwin.so",
+        "charset_normalizer/cd.cpython-314-darwin.so"
+      ],
+      "metadata_url": "https://pypi.org/pypi/charset-normalizer/3.5.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/e9/40/095ce62fa078483cccc1fa2b36e6bc9580b85422a20ee9f925341c50e44f/charset_normalizer-3.5.1-cp314-cp314-macosx_10_15_universal2.whl",
+      "upstream": {
+        "Changelog": "https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md",
+        "Code": "https://github.com/jawah/charset_normalizer",
+        "Documentation": "https://charset-normalizer.readthedocs.io/",
+        "Issue tracker": "https://github.com/jawah/charset_normalizer/issues"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "cyclonedx-bom",
+      "version": "7.3.1",
+      "filename": "cyclonedx_bom-7.3.1-py3-none-any.whl",
+      "sha256": "8c5adccefd593e89c0500463649c232625cee8e38dae1a433e057dfa495eff08",
+      "license_expression": null,
+      "license_metadata": "Apache-2.0",
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "chardet (>=5.1,<6.0)",
+        "cyclonedx-python-lib[validation] (>=8.0,<12)",
+        "packageurl-python (>=0.11,<2)",
+        "packaging (>=22,<27)",
+        "pip-requirements-parser (>=32.0,<33.0)",
+        "tomli (>=2.0.1,<3.0.0) ; python_version < \"3.11\""
+      ],
+      "license_files": {
+        "cyclonedx_bom-7.3.1.dist-info/licenses/LICENSE": "8d774b8e55770e19ccdbebe68a10c7505efaa6988257e87bfc58bf0c6675817b",
+        "cyclonedx_bom-7.3.1.dist-info/licenses/NOTICE": "22cfe3d5461b54aafdbcd4138f0f2d9dd16bbf70251901e22a0e5766f8c63599"
+      },
+      "entry_points": {
+        "cyclonedx_bom-7.3.1.dist-info/entry_points.txt": "[console_scripts]\ncyclonedx-py=cyclonedx_py._internal.cli:run\n\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/cyclonedx-bom/7.3.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/1a/8d/e464ae953209f1379e50f704fdc86b9695883e7d6f25464796981261bb1f/cyclonedx_bom-7.3.1-py3-none-any.whl",
+      "upstream": {
+        "Bug Tracker": "https://github.com/CycloneDX/cyclonedx-python/issues",
+        "Changelog": "https://github.com/CycloneDX/cyclonedx-python/releases",
+        "Documentation": "https://cyclonedx-bom-tool.readthedocs.io/",
+        "Funding": "https://owasp.org/donate/?reponame=www-project-cyclonedx&title=OWASP+CycloneDX",
+        "Homepage": "https://github.com/CycloneDX/cyclonedx-python/#readme",
+        "Repository": "https://github.com/CycloneDX/cyclonedx-python/"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "cyclonedx-python-lib",
+      "version": "11.12.0",
+      "filename": "cyclonedx_python_lib-11.12.0-py3-none-any.whl",
+      "sha256": "0e807521a921a5c3cb8ce1153f8a61d29eedfe76a46aac2796b7c6b573391a54",
+      "license_expression": null,
+      "license_metadata": "Apache-2.0",
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "jsonschema[format-nongpl] (>=4.25,<5.0) ; extra == \"validation\" or extra == \"json-validation\"",
+        "license-expression (>=30,<31)",
+        "lxml (>=4,<7) ; extra == \"validation\" or extra == \"xml-validation\"",
+        "packageurl-python (>=0.11,<2)",
+        "py-serializable (>=2.1.0,<3.0.0)",
+        "referencing (>=0.28.4) ; extra == \"validation\" or extra == \"json-validation\"",
+        "sortedcontainers (>=2.4.0,<3.0.0)",
+        "typing_extensions (>=4.6,<5.0) ; python_version < \"3.13\""
+      ],
+      "license_files": {
+        "cyclonedx_python_lib-11.12.0.dist-info/licenses/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "cyclonedx_python_lib-11.12.0.dist-info/licenses/NOTICE": "1c3bd67b96888a4ca25f3a94683d929b3f66d7e4cdfe6c04d24f16501a9375c3"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/cyclonedx-python-lib/11.12.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/cf/f0/b2cb999244f2f4194df63ecff6939228178fa63a33be809c412684ca8db7/cyclonedx_python_lib-11.12.0-py3-none-any.whl",
+      "upstream": {
+        "Bug Tracker": "https://github.com/CycloneDX/cyclonedx-python-lib/issues",
+        "Changelog": "https://github.com/CycloneDX/cyclonedx-python-lib/releases",
+        "Documentation": "https://cyclonedx-python-library.readthedocs.io/",
+        "Funding": "https://owasp.org/donate/?reponame=www-project-cyclonedx&title=OWASP+CycloneDX",
+        "Homepage": "https://github.com/CycloneDX/cyclonedx-python-lib/#readme",
+        "Repository": "https://github.com/CycloneDX/cyclonedx-python-lib"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "defusedxml",
+      "version": "0.7.1",
+      "filename": "defusedxml-0.7.1-py2.py3-none-any.whl",
+      "sha256": "a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61",
+      "license_expression": null,
+      "license_metadata": "PSFL",
+      "classifiers": [
+        "License :: OSI Approved :: Python Software Foundation License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "defusedxml-0.7.1.dist-info/LICENSE": "b80ce9da8c42a1f91079627fbbe2bf27210ae108a0ffe5f077d5b08e076c24c8"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/defusedxml/0.7.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl",
+      "upstream": {
+        "Download": "https://pypi.python.org/pypi/defusedxml",
+        "Homepage": "https://github.com/tiran/defusedxml"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "filelock",
+      "version": "3.32.4",
+      "filename": "filelock-3.32.4-py3-none-any.whl",
+      "sha256": "22e58ca3b1ae3b98993b762d7338367ae64fe50252bf78d59da3bfebcdf1cedd",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "filelock-3.32.4.dist-info/licenses/LICENSE": "608c89d5060ae9921adccf3236695bc654a9946e12323ef6c021dfa04e294d48"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/filelock/3.32.4/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/01/a4/9b63d595d748e3aff8812b65eacc1a2c4bd90b7c2012e08e72373b4835eb/filelock-3.32.4-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://py-filelock.readthedocs.io",
+        "Homepage": "https://github.com/tox-dev/py-filelock",
+        "Source": "https://github.com/tox-dev/py-filelock",
+        "Tracker": "https://github.com/tox-dev/py-filelock/issues"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "fqdn",
+      "version": "1.5.1",
+      "filename": "fqdn-1.5.1-py3-none-any.whl",
+      "sha256": "3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014",
+      "license_expression": null,
+      "license_metadata": "MPL 2.0",
+      "classifiers": [
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)"
+      ],
+      "requires_dist": [
+        "cached-property (>=1.3.0) ; python_version < \"3.8\""
+      ],
+      "license_files": {
+        "fqdn-1.5.1.dist-info/LICENSE": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/fqdn/1.5.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/cf/58/8acf1b3e91c58313ce5cb67df61001fc9dcd21be4fadb76c1a2d540e09ed/fqdn-1.5.1-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/ypcrts/fqdn"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "idna",
+      "version": "3.19",
+      "filename": "idna-3.19-py3-none-any.whl",
+      "sha256": "815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4",
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "ruff >= 0.16.0 ; extra == \"all\"",
+        "mypy >= 1.11.2 ; extra == \"all\"",
+        "ty >= 0.0.37 ; extra == \"all\"",
+        "pytest >= 8.3.2 ; extra == \"all\"",
+        "hypothesis >= 6.141.1 ; extra == \"all\"",
+        "coverage >= 7.10.0 ; extra == \"all\""
+      ],
+      "license_files": {
+        "idna-3.19.dist-info/licenses/LICENSE.md": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04"
+      },
+      "entry_points": {
+        "idna-3.19.dist-info/entry_points.txt": "[console_scripts]\nidna=idna.cli:main\n\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/idna/3.19/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/57/b0/0e52c878c53f245edd3a11020f20979b3f490f245af532c7cae3027754b5/idna-3.19-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://github.com/kjd/idna/blob/master/HISTORY.md",
+        "Issue tracker": "https://github.com/kjd/idna/issues",
+        "Source": "https://github.com/kjd/idna"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "isoduration",
+      "version": "20.11.0",
+      "filename": "isoduration-20.11.0-py3-none-any.whl",
+      "sha256": "b2904c2a4228c3d44f409c8ae8e2370eb21a26f7ac2ec5446df141dde3452042",
+      "license_expression": null,
+      "license_metadata": "UNKNOWN",
+      "classifiers": [
+        "License :: OSI Approved :: ISC License (ISCL)"
+      ],
+      "requires_dist": [
+        "arrow (>=0.15.0)"
+      ],
+      "license_files": {
+        "isoduration-20.11.0.dist-info/LICENSE": "452c0410e9a3d75abbef1b6cb519d31b23047092ca00f9bd619df7cb0d8b9a99"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/isoduration/20.11.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/7b/55/e5326141505c5d5e34c5e0935d2908a74e4561eca44108fbfb9c13d2911a/isoduration-20.11.0-py3-none-any.whl",
+      "upstream": {
+        "Bug Reports": "https://github.com/bolsote/isoduration/issues",
+        "Changelog": "https://github.com/bolsote/isoduration/blob/master/CHANGELOG",
+        "Homepage": "https://github.com/bolsote/isoduration",
+        "Repository": "https://github.com/bolsote/isoduration"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "jsonpointer",
+      "version": "3.1.1",
+      "filename": "jsonpointer-3.1.1-py3-none-any.whl",
+      "sha256": "8ff8b95779d071ba472cf5bc913028df06031797532f08a7d5b602d8b2a488ca",
+      "license_expression": null,
+      "license_metadata": "Modified BSD License",
+      "classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "jsonpointer-3.1.1.dist-info/licenses/LICENSE.txt": "d8b24f15d472885f788a2d6e985850f264627b86012a17bb242c83f310d907e5"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/jsonpointer/3.1.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/9e/6a/a83720e953b1682d2d109d3c2dbb0bc9bf28cc1cbc205be4ef4be5da709d/jsonpointer-3.1.1-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/stefankoegl/python-json-pointer"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0",
+      "filename": "jsonschema-4.26.0-py3-none-any.whl",
+      "sha256": "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "attrs>=22.2.0",
+        "jsonschema-specifications>=2023.03.6",
+        "referencing>=0.28.4",
+        "rpds-py>=0.25.0",
+        "fqdn; extra == 'format'",
+        "idna; extra == 'format'",
+        "isoduration; extra == 'format'",
+        "jsonpointer>1.13; extra == 'format'",
+        "rfc3339-validator; extra == 'format'",
+        "rfc3987; extra == 'format'",
+        "uri-template; extra == 'format'",
+        "webcolors>=1.11; extra == 'format'",
+        "fqdn; extra == 'format-nongpl'",
+        "idna; extra == 'format-nongpl'",
+        "isoduration; extra == 'format-nongpl'",
+        "jsonpointer>1.13; extra == 'format-nongpl'",
+        "rfc3339-validator; extra == 'format-nongpl'",
+        "rfc3986-validator>0.1.0; extra == 'format-nongpl'",
+        "rfc3987-syntax>=1.1.0; extra == 'format-nongpl'",
+        "uri-template; extra == 'format-nongpl'",
+        "webcolors>=24.6.0; extra == 'format-nongpl'"
+      ],
+      "license_files": {
+        "jsonschema-4.26.0.dist-info/licenses/COPYING": "4f92a015a13c4d1a040bef018aa13430b4f1bc73b41b16bb846c346766de7439"
+      },
+      "entry_points": {
+        "jsonschema-4.26.0.dist-info/entry_points.txt": "[console_scripts]\njsonschema = jsonschema.cli:main\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/jsonschema/4.26.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/69/90/f63fb5873511e014207a475e2bb4e8b2e570d655b00ac19a9a0ca0a385ee/jsonschema-4.26.0-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://github.com/python-jsonschema/jsonschema/blob/main/CHANGELOG.rst",
+        "Documentation": "https://python-jsonschema.readthedocs.io/",
+        "Funding": "https://github.com/sponsors/Julian",
+        "Homepage": "https://github.com/python-jsonschema/jsonschema",
+        "Issues": "https://github.com/python-jsonschema/jsonschema/issues/",
+        "Source": "https://github.com/python-jsonschema/jsonschema",
+        "Tidelift": "https://tidelift.com/subscription/pkg/pypi-jsonschema?utm_source=pypi-jsonschema&utm_medium=referral&utm_campaign=pypi-link"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1",
+      "filename": "jsonschema_specifications-2025.9.1-py3-none-any.whl",
+      "sha256": "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "referencing>=0.31.0"
+      ],
+      "license_files": {
+        "jsonschema_specifications-2025.9.1.dist-info/licenses/COPYING": "42dcd63495f87b4eb7c7757afa379bb55a53f94afd7a5f657d9adf57236e515c"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/jsonschema-specifications/2025.9.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://jsonschema-specifications.readthedocs.io/",
+        "Funding": "https://github.com/sponsors/Julian",
+        "Homepage": "https://github.com/python-jsonschema/jsonschema-specifications",
+        "Issues": "https://github.com/python-jsonschema/jsonschema-specifications/issues/",
+        "Source": "https://github.com/python-jsonschema/jsonschema-specifications",
+        "Tidelift": "https://tidelift.com/subscription/pkg/pypi-jsonschema-specifications?utm_source=pypi-jsonschema-specifications&utm_medium=referral&utm_campaign=pypi-link"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "lark",
+      "version": "1.3.1",
+      "filename": "lark-1.3.1-py3-none-any.whl",
+      "sha256": "c629b661023a014c37da873b4ff58a817398d12635d3bbb2c5a03be7fe5d1e12",
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [
+        "regex; extra == \"regex\"",
+        "js2py; extra == \"nearley\"",
+        "atomicwrites; extra == \"atomic-cache\"",
+        "interegular<0.4.0,>=0.3.1; extra == \"interegular\""
+      ],
+      "license_files": {
+        "lark-1.3.1.dist-info/licenses/LICENSE": "2eee60f52d4e11357bf89e72b034d050e285e47fda1361e5662fb322ee27d771"
+      },
+      "entry_points": {
+        "lark-1.3.1.dist-info/entry_points.txt": "[pyinstaller40]\nhook-dirs = lark.__pyinstaller:get_hook_dirs\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/lark/1.3.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/82/3d/14ce75ef66813643812f3093ab17e46d3a206942ce7376d31ec2d36229e7/lark-1.3.1-py3-none-any.whl",
+      "upstream": {
+        "Download": "https://github.com/lark-parser/lark/tarball/master",
+        "Homepage": "https://github.com/lark-parser/lark"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "license-expression",
+      "version": "30.4.4",
+      "filename": "license_expression-30.4.4-py3-none-any.whl",
+      "sha256": "421788fdcadb41f049d2dc934ce666626265aeccefddd25e162a26f23bcbf8a4",
+      "license_expression": null,
+      "license_metadata": "Apache-2.0",
+      "classifiers": [],
+      "requires_dist": [
+        "boolean.py>=4.0",
+        "pytest>=7.0.1; extra == \"dev\"",
+        "pytest-xdist>=2; extra == \"dev\"",
+        "twine; extra == \"dev\"",
+        "ruff; extra == \"dev\"",
+        "Sphinx>=5.0.2; extra == \"dev\"",
+        "sphinx-rtd-theme>=1.0.0; extra == \"dev\"",
+        "sphinxcontrib-apidoc>=0.4.0; extra == \"dev\"",
+        "sphinx-reredirects>=0.1.2; extra == \"dev\"",
+        "doc8>=0.11.2; extra == \"dev\"",
+        "sphinx-autobuild; extra == \"dev\"",
+        "sphinx-rtd-dark-mode>=1.3.0; extra == \"dev\"",
+        "sphinx-copybutton; extra == \"dev\""
+      ],
+      "license_files": {
+        "license_expression/data/cc-by-4.0.LICENSE": "2a82ac9bbc3e3ee066908381e8d373896db5a6025d083fbd59692fe9ccfb9111",
+        "license_expression/data/license_key_index.json.ABOUT": "fb5ce1f2dbd2bedc01fad9507be71ca19ec37b4d6f8dfb9516fbfefee410d85d",
+        "license_expression/data/scancode-licensedb-index.json": "d7594273825a68b2d5676d76d336c560210072f07a77edb193ad608694067596",
+        "license_expression-30.4.4.dist-info/licenses/NOTICE": "ef97db07e32f6e5d34363461acf5acc7d72db924533bce3d9f3b87046313363c",
+        "license_expression-30.4.4.dist-info/licenses/apache-2.0.LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/license-expression/30.4.4/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/af/40/791891d4c0c4dab4c5e187c17261cedc26285fd41541577f900470a45a4d/license_expression-30.4.4-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/aboutcode-org/license-expression"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "lxml",
+      "version": "6.1.2",
+      "filename": "lxml-6.1.2-cp314-cp314-macosx_10_15_universal2.whl",
+      "sha256": "d50a44113fe6800dcc8a859332b823a4735b1e6ae1b0063882e4cca569ec3e29",
+      "license_expression": null,
+      "license_metadata": "BSD-3-Clause",
+      "classifiers": [],
+      "requires_dist": [
+        "cssselect>=0.7; extra == \"cssselect\"",
+        "html5lib; extra == \"html5\"",
+        "BeautifulSoup4; extra == \"htmlsoup\"",
+        "lxml_html_clean; extra == \"html-clean\""
+      ],
+      "license_files": {
+        "lxml-6.1.2.dist-info/licenses/LICENSE.txt": "8fc2b568133516e46845d2147917adeee1648e70ae9ab5ed6c5417afef4ce855",
+        "lxml-6.1.2.dist-info/licenses/LICENSES.txt": "388fa99f3bde4447cd5a4cbb114037be026854db6cfe89e112691c1d8abdcf3c"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [
+        "lxml/_elementpath.cpython-314-darwin.so",
+        "lxml/builder.cpython-314-darwin.so",
+        "lxml/sax.cpython-314-darwin.so",
+        "lxml/etree.cpython-314-darwin.so",
+        "lxml/objectify.cpython-314-darwin.so",
+        "lxml/html/diff.cpython-314-darwin.so",
+        "lxml/html/_difflib.cpython-314-darwin.so"
+      ],
+      "metadata_url": "https://pypi.org/pypi/lxml/6.1.2/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/27/b5/728b0578791b397ace8d1b101c8b3fe10f36043542f7bb85f82d8bdc3f50/lxml-6.1.2-cp314-cp314-macosx_10_15_universal2.whl",
+      "upstream": {
+        "Bug Tracker": "https://bugs.launchpad.net/lxml",
+        "Homepage": "https://lxml.de/",
+        "Source": "https://github.com/lxml/lxml"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "filename": "markdown_it_py-4.2.0-py3-none-any.whl",
+      "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+      "license_expression": null,
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [
+        "mdurl~=0.1",
+        "psutil ; extra == \"benchmarking\"",
+        "pytest ; extra == \"benchmarking\"",
+        "pytest-benchmark ; extra == \"benchmarking\"",
+        "commonmark~=0.9 ; extra == \"compare\"",
+        "markdown~=3.4 ; extra == \"compare\"",
+        "mistletoe~=1.0 ; extra == \"compare\"",
+        "mistune~=3.0 ; extra == \"compare\"",
+        "panflute~=2.3 ; extra == \"compare\"",
+        "markdown-it-pyrs ; extra == \"compare\"",
+        "linkify-it-py>=1,<3 ; extra == \"linkify\"",
+        "mdit-py-plugins>=0.5.0 ; extra == \"plugins\"",
+        "gprof2dot ; extra == \"profiling\"",
+        "mdit-py-plugins>=0.5.0 ; extra == \"rtd\"",
+        "myst-parser ; extra == \"rtd\"",
+        "pyyaml ; extra == \"rtd\"",
+        "sphinx ; extra == \"rtd\"",
+        "sphinx-copybutton ; extra == \"rtd\"",
+        "sphinx-design ; extra == \"rtd\"",
+        "sphinx-book-theme~=1.0 ; extra == \"rtd\"",
+        "jupyter_sphinx ; extra == \"rtd\"",
+        "ipykernel ; extra == \"rtd\"",
+        "coverage ; extra == \"testing\"",
+        "pytest ; extra == \"testing\"",
+        "pytest-cov ; extra == \"testing\"",
+        "pytest-regressions ; extra == \"testing\"",
+        "pytest-timeout ; extra == \"testing\"",
+        "requests ; extra == \"testing\""
+      ],
+      "license_files": {
+        "markdown_it_py-4.2.0.dist-info/licenses/LICENSE": "4a2260d6e2cd0f5a151a1e86dbfe7d3ed552b1e2beabf9941c1ba5c49cbce484",
+        "markdown_it_py-4.2.0.dist-info/licenses/LICENSE.markdown-it": "792c48c5a849a15fdf9e37e8bcf9e6d1dd13b32b46c642a748a0a46a9919d473"
+      },
+      "entry_points": {
+        "markdown_it_py-4.2.0.dist-info/entry_points.txt": "[console_scripts]\nmarkdown-it=markdown_it.cli.parse:main\n\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/markdown-it-py/4.2.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://markdown-it-py.readthedocs.io",
+        "Homepage": "https://github.com/executablebooks/markdown-it-py"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "filename": "mdurl-0.1.2-py3-none-any.whl",
+      "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+      "license_expression": null,
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "mdurl-0.1.2.dist-info/LICENSE": "7c605df6e28667a9603118e98274f64a49ce3eed0d26fccce9534a345e0ef955"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/mdurl/0.1.2/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/executablebooks/mdurl"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "msgpack",
+      "version": "1.2.2",
+      "filename": "msgpack-1.2.2-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "0dd9173c5ebaf5ecc5ca86e7ae1db92934e1d57b856f3dd90698941431f4fd77",
+      "license_expression": "Apache-2.0",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "msgpack-1.2.2.dist-info/licenses/COPYING": "492dedba85da5872f78e6091bcd1fea474d660d35acb4dee964b8aab3f007427"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [
+        "msgpack/_cmsgpack.cpython-314-darwin.so"
+      ],
+      "metadata_url": "https://pypi.org/pypi/msgpack/1.2.2/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/b6/dc/8efe6dd96a12ab043930cb4cffb40b6e7f061491d6ec7a3d2b75ef1fda42/msgpack-1.2.2-cp314-cp314-macosx_11_0_arm64.whl",
+      "upstream": {
+        "Changelog": "https://github.com/msgpack/msgpack-python/blob/main/CHANGELOG.md",
+        "Documentation": "https://msgpack-python.readthedocs.io/",
+        "Homepage": "https://msgpack.org/",
+        "Repository": "https://github.com/msgpack/msgpack-python/",
+        "Tracker": "https://github.com/msgpack/msgpack-python/issues"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "packageurl-python",
+      "version": "0.17.6",
+      "filename": "packageurl_python-0.17.6-py3-none-any.whl",
+      "sha256": "31a85c2717bc41dd818f3c62908685ff9eebcb68588213745b14a6ee9e7df7c9",
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [
+        "isort; extra == \"lint\"",
+        "black; extra == \"lint\"",
+        "mypy; extra == \"lint\"",
+        "pytest; extra == \"test\"",
+        "setuptools; extra == \"build\"",
+        "wheel; extra == \"build\"",
+        "sqlalchemy>=2.0.0; extra == \"sqlalchemy\""
+      ],
+      "license_files": {},
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/packageurl-python/0.17.6/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/b1/2f/c7277b7615a93f51b5fbc1eacfc1b75e8103370e786fd8ce2abf6e5c04ab/packageurl_python-0.17.6-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/package-url/packageurl-python"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "filename": "packaging-26.3-py3-none-any.whl",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "license_expression": "Apache-2.0 OR BSD-2-Clause",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "packaging-26.3.dist-info/licenses/LICENSE": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48",
+        "packaging-26.3.dist-info/licenses/LICENSE.APACHE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "packaging-26.3.dist-info/licenses/LICENSE.BSD": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/packaging/26.3/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://packaging.pypa.io/",
+        "Source": "https://github.com/pypa/packaging"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "pip",
+      "version": "26.2.1",
+      "filename": "pip-26.2.1-py3-none-any.whl",
+      "sha256": "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "pip/_vendor/cachecontrol/LICENSE.txt": "86eeee87be2a43f3ff1f56496f451f69243926f025fedbb033666c304c4c161b",
+        "pip/_vendor/certifi/LICENSE": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7",
+        "pip/_vendor/distlib/LICENSE.txt": "808e10c8a6ab8deb149ff9b3fb19f447a808094606d712a9ca57fead3552599d",
+        "pip/_vendor/distro/LICENSE": "cb5e8e7e5f4a3988e1063c142c60dc2df75605f4c46515e776e3aca6df976e14",
+        "pip/_vendor/idna/LICENSE.md": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04",
+        "pip/_vendor/msgpack/COPYING": "492dedba85da5872f78e6091bcd1fea474d660d35acb4dee964b8aab3f007427",
+        "pip/_vendor/packaging/LICENSE": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48",
+        "pip/_vendor/packaging/LICENSE.APACHE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "pip/_vendor/packaging/LICENSE.BSD": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5",
+        "pip/_vendor/pkg_resources/LICENSE": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741",
+        "pip/_vendor/platformdirs/LICENSE": "29e0fd62e929850e86eb28c3fdccf0cefdf4fa94879011cffb3d0d4bed6d4db6",
+        "pip/_vendor/pygments/LICENSE": "a9d66f1d526df02e29dce73436d34e56e8632f46c275bbdffc70569e882f9f17",
+        "pip/_vendor/pyproject_hooks/LICENSE": "1b22b049b5267d6dfc23a67bf4a84d8ec04b9fdfb1a51d360e42b4342c8b4154",
+        "pip/_vendor/requests/LICENSE": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+        "pip/_vendor/resolvelib/LICENSE": "f388fd38cad13112c1dc0f669bbe80e7f84541edbafb72f3030d2ca7642c3c9d",
+        "pip/_vendor/rich/LICENSE": "deed7c17a4318158190a3ea239cc879a5a50271cebb98ae7025f48fbe58dca15",
+        "pip/_vendor/tomli/LICENSE": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe",
+        "pip/_vendor/tomli_w/LICENSE": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe",
+        "pip/_vendor/truststore/LICENSE": "33be7b7e8fa4fd19b1760e1a8ed8a668bdab852c91b692dd41424bcb725a9fca",
+        "pip/_vendor/urllib3/LICENSE.txt": "130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686",
+        "pip-26.2.1.dist-info/licenses/LICENSE.txt": "634300a669d49aeae65b12c6c48c924c51a4cdf3d1ff086dc3456dc8bcaa2104",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/cachecontrol/LICENSE.txt": "86eeee87be2a43f3ff1f56496f451f69243926f025fedbb033666c304c4c161b",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/certifi/LICENSE": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/distlib/LICENSE.txt": "808e10c8a6ab8deb149ff9b3fb19f447a808094606d712a9ca57fead3552599d",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/distro/LICENSE": "cb5e8e7e5f4a3988e1063c142c60dc2df75605f4c46515e776e3aca6df976e14",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/msgpack/COPYING": "492dedba85da5872f78e6091bcd1fea474d660d35acb4dee964b8aab3f007427",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/packaging/LICENSE": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/packaging/LICENSE.APACHE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/packaging/LICENSE.BSD": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/pkg_resources/LICENSE": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/platformdirs/LICENSE": "29e0fd62e929850e86eb28c3fdccf0cefdf4fa94879011cffb3d0d4bed6d4db6",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/pygments/LICENSE": "a9d66f1d526df02e29dce73436d34e56e8632f46c275bbdffc70569e882f9f17",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/pyproject_hooks/LICENSE": "1b22b049b5267d6dfc23a67bf4a84d8ec04b9fdfb1a51d360e42b4342c8b4154",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/requests/LICENSE": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/resolvelib/LICENSE": "f388fd38cad13112c1dc0f669bbe80e7f84541edbafb72f3030d2ca7642c3c9d",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/rich/LICENSE": "deed7c17a4318158190a3ea239cc879a5a50271cebb98ae7025f48fbe58dca15",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/tomli/LICENSE": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/tomli_w/LICENSE": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/truststore/LICENSE": "33be7b7e8fa4fd19b1760e1a8ed8a668bdab852c91b692dd41424bcb725a9fca",
+        "pip-26.2.1.dist-info/licenses/src/pip/_vendor/urllib3/LICENSE.txt": "130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686"
+      },
+      "entry_points": {
+        "pip-26.2.1.dist-info/entry_points.txt": "[console_scripts]\npip=pip._internal.cli.main:main\npip3=pip._internal.cli.main:main\n\n"
+      },
+      "startup_files": [],
+      "native_files": [
+        "pip/_vendor/distlib/t32.exe",
+        "pip/_vendor/distlib/t64-arm.exe",
+        "pip/_vendor/distlib/t64.exe",
+        "pip/_vendor/distlib/w32.exe",
+        "pip/_vendor/distlib/w64-arm.exe",
+        "pip/_vendor/distlib/w64.exe"
+      ],
+      "metadata_url": "https://pypi.org/pypi/pip/26.2.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/pip-26.2.1-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://pip.pypa.io/en/stable/news/",
+        "Documentation": "https://pip.pypa.io",
+        "Homepage": "https://pip.pypa.io/",
+        "Source": "https://github.com/pypa/pip"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "pip-api",
+      "version": "0.0.34",
+      "filename": "pip_api-0.0.34-py3-none-any.whl",
+      "sha256": "8b2d7d7c37f2447373aa2cf8b1f60a2f2b27a84e1e9e0294a3f6ef10eb3ba6bb",
+      "license_expression": null,
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "pip"
+      ],
+      "license_files": {
+        "pip_api-0.0.34.dist-info/LICENSE": "14ed54990120efea26042269885df36e1b53db858bf04b40c8cfc8c5e12f6fb1"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/pip-api/0.0.34/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/91/f7/ebf5003e1065fd00b4cbef53bf0a65c3d3e1b599b676d5383ccb7a8b88ba/pip_api-0.0.34-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "http://github.com/di/pip-api"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "pip_audit",
+      "version": "2.10.1",
+      "filename": "pip_audit-2.10.1-py3-none-any.whl",
+      "sha256": "99ef3f600a317c1945f1e89e227ef26e1c2d618429b8bd3fa6f4f7c440c4611a",
+      "license_expression": null,
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "CacheControl[filecache] >= 0.13.0",
+        "cyclonedx-python-lib >= 5,< 12",
+        "packaging>=23.0.0",
+        "pip-api>=0.0.28",
+        "pip-requirements-parser>=32.0.0",
+        "requests >= 2.31.0",
+        "rich >= 12.4",
+        "tomli >= 2.2.1",
+        "tomli-w >= 1.2.0",
+        "platformdirs >= 4.2.0",
+        "coverage[toml] ~= 7.0, != 7.3.3 ; extra == \"cov\"",
+        "build ; extra == \"dev\"",
+        "pip-audit[doc, test, lint] ; extra == \"dev\"",
+        "pdoc ; extra == \"doc\"",
+        "ruff >= 0.14 ; extra == \"lint\"",
+        "interrogate ~= 1.6 ; extra == \"lint\"",
+        "mypy ; extra == \"lint\"",
+        "types-requests ; extra == \"lint\"",
+        "types-toml ; extra == \"lint\"",
+        "typos ; extra == \"lint\"",
+        "pretend ; extra == \"test\"",
+        "pytest ; extra == \"test\"",
+        "pip-audit[cov] ; extra == \"test\""
+      ],
+      "license_files": {
+        "pip_audit-2.10.1.dist-info/licenses/LICENSE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+      },
+      "entry_points": {
+        "pip_audit-2.10.1.dist-info/entry_points.txt": "[console_scripts]\npip-audit=pip_audit._cli:audit\n\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/pip_audit/2.10.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/a3/a7/b0c504148114047bd1bc9d97447453c6850ca176bb2f3c0038835994e8b7/pip_audit-2.10.1-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://pypi.org/project/pip-audit/",
+        "Issues": "https://github.com/pypa/pip-audit/issues",
+        "Source": "https://github.com/pypa/pip-audit"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "pip-requirements-parser",
+      "version": "32.0.1",
+      "filename": "pip_requirements_parser-32.0.1-py3-none-any.whl",
+      "sha256": "4659bc2a667783e7a15d190f6fccf8b2486685b6dba4c19c3876314769c57526",
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "classifiers": [],
+      "requires_dist": [
+        "packaging",
+        "pyparsing",
+        "Sphinx (>=3.3.1) ; extra == 'docs'",
+        "sphinx-rtd-theme (>=0.5.0) ; extra == 'docs'",
+        "doc8 (>=0.8.1) ; extra == 'docs'",
+        "pytest (!=7.0.0,>=6) ; extra == 'testing'",
+        "pytest-xdist (>=2) ; extra == 'testing'",
+        "aboutcode-toolkit (>=6.0.0) ; extra == 'testing'",
+        "black ; extra == 'testing'"
+      ],
+      "license_files": {
+        "pip_requirements_parser-32.0.1.dist-info/mit.LICENSE": "18081c2c82771ca09d99d08cdac405924309e09fd19b16f1eea59cbc6ab809ed"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/pip-requirements-parser/32.0.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/54/d0/d04f1d1e064ac901439699ee097f58688caadea42498ec9c4b4ad2ef84ab/pip_requirements_parser-32.0.1-py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/nexB/pip-requirements-parser"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "platformdirs",
+      "version": "4.11.5",
+      "filename": "platformdirs-4.11.5-py3-none-any.whl",
+      "sha256": "89f8d42695853b89c7170bd49bc3dc593f98a71e695ede88e06a3b247bc4563b",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "platformdirs-4.11.5.dist-info/licenses/LICENSE": "29e0fd62e929850e86eb28c3fdccf0cefdf4fa94879011cffb3d0d4bed6d4db6"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/platformdirs/4.11.5/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/c7/12/6f3fcd5067a9cbf4f8664b32957973498da8b083455203c8d9cab83a725c/platformdirs-4.11.5-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://platformdirs.readthedocs.io/en/latest/changelog.html",
+        "Documentation": "https://platformdirs.readthedocs.io",
+        "Homepage": "https://github.com/tox-dev/platformdirs",
+        "Source": "https://github.com/tox-dev/platformdirs",
+        "Tracker": "https://github.com/tox-dev/platformdirs/issues"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "py-serializable",
+      "version": "2.1.0",
+      "filename": "py_serializable-2.1.0-py3-none-any.whl",
+      "sha256": "b56d5d686b5a03ba4f4db5e769dc32336e142fc3bd4d68a8c25579ebb0a67304",
+      "license_expression": null,
+      "license_metadata": "Apache-2.0",
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "defusedxml (>=0.7.1,<0.8.0)"
+      ],
+      "license_files": {
+        "py_serializable-2.1.0.dist-info/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/py-serializable/2.1.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/9b/bf/7595e817906a29453ba4d99394e781b6fabe55d21f3c15d240f85dd06bb1/py_serializable-2.1.0-py3-none-any.whl",
+      "upstream": {
+        "Bug Tracker": "https://github.com/madpah/serializable/issues",
+        "Documentation": "https://py-serializable.readthedocs.io/",
+        "Homepage": "https://github.com/madpah/serializable#readme",
+        "Repository": "https://github.com/madpah/serializable"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0",
+      "filename": "pygments-2.21.0-py3-none-any.whl",
+      "sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+      "license_expression": "BSD-2-Clause",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "colorama>=0.4.6; extra == 'windows-terminal'"
+      ],
+      "license_files": {
+        "pygments-2.21.0.dist-info/licenses/LICENSE": "a9d66f1d526df02e29dce73436d34e56e8632f46c275bbdffc70569e882f9f17"
+      },
+      "entry_points": {
+        "pygments-2.21.0.dist-info/entry_points.txt": "[console_scripts]\npygmentize = pygments.cmdline:main\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/Pygments/2.21.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+      "upstream": {
+        "Bug Tracker": "https://github.com/pygments/pygments/issues",
+        "Changelog": "https://github.com/pygments/pygments/blob/master/CHANGES",
+        "Documentation": "https://pygments.org/docs",
+        "Homepage": "https://pygments.org",
+        "Source": "https://github.com/pygments/pygments"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "pyparsing",
+      "version": "3.3.2",
+      "filename": "pyparsing-3.3.2-py3-none-any.whl",
+      "sha256": "850ba148bd908d7e2411587e247a1e4f0327839c40e2e5e6d05a007ecc69911d",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "railroad-diagrams ; extra == \"diagrams\"",
+        "jinja2 ; extra == \"diagrams\""
+      ],
+      "license_files": {
+        "pyparsing-3.3.2.dist-info/licenses/LICENSE": "a5425f9dc14ac74d4c5f0b679e941f2442e32cca7452a4418d5b1a49893ebe4e"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/pyparsing/3.3.2/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://pyparsing-docs.readthedocs.io/en/latest/",
+        "Homepage": "https://github.com/pyparsing/pyparsing/",
+        "Source": "https://github.com/pyparsing/pyparsing.git"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "filename": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427",
+      "license_expression": null,
+      "license_metadata": "Dual License",
+      "classifiers": [
+        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "six >=1.5"
+      ],
+      "license_files": {
+        "python_dateutil-2.9.0.post0.dist-info/LICENSE": "ba00f51a0d92823b5a1cde27d8b5b9d2321e67ed8da9bc163eff96d5e17e577e"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/python-dateutil/2.9.0.post0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://dateutil.readthedocs.io/en/stable/",
+        "Homepage": "https://github.com/dateutil/dateutil",
+        "Source": "https://github.com/dateutil/dateutil"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0",
+      "filename": "referencing-0.37.0-py3-none-any.whl",
+      "sha256": "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "attrs>=22.2.0",
+        "rpds-py>=0.7.0",
+        "typing-extensions>=4.4.0; python_version < '3.13'"
+      ],
+      "license_files": {
+        "referencing-0.37.0.dist-info/licenses/COPYING": "42dcd63495f87b4eb7c7757afa379bb55a53f94afd7a5f657d9adf57236e515c"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/referencing/0.37.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/2c/58/ca301544e1fa93ed4f80d724bf5b194f6e4b945841c5bfd555878eea9fcb/referencing-0.37.0-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://referencing.readthedocs.io/en/stable/changes/",
+        "Documentation": "https://referencing.readthedocs.io/",
+        "Funding": "https://github.com/sponsors/Julian",
+        "Homepage": "https://github.com/python-jsonschema/referencing",
+        "Issues": "https://github.com/python-jsonschema/referencing/issues/",
+        "Source": "https://github.com/python-jsonschema/referencing",
+        "Tidelift": "https://tidelift.com/subscription/pkg/pypi-referencing?utm_source=pypi-referencing&utm_medium=referral&utm_campaign=pypi-link"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "filename": "requests-2.34.2-py3-none-any.whl",
+      "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+      "license_expression": null,
+      "license_metadata": "Apache-2.0",
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "charset_normalizer<4,>=2",
+        "idna<4,>=2.5",
+        "urllib3<3,>=1.26",
+        "certifi>=2023.5.7",
+        "PySocks!=1.5.7,>=1.5.6; extra == \"socks\"",
+        "chardet<8,>=3.0.2; extra == \"use-chardet-on-py3\""
+      ],
+      "license_files": {
+        "requests-2.34.2.dist-info/licenses/LICENSE": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
+        "requests-2.34.2.dist-info/licenses/NOTICE": "f5110972dedad2b4e9d314518daf3b7d72d6e02e499acd802181de6f74571dcc"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/requests/2.34.2/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://requests.readthedocs.io",
+        "Source": "https://github.com/psf/requests"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "rfc3339-validator",
+      "version": "0.1.4",
+      "filename": "rfc3339_validator-0.1.4-py2.py3-none-any.whl",
+      "sha256": "24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa",
+      "license_expression": null,
+      "license_metadata": "MIT license",
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [
+        "six"
+      ],
+      "license_files": {
+        "rfc3339_validator-0.1.4.dist-info/LICENSE": "5ba1a4f03626ccca6dcbf53a554545e4f776a335bfdaa233ec3bfe9bb7fac15d"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/rfc3339-validator/0.1.4/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/7b/44/4e421b96b67b2daff264473f7465db72fbdf36a07e05494f50300cc7b0c6/rfc3339_validator-0.1.4-py2.py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/naimetti/rfc3339-validator"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "rfc3986-validator",
+      "version": "0.1.1",
+      "filename": "rfc3986_validator-0.1.1-py2.py3-none-any.whl",
+      "sha256": "2f235c432ef459970b4306369336b9d5dbdda31b510ca1e327636e01f528bfa9",
+      "license_expression": null,
+      "license_metadata": "MIT license",
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "rfc3986_validator-0.1.1.dist-info/LICENSE": "5ba1a4f03626ccca6dcbf53a554545e4f776a335bfdaa233ec3bfe9bb7fac15d"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/rfc3986-validator/0.1.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/9e/51/17023c0f8f1869d8806b979a2bffa3f861f26a3f1a66b094288323fba52f/rfc3986_validator-0.1.1-py2.py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/naimetti/rfc3986-validator"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "rfc3987-syntax",
+      "version": "1.1.0",
+      "filename": "rfc3987_syntax-1.1.0-py3-none-any.whl",
+      "sha256": "6c3d97604e4c5ce9f714898e05401a0445a641cfa276432b0a648c80856f6a3f",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [
+        "lark>=1.2.2",
+        "pytest>=8.3.5; extra == 'testing'"
+      ],
+      "license_files": {
+        "rfc3987_syntax-1.1.0.dist-info/licenses/LICENSE": "50eefaee3617ed933720bd1c13c601ae84a43f273c157e25b595ff177b3491dd"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/rfc3987-syntax/1.1.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/7e/71/44ce230e1b7fadd372515a97e32a83011f906ddded8d03e3c6aafbdedbb7/rfc3987_syntax-1.1.0-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://github.com/willynilly/rfc3987-syntax#readme",
+        "Homepage": "https://github.com/willynilly/rfc3987-syntax",
+        "Issues": "https://github.com/willynilly/rfc3987-syntax/issues",
+        "Source": "https://github.com/willynilly/rfc3987-syntax"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "rich",
+      "version": "15.0.0",
+      "filename": "rich-15.0.0-py3-none-any.whl",
+      "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [
+        "ipywidgets (>=7.5.1,<9) ; extra == \"jupyter\"",
+        "markdown-it-py (>=2.2.0)",
+        "pygments (>=2.13.0,<3.0.0)"
+      ],
+      "license_files": {
+        "rich-15.0.0.dist-info/licenses/LICENSE": "deed7c17a4318158190a3ea239cc879a5a50271cebb98ae7025f48fbe58dca15"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/rich/15.0.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://rich.readthedocs.io/en/latest/",
+        "Homepage": "https://github.com/Textualize/rich"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "rpds-py",
+      "version": "2026.6.3",
+      "filename": "rpds_py-2026.6.3-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "d7469697dce35be237db177d42e2a2ee26e6dcc5fc052078a6fefabd288c6edd",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "rpds_py-2026.6.3.dist-info/licenses/LICENSE": "314e4e91be3baa93c0fb4bccc9e4e97cd643eb839b065af921782c2175fe9909"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [
+        "rpds/rpds.cpython-314-darwin.so"
+      ],
+      "metadata_url": "https://pypi.org/pypi/rpds-py/2026.6.3/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/ba/54/f785cc3d3f60839ca57a5af4927a9f347b07b2799c373fc20f7949f87c7e/rpds_py-2026.6.3-cp314-cp314-macosx_11_0_arm64.whl",
+      "upstream": {
+        "Documentation": "https://rpds.readthedocs.io/",
+        "Funding": "https://github.com/sponsors/Julian",
+        "Homepage": "https://github.com/crate-py/rpds",
+        "Issues": "https://github.com/crate-py/rpds/issues/",
+        "Source": "https://github.com/crate-py/rpds",
+        "Tidelift": "https://tidelift.com/subscription/pkg/pypi-rpds-py?utm_source=pypi-rpds-py&utm_medium=referral&utm_campaign=pypi-link",
+        "Upstream": "https://github.com/orium/rpds"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "filename": "six-1.17.0-py2.py3-none-any.whl",
+      "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+      "license_expression": null,
+      "license_metadata": "MIT",
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "six-1.17.0.dist-info/LICENSE": "4375ba20e2b9c6c4e7cad2940a628fd90e95cc3d50ee92aae755715d8ba1fbd0"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/six/1.17.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+      "upstream": {
+        "Homepage": "https://github.com/benjaminp/six"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "sortedcontainers",
+      "version": "2.4.0",
+      "filename": "sortedcontainers-2.4.0-py2.py3-none-any.whl",
+      "sha256": "a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0",
+      "license_expression": null,
+      "license_metadata": "Apache 2.0",
+      "classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "sortedcontainers-2.4.0.dist-info/LICENSE": "1db7cae7fce6452e2e608e401a0f953e0133e4c2d75db69fb8ae851d2086f5b6"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/sortedcontainers/2.4.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/32/46/9cb0e58b2deb7f82b84065f37f3bffeb12413f947f9388e4cac22c4621ce/sortedcontainers-2.4.0-py2.py3-none-any.whl",
+      "upstream": {
+        "Homepage": "http://www.grantjenks.com/docs/sortedcontainers/"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "tomli",
+      "version": "2.4.1",
+      "filename": "tomli-2.4.1-cp314-cp314-macosx_11_0_arm64.whl",
+      "sha256": "a120733b01c45e9a0c34aeef92bf0cf1d56cfe81ed9d47d562f9ed591a9828ac",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "tomli-2.4.1.dist-info/licenses/LICENSE": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [
+        "ddc459050edb75a05942__mypyc.cpython-314-darwin.so",
+        "tomli/_types.cpython-314-darwin.so",
+        "tomli/__init__.cpython-314-darwin.so",
+        "tomli/_re.cpython-314-darwin.so",
+        "tomli/_parser.cpython-314-darwin.so"
+      ],
+      "metadata_url": "https://pypi.org/pypi/tomli/2.4.1/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/62/05/d2f816630cc771ad836af54f5001f47a6f611d2d39535364f148b6a92d6b/tomli-2.4.1-cp314-cp314-macosx_11_0_arm64.whl",
+      "upstream": {
+        "Changelog": "https://github.com/hukkin/tomli/blob/master/CHANGELOG.md",
+        "Homepage": "https://github.com/hukkin/tomli"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "tomli_w",
+      "version": "1.2.0",
+      "filename": "tomli_w-1.2.0-py3-none-any.whl",
+      "sha256": "188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90",
+      "license_expression": null,
+      "license_metadata": null,
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "tomli_w-1.2.0.dist-info/LICENSE": "b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/tomli_w/1.2.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/c7/18/c86eb8e0202e32dd3df50d43d7ff9854f8e0603945ff398974c1d91ac1ef/tomli_w-1.2.0-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://github.com/hukkin/tomli-w/blob/master/CHANGELOG.md",
+        "Homepage": "https://github.com/hukkin/tomli-w"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.3",
+      "filename": "tzdata-2026.3-py2.py3-none-any.whl",
+      "sha256": "dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931",
+      "license_expression": null,
+      "license_metadata": "Apache-2.0",
+      "classifiers": [],
+      "requires_dist": [],
+      "license_files": {
+        "tzdata-2026.3.dist-info/licenses/LICENSE": "df58f69ea88683035d720b5375bcef0cf5aeaa98a1d098d572e0992c378deb46",
+        "tzdata-2026.3.dist-info/licenses/licenses/LICENSE_APACHE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/tzdata/2026.3/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/e5/6d/b53b99a9f2766d095985947a5782f1702cabb129a34f7a802d7197af832f/tzdata-2026.3-py2.py3-none-any.whl",
+      "upstream": {
+        "Bug Reports": "https://github.com/python/tzdata/issues",
+        "Documentation": "https://tzdata.python.org",
+        "Homepage": "https://github.com/python/tzdata",
+        "Source": "https://github.com/python/tzdata"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "uri-template",
+      "version": "1.3.0",
+      "filename": "uri_template-1.3.0-py3-none-any.whl",
+      "sha256": "a44a133ea12d44a0c0f06d7d42a52d71282e77e2f937d8abd5655b8d56fc1363",
+      "license_expression": null,
+      "license_metadata": "MIT License",
+      "classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "requires_dist": [
+        "types-PyYAML ; extra == 'dev'",
+        "mypy ; extra == 'dev'",
+        "flake8 ; extra == 'dev'",
+        "flake8-annotations ; extra == 'dev'",
+        "flake8-bandit ; extra == 'dev'",
+        "flake8-bugbear ; extra == 'dev'",
+        "flake8-commas ; extra == 'dev'",
+        "flake8-comprehensions ; extra == 'dev'",
+        "flake8-continuation ; extra == 'dev'",
+        "flake8-datetimez ; extra == 'dev'",
+        "flake8-docstrings ; extra == 'dev'",
+        "flake8-import-order ; extra == 'dev'",
+        "flake8-literal ; extra == 'dev'",
+        "flake8-modern-annotations ; extra == 'dev'",
+        "flake8-noqa ; extra == 'dev'",
+        "flake8-pyproject ; extra == 'dev'",
+        "flake8-requirements ; extra == 'dev'",
+        "flake8-typechecking-import ; extra == 'dev'",
+        "flake8-use-fstring ; extra == 'dev'",
+        "pep8-naming ; extra == 'dev'"
+      ],
+      "license_files": {
+        "uri_template-1.3.0.dist-info/LICENSE": "9d3c97efe95551ee3e05c14cf0b447acfa2128e16d0fc993b649b756f763e13d"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/uri-template/1.3.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/e7/00/3fca040d7cf8a32776d3d81a00c8ee7457e00f80c649f1e4a863c8321ae9/uri_template-1.3.0-py3-none-any.whl",
+      "upstream": {
+        "homepage": "https://gitlab.linss.com/open-source/python/uri-template"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "urllib3",
+      "version": "2.7.0",
+      "filename": "urllib3-2.7.0-py3-none-any.whl",
+      "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897",
+      "license_expression": "MIT",
+      "license_metadata": null,
+      "classifiers": [],
+      "requires_dist": [
+        "brotli>=1.2.0; (platform_python_implementation == 'CPython') and extra == 'brotli'",
+        "brotlicffi>=1.2.0.0; (platform_python_implementation != 'CPython') and extra == 'brotli'",
+        "h2<5,>=4; extra == 'h2'",
+        "pysocks!=1.5.7,<2.0,>=1.5.6; extra == 'socks'",
+        "backports-zstd>=1.0.0; (python_version < '3.14') and extra == 'zstd'"
+      ],
+      "license_files": {
+        "urllib3-2.7.0.dist-info/licenses/LICENSE.txt": "130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686"
+      },
+      "entry_points": {},
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/urllib3/2.7.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl",
+      "upstream": {
+        "Changelog": "https://github.com/urllib3/urllib3/blob/main/CHANGES.rst",
+        "Code": "https://github.com/urllib3/urllib3",
+        "Documentation": "https://urllib3.readthedocs.io",
+        "Issue tracker": "https://github.com/urllib3/urllib3/issues"
+      },
+      "pypi_hash_verified": true
+    },
+    {
+      "name": "webcolors",
+      "version": "25.10.0",
+      "filename": "webcolors-25.10.0-py3-none-any.whl",
+      "sha256": "032c727334856fc0b968f63daa252a1ac93d33db2f5267756623c210e57a4f1d",
+      "license_expression": null,
+      "license_metadata": "BSD-3-Clause",
+      "classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "requires_dist": [],
+      "license_files": {
+        "webcolors-25.10.0.dist-info/licenses/LICENSE": "224bb9063d1204f687477a680fab945debff8cf717c629510c1d7083d9a7969a"
+      },
+      "entry_points": {
+        "webcolors-25.10.0.dist-info/entry_points.txt": "[console_scripts]\n\n[gui_scripts]\n\n"
+      },
+      "startup_files": [],
+      "native_files": [],
+      "metadata_url": "https://pypi.org/pypi/webcolors/25.10.0/json",
+      "artifact_url": "https://files.pythonhosted.org/packages/e2/cc/e097523dd85c9cf5d354f78310927f1656c422bd7b2613b2db3e3f9a0f2c/webcolors-25.10.0-py3-none-any.whl",
+      "upstream": {
+        "Documentation": "https://webcolors.readthedocs.io",
+        "Source Code": "https://github.com/ubernostrum/webcolors"
+      },
+      "pypi_hash_verified": true
+    }
+  ],
+  "native_dependency_evidence": {
+    "grant": {
+      "url": "https://github.com/anchore/grant/releases/download/v0.6.8/grant_0.6.8_darwin_arm64.sbom",
+      "sha256": "3fd5861e1a816dde33ec153a9120908db5833b45d23e7964099a805a10aa24ff",
+      "package_count": 271,
+      "material_dependencies": [
+        "Syft1.46.0 includes parsers and container/registry/cloud clients; only successful local SBOM decode admitted"
+      ],
+      "signature": "checksum signature verified using supplied certificate; release workflow identity inspected; Fulcio chain and Rekor NOT verified"
+    },
+    "gitleaks": {
+      "url": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/go.mod",
+      "sha256": "607c140abf2a872e70423972d4dfc7fa658ebe10365d0ea995269ed292add7a3",
+      "material_dependencies": [
+        "archives/decompression, regexp, gitdiff, viper config; only dir scan admitted"
+      ],
+      "signature": "release checksum and GitHub digest verified; no separate upstream signature available"
+    }
+  }
+}

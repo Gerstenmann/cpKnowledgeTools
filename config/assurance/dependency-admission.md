@@ -52,3 +52,78 @@ Sources: [coverage](https://pypi.org/project/coverage/),
 [mypy](https://pypi.org/project/mypy/),
 [Hypothesis](https://pypi.org/project/hypothesis/),
 [MPL FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/).
+
+## Separate scanner stack (2026-08-31)
+
+DEV-P06 decision, before installation: WRAP CycloneDX Python 7.3.1
+(Apache-2.0), pip-audit 2.10.1 (Apache-2.0), Gitleaks 8.30.1 (MIT), and
+Grant 0.6.8 (Apache-2.0), accepted_with_conditions for unmodified local tool
+execution only. The Owner's bounded scanner-stack task supplies execution
+authority; this record and scanner findings do not supply authority themselves.
+Rule homes: DEV-P05, DEV-P06, CPKS-POL-SW-SUPPLY, CPKS-SPEC-OPS,
+CPKS-SPEC-SEC, CPKS-SPEC-TST, CPKT-SPEC-ARCH and CPKS-DEC-042, resolved live.
+
+The existing four adapters fit the requested scope. Building replacement
+scanners would duplicate maintained upstream inventories, rules and advisory
+clients. Additional scanners are excluded by the task. The boundary remains
+fixed CLI arguments and safe normalized evidence, with no imported scanner
+library in the project and no copied upstream implementation.
+
+Official versioned PyPI metadata and all 49 resolved wheels were inspected
+without executing them; their SHA-256 hashes match PyPI. No source distribution,
+build hook, `.pth`, sitecustomize or usercustomize is installed. Entry points are
+ordinary console scripts, except Lark's optional PyInstaller hook (not loaded).
+The admitted execution form uses the separate Venv's absolute Python executable
+with `-I -B -m`, avoiding location-dependent console-script shebangs. Both the
+interpreter and installed site-packages are fingerprinted. The manifest and
+hash-locked wheel requirements are technical evidence for this stack only.
+
+Material Python transitives include requests/urllib3/CacheControl/certifi for
+PyPI transport, pip-api/pip (startup queries `python -m pip --version`, not an
+installation), CycloneDX's library and JSON validation stack, and native wheels
+for lxml, rpds-py, msgpack, tomli and charset-normalizer. Pip's bundled Windows
+launchers are not executed on Darwin. The full resolved graph is retained in
+the machine-readable admission, rather than added to project dependencies.
+
+Specific license review for this unmodified internal tool environment:
+chardet is LGPL-2.1-or-later; certifi and fqdn are MPL-2.0. They remain separate
+upstream distributions; no covered code is copied into CPKT, modified, bundled
+or externally distributed. lxml has BSD-3-Clause/PSF components and bundled
+MIT/zlib/LGPL-2.1 iconv libraries. Its LICENSES also identifies GPL test tooling
+and incompletely licensed XML transformation resources; these are outside the
+admitted JSON-only scanner path. This is not an approval to reuse or distribute
+those files. License-expression includes attributed CC-BY-4.0 license data;
+its notices remain installed. packageurl-python's wheel omits its license file,
+but the exact upstream v0.17.6 `mit.LICENSE` resolves MIT. rfc3987-syntax's
+Apache classifier conflicts with its MIT expression; the v1.1.0 full LICENSE
+and pyproject resolve MIT. Defusedxml uses PSF-2.0. These findings are retained,
+not converted into claims of flawless package metadata.
+
+Native tools use only official Darwin arm64 release archives, checked against
+published checksums and GitHub artifact digests. They link OS libraries and
+contain Go dependencies. Grant's official SBOM inventories 271 packages,
+including embedded Syft; no standalone Syft CLI is introduced. Grant's checksum
+signature verifies against its supplied certificate, whose workflow identity
+was inspected. Fulcio-chain/Rekor validation is not claimed. Gitleaks has no
+equivalent signature verified here. Hashes prove byte integrity, not safety.
+
+Conditions: separate ignored tool environment; exact pins and fingerprints;
+no automatic updates, privileged installer, global installation, target package
+resolution, remediation or distribution; temporary clean HOME/XDG/CWD and no
+inherited credentials; bounded output/runtime/cache; only explicit local SBOM
+input for Grant list, never Grant check; Gitleaks directory scans only. Ordinary
+offline runs make no intentional network request. Only explicitly authorized
+pip-audit PyPI queries disclose public distribution names/versions; no source
+content is submitted. Host filesystem/network isolation remains required.
+Changing inputs, versions, platform, license or privileges requires delta review.
+
+Replacement removes only this isolated stack and its invocation paths, leaving
+project dependencies unchanged. Rebuilding uses hash-locked wheels and official
+archives; no source build is approved. External distribution, XML processing,
+untrusted project execution and sensitive Owner-data scanning require separate
+review. Unknown transitive license/health or signature details outside this
+use-context remain assurance gaps; this is not a universal supply-chain approval.
+
+Primary sources and concrete artifact/provenance hashes are in
+`scanner-admission.json`; generated research, real runs and review evidence
+remain under `artifacts/assurance/` and `artifacts/handovers/`.

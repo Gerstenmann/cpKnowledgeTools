@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import importlib.metadata
 import json
+import os
+import tempfile
 import tomllib
 from pathlib import Path
 
-from .report import Report
+from .report import Report, persist_blob
 from .repository import bounded_path, file_hash, repository_state
 
 
@@ -83,15 +85,28 @@ def supply_chain(
     tools: dict[str, Path] | None = None,
     allow_network: bool = False,
     sbom: Path | None = None,
+    admission_manifest: Path | None = None,
+    retain_sbom: bool = False,
+    timeout: int = 300,
 ) -> Report:
     if profile not in {"research", "admission", "deep-review", "delta"}:
         raise ValueError("unknown supply-chain profile")
     if profile == "research" and tools:
         raise ValueError("research profile is static; use another profile for scanners")
+    if not 1 <= timeout <= 3600:
+        raise ValueError("timeout must be between 1 and 3600 seconds per scanner")
+    if retain_sbom and (profile == "research" or not tools or "cyclonedx" not in tools):
+        raise ValueError("SBOM retention requires an explicit CycloneDX scanner")
     state = repository_state(root)
     root = Path(state["root"])
     report = Report(
-        {"operation": "supply-chain", "profile": profile},
+        {
+            "operation": "supply-chain",
+            "profile": profile,
+            "inventory_target": "current_interpreter",
+            "scanner_environment": "separately_admitted_tools",
+            "sbom_retention": "sanitized_generated_only" if retain_sbom else "none",
+        },
         state,
         changed_paths=state["changed_paths"],
     )
@@ -142,47 +157,156 @@ def supply_chain(
                         "recommended_disposition": "Review material delta only.",
                     }
                 )
+    generated_sbom = None
     if profile != "research":
-        from .scanners import SCANNERS, scan
-
-        if set(tools or {}) - SCANNERS:
-            raise ValueError("unsupported scanner")
-        for name in (
-            "cyclonedx",
-            "pip-audit",
-            "grant",
-            "provenance",
-            "candidate_health",
+        generated_sbom = _scanner_stack(
+            report,
+            root,
+            tools=tools or {},
+            required_stack=profile in {"admission", "deep-review"},
+            admission_manifest=admission_manifest,
+            allow_network=allow_network,
+            sbom=sbom,
+            timeout=timeout,
+        )
+        for name, reason in (
+            ("provenance", "Assess source identity, origin and integrity context."),
+            ("candidate_health", "Assess maintenance and project health context."),
+            ("license_legal", "Review license obligations against intended use."),
+            ("human_acceptance", "Acceptance remains with the applicable authority."),
         ):
-            if tools and name in tools:
-                scan(
-                    report,
-                    root,
-                    name=name,
-                    executable=tools[name],
-                    allow_network=allow_network,
-                    sbom=sbom,
-                )
-                continue
             report.check(
                 name,
-                "incomplete",
-                kind="external_tool_finding",
-                reason="External evidence or applicable human assessment required.",
+                "review_required",
+                kind="human_review_required",
+                required=False,
+                reason=reason,
             )
-        if tools and "gitleaks" in tools:
-            scan(report, root, name="gitleaks", executable=tools["gitleaks"])
         if profile == "deep-review":
             report.check(
                 "privileged_code_review",
-                "incomplete",
+                "review_required",
                 kind="human_review_required",
+                required=False,
                 reason="Review hooks, binaries, copied code, privileges and recovery.",
             )
-    final_state = repository_state(root)
-    report.check(
-        "input_stability",
-        "passed" if state == final_state else "incomplete",
-        reason="Repository state compared before and after evidence collection.",
-    )
+    try:
+        final_state = repository_state(root)
+        final_inventory = inventory(root)
+        report.check(
+            "input_stability",
+            "passed"
+            if state == final_state and current == final_inventory
+            else "incomplete",
+            repository_unchanged=state == final_state,
+            inventory_unchanged=current == final_inventory,
+            reason="Repository and interpreter inventory compared before/after.",
+        )
+    except OSError, ValueError:
+        report.check(
+            "input_stability",
+            "incomplete",
+            reason="Repository or interpreter inventory could not be rechecked.",
+        )
+    if retain_sbom:
+        if generated_sbom is None:
+            report.check(
+                "sbom_retention",
+                "incomplete",
+                reason="No validated generated CycloneDX SBOM is available to retain.",
+            )
+        else:
+            path = persist_blob(root, generated_sbom)
+            report.evidence_refs.append(str(path))
+            report.check(
+                "sbom_retention",
+                "passed",
+                evidence_ref=str(path),
+                source="generated_cyclonedx",
+                grant_input="explicit_sbom" if sbom is not None else "generated_sbom",
+                content_hash=file_hash(path),
+            )
     return report
+
+
+def _scanner_stack(
+    report: Report,
+    root: Path,
+    *,
+    tools: dict[str, Path],
+    required_stack: bool,
+    admission_manifest: Path | None,
+    allow_network: bool,
+    sbom: Path | None,
+    timeout: int,
+) -> bytes | None:
+    """Run the explicit stack with a private, temporary CycloneDX-to-Grant input."""
+    from .admission import load_manifest
+    from .scanners import SCANNERS, scan
+
+    if set(tools) - SCANNERS:
+        raise ValueError("unsupported scanner")
+    admissions = {}
+    if tools:
+        manifest_path = admission_manifest or (
+            root / "config" / "assurance" / "scanner-admission.json"
+        )
+        try:
+            admissions = load_manifest(manifest_path)
+        except OSError, ValueError:
+            report.check(
+                "scanner_admission",
+                "incomplete",
+                reason="Admission manifest is missing or invalid; no tool executed.",
+            )
+    generated_sbom = None
+    with tempfile.TemporaryDirectory(prefix="cpks-supply-sbom-") as directory:
+        generated_path = Path(directory) / "environment.sbom.json"
+        for name in ("cyclonedx", "pip-audit", "grant", "gitleaks"):
+            if name not in tools:
+                if required_stack:
+                    report.check(
+                        name,
+                        "incomplete",
+                        kind="external_tool_finding",
+                        reason="An explicitly configured admitted scanner is required.",
+                    )
+                continue
+            admission = admissions.get(name)
+            if admission is None:
+                report.check(
+                    name,
+                    "incomplete",
+                    kind="external_tool_finding",
+                    reason="No admitted tool entry is available; tool not executed.",
+                )
+                continue
+            grant_sbom = sbom
+            if name == "grant" and grant_sbom is None:
+                if generated_sbom is None:
+                    report.check(
+                        name,
+                        "incomplete",
+                        kind="external_tool_finding",
+                        reason="No validated generated or explicit SBOM is available.",
+                    )
+                    continue
+                grant_sbom = generated_path
+            output = scan(
+                report,
+                root,
+                name=name,
+                executable=tools[name],
+                allow_network=allow_network,
+                sbom=grant_sbom if name == "grant" else None,
+                timeout=timeout,
+                admission=admission,
+            )
+            if name == "cyclonedx" and output is not None:
+                generated_sbom = output
+                fd = os.open(
+                    generated_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+                )
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(generated_sbom)
+    return generated_sbom

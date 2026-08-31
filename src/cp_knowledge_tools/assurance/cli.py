@@ -68,6 +68,17 @@ def add_parsers(root):
         help="Allow authorized vulnerability-service queries.",
     )
     supply.add_argument("--sbom", type=Path, help="Explicit SBOM input for Grant.")
+    supply.add_argument(
+        "--admission-manifest",
+        type=Path,
+        help="Reviewed admission manifest (default: repository config/assurance).",
+    )
+    supply.add_argument(
+        "--retain-sbom",
+        action="store_true",
+        help="Retain only the sanitized generated CycloneDX SBOM as private evidence.",
+    )
+    supply.add_argument("--timeout", type=int, default=300)
     drift = root.add_parser("drift", help="Read-only current-state audit.")
     command = drift.add_subparsers(dest="command", required=True).add_parser("audit")
     _common(command)
@@ -98,6 +109,8 @@ def dispatch(args: argparse.Namespace) -> int:
             timeout=args.timeout,
         )
     elif args.command == "supply-chain":
+        if args.no_evidence and args.retain_sbom:
+            raise ValueError("--no-evidence cannot be combined with --retain-sbom")
         scanner_tools = {}
         for item in args.tool:
             name, separator, path = item.partition("=")
@@ -111,6 +124,9 @@ def dispatch(args: argparse.Namespace) -> int:
             tools=scanner_tools,
             allow_network=args.allow_network,
             sbom=args.sbom,
+            admission_manifest=args.admission_manifest,
+            retain_sbom=args.retain_sbom,
+            timeout=args.timeout,
         )
     else:
         state = repository_state(args.repo_root)
@@ -127,6 +143,10 @@ def dispatch(args: argparse.Namespace) -> int:
         print(json.dumps(report.payload(), ensure_ascii=False, sort_keys=True))
     else:
         print(f"{report.status}: {report.scope}")
+        print(
+            f"  status scope: {report.status_scope}; review: {report.review_status}; "
+            f"decision: {report.decision}"
+        )
         for check in report.checks:
             print(f"  {check['status']}: {check['name']}")
             if check.get("reason"):
