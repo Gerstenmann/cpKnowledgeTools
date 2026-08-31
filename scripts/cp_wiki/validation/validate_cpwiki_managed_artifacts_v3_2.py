@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 """
-Read-only managed-artifact validator for cp-wiki — revision 3.2.
+Read-only managed-artifact validator for cp-wiki — revision 3.2.1.
 
 Validation basis:
-- CPKS-SPEC-ART@0.5 (active)
-- CPKS-SPEC-OPS@0.8 (active; technical event-time and execution boundary)
-- CPKS-SPEC-PROC@0.4 (active)
-- CPKS-POL-GOV-AUTH@1.1
-- CPKS-DEC-021@0.1
-- CPKS-DEC-026@1.0
+- CPKS-SPEC-ART@0.6 (metadata, lifecycle and relation-aware resolution)
+- CPKS-SPEC-OPS@1.1 (scope-specific validation preconditions)
+- CPKS-SPEC-PROC@0.4 (process validation subset)
+
+These are implemented rule versions, not a live authority resolution or a
+claim to implement every rule in each specification. Reports and CLI filenames
+retain the v3.2 family name for existing consumers.
+
+Revision 3.2.1 separates findings, conformance and a requested operation gate.
+The default only reports; --strict-exit remains an explicit inventory audit.
+--gate-operation with repeatable --target paths evaluates a bounded technical
+gate without granting authority. See the adjacent README for scope and limits.
 
 Revision 3.2 retains the existing validator capabilities. Its current rule
 basis includes the ART 0.5 temporal clarification in addition to the earlier
@@ -47,17 +53,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
-from collections import Counter, defaultdict
-from dataclasses import asdict, dataclass
 import datetime as dt
+import hashlib
 import json
-from pathlib import Path
-import shutil
 import re
+import shutil
 import sys
 import tempfile
-from typing import Any, Iterable
 import unicodedata
+from collections import Counter, defaultdict
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass, replace
+from pathlib import Path, PurePosixPath
+from typing import Any
 
 from cp_knowledge_tools.validation.temporal import (
     lifecycle_temporal_precedes,
@@ -73,12 +81,14 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 
-VALIDATOR_REVISION = "3.2"
+VALIDATOR_REVISION = "3.2.1"
 VALIDATION_BASIS = [
-    "CPKS-SPEC-ART@0.5",
-    "CPKS-SPEC-OPS@0.8",
+    "CPKS-SPEC-ART@0.6",
+    "CPKS-SPEC-OPS@1.1",
     "CPKS-SPEC-PROC@0.4",
 ]
+RESOLUTION_ROOTS = ("Systems", "Development", "Templates", "Processes", "Archive")
+GATE_OPERATIONS = ("artifact.activate", "artifact.revise", "artifact.transition")
 EVIDENCE_CLASS_EFFECTIVE_DATE = dt.date(2026, 7, 30)
 VERSION_RULE_EFFECTIVE_DATE = dt.date(2026, 7, 27)
 DEFAULT_VAULT = Path("/Users/cp/Documents/cp-wiki")
@@ -273,6 +283,12 @@ class Finding:
     actual: Any = None
     expected: Any = None
     line: int | None = None
+    rule_source: str = "CPKS-SPEC-ART@0.6 §15"
+    validation_profile: str = "unmanaged"
+    finding_status: str = "confirmed"
+    gate_effect: str = "not_evaluated"
+    blocking_operation: str | None = None
+    gate_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -294,6 +310,7 @@ class Document:
     has_frontmatter: bool
     parse_error: str | None
     validation_profile: str = "unmanaged"
+    read_error: str | None = None
 
     @property
     def document_type(self) -> str | None:
@@ -356,6 +373,33 @@ class AliasIndex:
 
     def canonical(self, value: str) -> str:
         return self.aliases.get(value, value)
+
+
+@dataclass
+class ValidationInventory:
+    documents: list[Document]
+    resolution_documents: list[Document]
+    findings: list[Finding]
+    aliases: AliasIndex
+    acknowledgement_stats: AcknowledgementStats
+
+
+@dataclass(frozen=True)
+class GateDecision:
+    status: str = "not_requested"
+    operation: str | None = None
+    targets: tuple[str, ...] = ()
+    evaluated_paths: tuple[str, ...] = ()
+    blockers: tuple[dict[str, str], ...] = ()
+    incomplete: tuple[dict[str, str], ...] = ()
+    rule_source: str = "CPKS-SPEC-OPS@1.1 §9.7.1; CPKS-SPEC-ART@0.6 §15"
+    authority_evaluated: bool = False
+    limits: tuple[str, ...] = (
+        "Technical managed-artifact check, not authority or mutation approval.",
+        "Targets use their applicable validation profile.",
+        "Required references use identity/path/lifecycle integrity checks only.",
+        "No transitive semantic, security, privacy or legal review is performed.",
+    )
 
 
 class FrontmatterError(RuntimeError):
@@ -447,6 +491,8 @@ def is_work_package_development_path(relative: str) -> bool:
 
 
 def scan_zone(relative: str) -> str:
+    if relative.startswith("Archive/"):
+        return "governance_history"
     if relative.startswith("Systems/cpKnowledgeSystem/Governance/"):
         if "/Archive/" in relative or "/Decisions/History/" in relative:
             return "governance_history"
@@ -590,13 +636,14 @@ def iter_candidate_paths(vault: Path) -> Iterable[Path]:
         vault / "Development/cp-wiki Vault/Specifications",
         vault / "Development/cpKnowledgeTools",
         vault / "Processes",
+        vault / "Archive",
         *work_package_roots,
     ]
     seen: set[Path] = set()
     for root in roots:
         if not root.exists():
             continue
-        for path in root.rglob("*.md"):
+        for path in sorted(root.rglob("*.md")):
             resolved = path.resolve()
             if resolved in seen:
                 continue
@@ -611,17 +658,12 @@ def iter_resolution_paths(vault: Path) -> Iterable[Path]:
     Concrete references, however, may target historical versions elsewhere in
     the canonical lifecycle trees.
     """
-    roots = [
-        vault / "Systems",
-        vault / "Development",
-        vault / "Templates",
-        vault / "Processes",
-    ]
+    roots = [vault / relative for relative in RESOLUTION_ROOTS]
     seen: set[Path] = set()
     for root in roots:
         if not root.exists():
             continue
-        for path in root.rglob("*.md"):
+        for path in sorted(root.rglob("*.md")):
             resolved = path.resolve()
             if resolved in seen:
                 continue
@@ -631,8 +673,17 @@ def iter_resolution_paths(vault: Path) -> Iterable[Path]:
 
 def load_document(vault: Path, path: Path) -> Document:
     relative = path.relative_to(vault).as_posix()
-    text = path.read_text(encoding="utf-8")
     zone = scan_zone(relative)
+    try:
+        if not path.resolve().is_relative_to(vault.resolve()):
+            raise ValueError("Document resolves outside the Vault root.")
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError, ValueError) as exc:
+        return Document(
+            path=path, relative_path=relative, scan_zone=zone, text="",
+            raw_frontmatter=None, body="", frontmatter={}, has_frontmatter=False,
+            parse_error=None, read_error=str(exc),
+        )
     try:
         raw, body = split_frontmatter(text)
         if raw is None:
@@ -686,6 +737,8 @@ def add(
     actual: Any = None,
     expected: Any = None,
     line: int | None = None,
+    finding_status: str = "confirmed",
+    rule_source: str | None = None,
 ) -> None:
     findings.append(
         Finding(
@@ -699,6 +752,13 @@ def add(
             actual=actual,
             expected=expected,
             line=line,
+            rule_source=rule_source or (
+                "CPKS-SPEC-PROC@0.4 §14"
+                if "process" in code
+                else "CPKS-SPEC-ART@0.6 §15"
+            ),
+            validation_profile=doc.validation_profile,
+            finding_status=finding_status,
         )
     )
 
@@ -848,6 +908,7 @@ def apply_acknowledgements(
         accepted = accepted_by_path.get(finding.path, set())
         suppressible = (
             finding.severity in {"warning", "info"}
+            and finding.finding_status != "incomplete"
             and finding.code in accepted
             and "validation_acknowledgement" not in finding.code
         )
@@ -887,19 +948,6 @@ def expected_filename(doc: Document) -> str | None:
     if doc.status == "active":
         return f"{doc.artifact_id} {normalized}.md"
     return f"{doc.artifact_id}@{doc.version} {normalized}.md"
-
-
-def raw_field_is_quoted(doc: Document, field: str) -> bool:
-    if doc.raw_frontmatter is None:
-        return False
-    match = re.search(
-        rf"(?m)^{re.escape(field)}:\s*(.+?)\s*$",
-        doc.raw_frontmatter,
-    )
-    if not match:
-        return False
-    raw = match.group(1).strip()
-    return len(raw) >= 2 and raw[0] in {'"', "'"} and raw[-1] == raw[0]
 
 
 def select_line_heads(documents: list[Document]) -> dict[str, Document]:
@@ -1066,7 +1114,7 @@ def legacy_reference_severity(doc: Document) -> str:
         "legacy_support",
     }:
         return "info"
-    return "error"
+    return "warning"
 
 
 def validate_alias_use(
@@ -1453,15 +1501,13 @@ def validate_identity_and_version(
                 field="version",
                 actual=doc.version,
             )
-        if not isinstance(
-            doc.frontmatter.get("version"), str
-        ) or not raw_field_is_quoted(doc, "version"):
+        if not isinstance(doc.frontmatter.get("version"), str):
             add(
                 findings,
                 doc,
                 "error",
                 "version_must_be_yaml_string",
-                "version must be quoted and stored as a YAML string.",
+                "version must be stored as a YAML string, not a number.",
                 field="version",
                 actual=doc.frontmatter.get("version"),
             )
@@ -1983,6 +2029,13 @@ def validate_document(
     findings: list[Finding],
     aliases: AliasIndex,
 ) -> None:
+    if doc.read_error:
+        add(
+            findings, doc, "warning", "document_read_incomplete",
+            "Document could not be read safely; validation is incomplete.",
+            actual=doc.read_error, finding_status="incomplete",
+        )
+        return
     if doc.parse_error:
         add(
             findings,
@@ -2176,7 +2229,26 @@ def validate_version_sequences(
         line_created = [date for date in (frontmatter_date(doc, "created") for doc in docs) if date]
         first_numeric = min(docs, key=lambda item: version_key(item.version))
         if line_created and min(line_created) >= VERSION_RULE_EFFECTIVE_DATE:
-            if first_numeric.document_type == "decision_record":
+            allowed_initial = (
+                {"0.1", "1.0"}
+                if first_numeric.document_type == "decision_record" else {"0.1"}
+            )
+            history_unproven = (
+                first_numeric.status not in {"draft", "proposed"}
+                or any(
+                    not is_empty(first_numeric.frontmatter.get(field))
+                    for field in ("source_artifact", "supersedes")
+                )
+            )
+            if first_numeric.version not in allowed_initial and history_unproven:
+                add(
+                    findings, first_numeric, "warning", "version_history_incomplete",
+                    "The observed lifecycle does not establish the initial version; "
+                    "it is not evidence that this line started at the wrong version.",
+                    field="version", actual=first_numeric.version,
+                    expected=sorted(allowed_initial), finding_status="incomplete",
+                )
+            elif first_numeric.document_type == "decision_record":
                 if first_numeric.version not in {"0.1", "1.0"}:
                     historical_first = scalar_text(first_numeric.frontmatter.get("status")) in {
                         "superseded",
@@ -2277,7 +2349,8 @@ def validate_global(
     resolution_documents: list[Document],
 ) -> None:
     managed = [
-        doc for doc in documents if doc.scope_class == "managed" and not doc.parse_error
+        doc for doc in resolution_documents
+        if doc.scope_class == "managed" and not doc.parse_error
     ]
     by_identity_version: dict[tuple[str, str], list[Document]] = defaultdict(list)
     by_active_identity: dict[str, list[Document]] = defaultdict(list)
@@ -2329,7 +2402,7 @@ def validate_global(
                     actual=path,
                 )
 
-    validate_version_sequences(documents, findings, aliases)
+    validate_version_sequences(resolution_documents, findings, aliases)
 
     exact, active = build_resolution_indexes(resolution_documents, aliases)
     for doc in documents:
@@ -2371,25 +2444,330 @@ def validate_global(
                     )
 
 
-def validate_vault(
-    vault: Path,
-) -> tuple[list[Document], list[Finding], AliasIndex, AcknowledgementStats]:
+def validate_inventory(vault: Path) -> ValidationInventory:
     documents = [load_document(vault, path) for path in iter_candidate_paths(vault)]
     findings: list[Finding] = []
-    aliases = build_alias_index(documents, findings)
     documents_by_path = {document.path.resolve(): document for document in documents}
     resolution_documents = list(documents)
     for path in iter_resolution_paths(vault):
         if path.resolve() in documents_by_path:
             continue
         document = load_document(vault, path)
-        if document.scope_class == "managed" and not document.parse_error:
+        if (
+            document.scope_class == "managed"
+            or document.parse_error
+            or document.read_error
+        ):
             resolution_documents.append(document)
+            # Reference-only documents keep their separate scope. Inspect
+            # identity and path without applying current metadata to history.
+            if document.scope_class == "managed":
+                validate_identity_and_version(document, findings, full=False)
+                validate_canonical_path_and_filename(
+                    document,
+                    findings,
+                    check_filename=False,
+                )
+            elif document.parse_error or document.read_error:
+                validate_document(document, findings, AliasIndex({}, {}, {}))
+    aliases = build_alias_index(resolution_documents, findings)
     for document in documents:
         validate_document(document, findings, aliases)
     validate_global(documents, findings, aliases, resolution_documents)
-    findings, acknowledgement_stats = apply_acknowledgements(documents, findings)
-    return documents, findings, aliases, acknowledgement_stats
+    findings, acknowledgement_stats = apply_acknowledgements(
+        resolution_documents,
+        findings,
+    )
+    return ValidationInventory(
+        documents,
+        resolution_documents,
+        findings,
+        aliases,
+        acknowledgement_stats,
+    )
+
+
+def validate_vault(
+    vault: Path,
+) -> tuple[list[Document], list[Finding], AliasIndex, AcknowledgementStats]:
+    """Compatibility interface; operation gates use the richer inventory."""
+    result = validate_inventory(vault)
+    return (
+        result.documents,
+        result.findings,
+        result.aliases,
+        result.acknowledgement_stats,
+    )
+
+
+COLLISION_CODES = {
+    "duplicate_stable_id_and_version",
+    "multiple_active_versions",
+    "duplicate_canonical_path",
+    "parallel_canonical_version",
+    "former_id_claimed_by_multiple_artifacts",
+    "former_id_conflicts_with_current_artifact_id",
+}
+REFERENCE_INTEGRITY_CODES = COLLISION_CODES | {
+    "invalid_yaml_frontmatter",
+    "document_read_incomplete",
+    "invalid_artifact_id",
+    "invalid_process_id",
+    "invalid_version",
+    "version_must_be_yaml_string",
+    "invalid_status_for_document_type",
+    "canonical_path_mismatch",
+    "active_filename_mismatch",
+    "versioned_filename_mismatch",
+    "active_artifact_outside_active_zone",
+    "active_artifact_in_history_or_archive",
+    "inactive_artifact_in_active_zone",
+    "closed_development_status_not_terminal",
+    "inactive_process_in_processes",
+    "active_process_outside_processes",
+    "missing_approval_metadata",
+    "invalid_former_ids_type",
+    "invalid_former_id",
+    "former_id_equals_current_id",
+}
+
+
+def reference_integrity_finding(finding: Finding) -> bool:
+    if finding.code in REFERENCE_INTEGRITY_CODES:
+        return True
+    if finding.code == "missing_required_field":
+        return finding.field in set(MANAGED_TYPES.values()) | {
+            "document_type",
+            "title",
+            "version",
+            "status",
+            "canonical_path",
+        }
+    return finding.code == "invalid_lifecycle_temporal_value" and finding.field in {
+        "approved_at",
+        "effective_from",
+    }
+
+
+def normalize_gate_target(vault: Path, value: str) -> str:
+    """Require an explicit Vault-relative Markdown path, never an escape."""
+    path = PurePosixPath(value)
+    if (
+        not value
+        or path.is_absolute()
+        or ".." in path.parts
+        or "\\" in value
+        or path.suffix != ".md"
+    ):
+        raise ValueError(f"Invalid Vault-relative gate target: {value!r}")
+    candidate = vault / path
+    if not candidate.resolve().is_relative_to(vault.resolve()):
+        raise ValueError(f"Gate target resolves outside the Vault: {value!r}")
+    return unicodedata.normalize("NFC", path.as_posix())
+
+
+def evaluate_operation_gate(
+    inventory: ValidationInventory,
+    operation: str | None = None,
+    targets: Iterable[str] = (),
+) -> tuple[GateDecision, list[Finding]]:
+    """Project findings onto explicit targets; this is not an authority check.
+
+    Required *direct* references contribute only identity, canonical-path and
+    lifecycle integrity. Their entire historical or transitive dependency graphs
+    do not become new mutation targets. Callers must list other changed/affected
+    targets explicitly; this function does not infer semantic impact.
+    """
+    targets = tuple(sorted(set(targets)))
+    if operation is None:
+        if targets:
+            raise ValueError("Gate targets require an operation.")
+        return GateDecision(), inventory.findings
+    if operation not in GATE_OPERATIONS or not targets:
+        raise ValueError(
+            "A supported gate operation and explicit targets are required."
+        )
+
+    def path_key(value: str) -> str:
+        return unicodedata.normalize("NFC", value)
+
+    by_path = {
+        path_key(doc.relative_path): doc for doc in inventory.resolution_documents
+    }
+    validated = {path_key(doc.relative_path) for doc in inventory.documents}
+    exact, active = build_resolution_indexes(
+        inventory.resolution_documents,
+        inventory.aliases,
+    )
+    roles: dict[str, str] = {}
+    selected_ids: set[str] = set()
+    missing: list[dict[str, str]] = []
+
+    def include_alias_declarations(identity: str) -> None:
+        # Alias conflicts can originate from a draft line, including a claim
+        # against an approved bootstrap alias. Their lifecycle is irrelevant
+        # to the collision; unrelated findings on those lines stay advisory.
+        for alias, canonical in inventory.aliases.aliases.items():
+            if canonical != identity:
+                continue
+            declared_ids = inventory.aliases.declarations.get(alias, [])
+            for declaration in inventory.resolution_documents:
+                if declaration.artifact_id in declared_ids and alias in as_list(
+                    declaration.frontmatter.get("former_ids")
+                ):
+                    roles.setdefault(
+                        path_key(declaration.relative_path), "alias_declaration"
+                    )
+
+    for target in targets:
+        doc = by_path.get(target)
+        if (
+            doc is None
+            or target not in validated
+            or (
+                doc.scope_class != "managed"
+                and not doc.parse_error
+                and not doc.read_error
+            )
+            or doc.validation_profile == "unmanaged"
+            and not doc.parse_error
+            and not doc.read_error
+        ):
+            missing.append(
+                {
+                    "path": target,
+                    "code": "gate_target_not_validated",
+                    "reason": (
+                        "Target is absent, outside validation scope or unsupported."
+                    ),
+                }
+            )
+            continue
+        roles[target] = "target"
+        if doc.artifact_id:
+            identity = inventory.aliases.canonical(doc.artifact_id)
+            selected_ids.add(identity)
+            include_alias_declarations(identity)
+        # Historical targets retain their historical profile, including their
+        # period-correct outgoing relations. No active dependency is invented.
+        if not doc.is_current_profile:
+            continue
+        references: list[tuple[str, str | None]] = []
+        for field in sorted(ACTIVE_TARGET_STABLE_FIELDS):
+            for raw in as_list(doc.frontmatter.get(field)):
+                if isinstance(raw, str) and ID_RE.fullmatch(raw):
+                    references.append((inventory.aliases.canonical(raw), None))
+        for field in sorted(VERSIONED_LIST_FIELDS | VERSIONED_SCALAR_FIELDS):
+            for raw in as_list(doc.frontmatter.get(field)):
+                if isinstance(raw, str) and VERSIONED_REF_RE.fullmatch(raw):
+                    identity, version, _ = split_reference(raw, inventory.aliases)
+                    references.append((identity, version))
+        raw_target = doc.frontmatter.get("target_artifact")
+        if isinstance(raw_target, str) and VERSIONED_REF_RE.fullmatch(raw_target):
+            identity, version, _ = split_reference(raw_target, inventory.aliases)
+            references.append((identity, version))
+        for identity, version in references:
+            resolved = (
+                active.get(identity, [])
+                if version is None
+                else exact.get(
+                    (identity, version),
+                    [],
+                )
+            )
+            for dependency in resolved:
+                dependency_path = path_key(dependency.relative_path)
+                if roles.get(dependency_path) != "target":
+                    roles[dependency_path] = "required_reference"
+                if dependency.validation_profile == "unmanaged":
+                    missing.append(
+                        {
+                            "path": dependency.relative_path,
+                            "code": "reference_profile_incomplete",
+                            "reason": (
+                                "Required reference has identity/path checks, but no "
+                                "supported lifecycle validation profile."
+                            ),
+                        }
+                    )
+            include_alias_declarations(identity)
+
+    blockers: list[dict[str, str]] = []
+    incomplete = list(missing)
+    assessed: list[Finding] = []
+    for finding in inventory.findings:
+        role = roles.get(path_key(finding.path))
+        if (
+            role is None
+            and finding.code in COLLISION_CODES
+            and finding.artifact_id
+            and inventory.aliases.canonical(finding.artifact_id) in selected_ids
+        ):
+            role = "target_identity_collision"
+        relevant = (
+            role == "target"
+            or role == "target_identity_collision"
+            or (role == "alias_declaration" and finding.code in COLLISION_CODES)
+            or (role == "required_reference" and reference_integrity_finding(finding))
+        )
+        if relevant and finding.finding_status == "incomplete":
+            effect = "incomplete"
+            reason = f"Required technical evidence is incomplete for {role}."
+            incomplete.append(
+                {"path": finding.path, "code": finding.code, "reason": reason}
+            )
+        elif relevant and finding.severity == "error":
+            effect = "blocks"
+            reason = (
+                f"Confirmed conformance/integrity error on {role}; "
+                f"only {operation} is withheld."
+            )
+            blockers.append(
+                {"path": finding.path, "code": finding.code, "reason": reason}
+            )
+        else:
+            effect = "non_blocking" if relevant else "out_of_scope"
+            reason = (
+                "Advisory finding; it does not block this operation."
+                if relevant
+                else "Outside this operation's target/reference-integrity checks."
+            )
+        assessed.append(
+            replace(
+                finding,
+                gate_effect=effect,
+                gate_reason=reason,
+                blocking_operation=operation
+                if effect in {"blocks", "incomplete"}
+                else None,
+            )
+        )
+    return GateDecision(
+        status="blocked" if blockers else "incomplete" if incomplete else "clear",
+        operation=operation,
+        targets=targets,
+        evaluated_paths=tuple(sorted(roles)),
+        blockers=tuple(blockers),
+        incomplete=tuple(incomplete),
+    ), assessed
+
+
+def conformance_summary(documents: list[Document], findings: list[Finding]) -> dict:
+    errors = sum(item.severity == "error" for item in findings)
+    incomplete = sum(item.finding_status == "incomplete" for item in findings)
+    empty = not any(doc.scope_class == "managed" for doc in documents)
+    return {
+        "status": "nonconformant"
+        if errors
+        else "incomplete"
+        if incomplete or empty
+        else "conformant",
+        "scope": "configured validation profiles and reference integrity",
+        "error_count": errors,
+        "incomplete_count": incomplete,
+        "empty_managed_inventory": empty,
+        "authority_evaluated": False,
+    }
 
 
 def markdown_escape(value: Any) -> str:
@@ -2406,7 +2784,9 @@ def render_markdown(
     aliases: AliasIndex,
     acknowledgement_stats: AcknowledgementStats,
     generated_at: str,
+    gate: GateDecision | None = None,
 ) -> str:
+    gate = gate or GateDecision()
     severity_counts = Counter(finding.severity for finding in findings)
     profile_counts = Counter(doc.validation_profile for doc in documents)
     scope_counts = Counter(doc.scope_class for doc in documents)
@@ -2457,10 +2837,32 @@ def render_markdown(
         "## 1. Executive assessment",
         "",
     ]
-    if severity_counts["error"]:
-        lines.append("The configured inventory contains blocking findings.")
+    lines.append(
+        "The configured inventory contains conformance errors."
+        if severity_counts["error"]
+        else "No conformance errors were found in this scope."
+    )
+    lines.extend([
+        "",
+        f"Operation gate: **{gate.status}**; operation: `{gate.operation or 'none'}`.",
+        "Findings do not grant authority or impose a general work stop.",
+        "The legacy --strict-exit option audits global conformance, not a mutation.",
+    ])
+    if gate.status == "not_requested":
+        lines.append("No operation gate was requested; no operation was blocked.")
     else:
-        lines.append("No blocking errors were found in the configured inventory.")
+        lines.extend([
+            f"Targets: {', '.join(markdown_escape(path) for path in gate.targets)}",
+            f"Gate rule: {gate.rule_source}",
+            "",
+            "| Gate issue | Path | Reason |",
+            "|---|---|---|",
+        ])
+        for issue in (*gate.blockers, *gate.incomplete):
+            lines.append(
+                f"| {issue['code']} | {markdown_escape(issue['path'])} "
+                f"| {issue['reason']} |"
+            )
 
     lines.extend(
         [
@@ -2532,8 +2934,9 @@ def render_markdown(
     else:
         lines.extend(
             [
-                "| Severity | Code | Profile | Path | Field | Message | Actual | Expected |",
-                "|---|---|---|---|---|---|---|---|",
+                "| Severity | Code | Profile | Path | Field | Message | Actual "
+                "| Expected | Rule | Status | Gate |",
+                "|---|---|---|---|---|---|---|---|---|---|---|",
             ]
         )
         by_path = {doc.relative_path: doc.validation_profile for doc in documents}
@@ -2562,6 +2965,9 @@ def render_markdown(
                         f"`{markdown_escape(finding.expected)}`"
                         if finding.expected is not None
                         else "",
+                        finding.rule_source,
+                        finding.finding_status,
+                        finding.gate_effect,
                     ]
                 )
                 + " |"
@@ -2577,11 +2983,17 @@ def render_markdown(
             "",
             "## 9. Interpretation",
             "",
-            "- Current and current-Development artifacts are checked against the complete draft schema.",
-            "- Historical and closed-Development artifacts retain period-correct metadata; YAML, identity, version, path and duplicate integrity remain blocking.",
-            "- Current use of former IDs is an error; historical use is resolved and reported as information.",
-            "- A valid structured target descriptor may point to a not-yet-materialized version.",
-            "- Historical acknowledgements suppress only explicitly accepted warning/info codes; integrity errors remain blocking.",
+            "- Current artifacts and current Development use the configured schema.",
+            "- Historical artifacts retain period-correct metadata; "
+            "integrity findings remain visible.",
+            "- Successfully resolved former IDs are advisory; "
+            "missing or ambiguous targets remain errors.",
+            "- A valid structured target descriptor may point to "
+            "a not-yet-materialized version.",
+            "- Acknowledgements cannot suppress errors "
+            "or incomplete required evidence.",
+            "- Relevant errors or incomplete required checks withhold only "
+            "the explicitly requested operation.",
             "- The validator does not repair files, activate artifacts, commit or push.",
             "",
         ]
@@ -2596,6 +3008,9 @@ def write_reports(
     findings: list[Finding],
     aliases: AliasIndex,
     acknowledgement_stats: AcknowledgementStats,
+    *,
+    gate: GateDecision | None = None,
+    resolution_documents: list[Document] | None = None,
 ) -> Path:
     generated = dt.datetime.now().astimezone()
     timestamp = generated.strftime("%Y%m%dT%H%M%S%z")
@@ -2605,10 +3020,21 @@ def write_reports(
     report_dir.mkdir(parents=True, exist_ok=False)
 
     payload = {
+        "schema": "cpks.managed-artifact-validation/1",
         "generated_at": generated.isoformat(),
         "vault": str(vault),
         "validator_revision": VALIDATOR_REVISION,
         "validation_basis": VALIDATION_BASIS,
+        "rule_resolution": "implemented_versions; not live authority resolution",
+        "conformance": conformance_summary(documents, findings),
+        "gate": asdict(gate or GateDecision()),
+        "resolution_roots": list(RESOLUTION_ROOTS),
+        "fingerprint_kind": "sha256_utf8_decoded_text; not an atomic Vault snapshot",
+        "input_fingerprints": {
+            doc.relative_path: hashlib.sha256(doc.text.encode("utf-8")).hexdigest()
+            if not doc.read_error else None
+            for doc in (resolution_documents or documents)
+        },
         "evidence_class_coverage": {
             "current_managed_total": len([doc for doc in documents if doc.scope_class == "managed" and doc.validation_profile in FULL_CURRENT_PROFILES]),
             "by_class": dict(Counter(doc.evidence_class or "missing" for doc in documents if doc.scope_class == "managed" and doc.validation_profile in FULL_CURRENT_PROFILES)),
@@ -2661,6 +3087,7 @@ def write_reports(
             aliases,
             acknowledgement_stats,
             generated.isoformat(),
+            gate,
         ),
         encoding="utf-8",
     )
@@ -3505,7 +3932,18 @@ def main() -> int:
     parser.add_argument(
         "--strict-exit",
         action="store_true",
-        help="Return exit code 1 when blocking errors are found.",
+        help=(
+            "Explicit global conformance audit: exit 1 for errors, 2 for incomplete "
+            "checks. Not an operation gate; cannot be combined with --gate-operation."
+        ),
+    )
+    parser.add_argument(
+        "--gate-operation", choices=GATE_OPERATIONS,
+        help="Evaluate only the named technical operation; grants no authority.",
+    )
+    parser.add_argument(
+        "--target", action="append", default=[], metavar="VAULT_RELATIVE_PATH",
+        help="Repeat for every changed/affected managed file in the operation gate.",
     )
     parser.add_argument(
         "--self-test",
@@ -3514,22 +3952,43 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if bool(args.gate_operation) != bool(args.target):
+        parser.error(
+            "--gate-operation and at least one --target must be used together."
+        )
+    if args.gate_operation and (args.strict_exit or args.self_test):
+        parser.error(
+            "An operation gate cannot be combined with --strict-exit or --self-test."
+        )
+    vault = args.vault.expanduser().resolve()
+    try:
+        targets = [normalize_gate_target(vault, value) for value in args.target]
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
+
     if args.self_test:
         try:
             result = run_self_tests()
         except SelfTestFailure as exc:
             print(f"SELF-TEST FAILED: {exc}", file=sys.stderr)
             return 1
-        print("Managed-artifact validator v3.2 self-test passed.")
+        print(f"Managed-artifact validator v{VALIDATOR_REVISION} self-test passed.")
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
-    vault = args.vault.expanduser().resolve()
     if not vault.is_dir():
         print(f"ERROR: Vault not found: {vault}", file=sys.stderr)
         return 2
 
-    documents, findings, aliases, acknowledgement_stats = validate_vault(vault)
+    try:
+        inventory = validate_inventory(vault)
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: Validation inventory incomplete: {exc}", file=sys.stderr)
+        return 2
+    documents = inventory.documents
+    aliases = inventory.aliases
+    acknowledgement_stats = inventory.acknowledgement_stats
+    gate, findings = evaluate_operation_gate(inventory, args.gate_operation, targets)
     report_dir = write_reports(
         args.report_root,
         vault,
@@ -3537,6 +3996,8 @@ def main() -> int:
         findings,
         aliases,
         acknowledgement_stats,
+        gate=gate,
+        resolution_documents=inventory.resolution_documents,
     )
 
     published_reports: list[Path] = []
@@ -3554,7 +4015,7 @@ def main() -> int:
 
     severity_counts = Counter(finding.severity for finding in findings)
     profile_counts = Counter(doc.validation_profile for doc in documents)
-    print("Managed-artifact validation v3.2 completed.")
+    print(f"Managed-artifact validation v{VALIDATOR_REVISION} completed.")
     print(f"Files inventoried: {len(documents)}")
     for profile in (
         "current_managed",
@@ -3576,12 +4037,32 @@ def main() -> int:
     print(f"Errors:                                {severity_counts['error']}")
     print(f"Warnings:                              {severity_counts['warning']}")
     print(f"Info:                                  {severity_counts['info']}")
+    print(
+        "Conformance:                           "
+        f"{conformance_summary(documents, findings)['status']}"
+    )
+    print(f"Operation gate:                        {gate.status}")
+    if gate.operation:
+        print(f"Gate operation:                        {gate.operation}")
+    else:
+        print(
+            "No operation gate requested; findings do not impose a general work stop."
+        )
+    print("Technical validation does not grant authority or mutation approval.")
     print(f"Report directory:                      {report_dir}")
     for published_report in published_reports:
         print(f"Published report:                      {published_report}")
 
-    if args.strict_exit and severity_counts["error"]:
+    if gate.status == "blocked":
         return 1
+    if gate.status == "incomplete":
+        return 2
+    if args.strict_exit:
+        conformance = conformance_summary(documents, findings)["status"]
+        if conformance == "nonconformant":
+            return 1
+        if conformance == "incomplete":
+            return 2
     return 0
 
 

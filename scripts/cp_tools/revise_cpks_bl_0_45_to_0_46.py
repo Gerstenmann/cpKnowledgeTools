@@ -30,8 +30,8 @@ Safety:
 - --check is default
 - --apply writes
 - backups are created before mutation
-- the post-change validator is run with --strict-exit
-- automatic rollback occurs if validation fails
+- the post-change validator gates only the new draft and archived predecessor
+- automatic rollback occurs if this scoped gate is blocked or incomplete
 - no Git commit or push
 """
 
@@ -840,7 +840,12 @@ def validator_command(repo: Path, vault: Path) -> list[str]:
         str(repo / VALIDATOR_REL),
         "--vault",
         str(vault),
-        "--strict-exit",
+        "--gate-operation",
+        "artifact.revise",
+        "--target",
+        TARGET_046_REL.as_posix(),
+        "--target",
+        ARCHIVE_045_REL.as_posix(),
     ]
     # Publish only when the patched validator supports the option.
     validator_text = (repo / VALIDATOR_REL).read_text(encoding="utf-8")

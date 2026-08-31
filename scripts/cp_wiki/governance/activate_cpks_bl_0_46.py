@@ -23,7 +23,8 @@ The script does not perform material content changes, Git commit, or push.
 
 Execution:
     --check   verify preconditions and generated transforms; no Vault write
-    --apply   perform activation, run validator v3.2 --strict-exit, rollback on error
+    --apply   perform activation, run validator v3.2 for both changed destinations,
+              rollback on a blocked or incomplete scoped operation gate
 
 Recovery copies are stored as technical run data under:
     /Users/cp/Library/Application Support/cpKnowledgeTools/Runs/cp-wiki/governance/
@@ -565,7 +566,12 @@ def validator_command(repo: Path, vault: Path) -> list[str]:
         str(validator),
         "--vault",
         str(vault),
-        "--strict-exit",
+        "--gate-operation",
+        "artifact.activate",
+        "--target",
+        ACTIVE_REL.as_posix(),
+        "--target",
+        ARCHIVE_044_REL.as_posix(),
     ]
     validator_text = validator.read_text(encoding="utf-8")
     if "--publish-report" in validator_text:
