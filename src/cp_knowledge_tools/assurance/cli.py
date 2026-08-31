@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .drift import audit
+from .project_environment import project_environment
 from .report import Report, persist
 from .repository import repository_state
 from .supply import supply_chain
@@ -79,6 +80,20 @@ def add_parsers(root):
         help="Retain only the sanitized generated CycloneDX SBOM as private evidence.",
     )
     supply.add_argument("--timeout", type=int, default=300)
+    environment = commands.add_parser(
+        "environment",
+        help="Check uv lock consistency or observe an authorized fresh rebuild.",
+    )
+    _common(environment)
+    environment.add_argument("--mode", choices=("check", "rebuild"), default="check")
+    environment.add_argument("--uv", required=True, type=Path)
+    environment.add_argument("--python", required=True, type=Path)
+    environment.add_argument("--environment", required=True, type=Path)
+    environment.add_argument("--cache-dir", required=True, type=Path)
+    environment.add_argument("--binding", type=Path)
+    environment.add_argument("--allow-network", action="store_true")
+    environment.add_argument("--offline-frozen", action="store_true")
+    environment.add_argument("--timeout", type=int, default=300)
     drift = root.add_parser("drift", help="Read-only current-state audit.")
     command = drift.add_subparsers(dest="command", required=True).add_parser("audit")
     _common(command)
@@ -106,6 +121,19 @@ def dispatch(args: argparse.Namespace) -> int:
             paths=tuple(args.path),
             tests=tuple(args.test),
             base=args.base,
+            timeout=args.timeout,
+        )
+    elif args.command == "environment":
+        report = project_environment(
+            args.repo_root,
+            uv=args.uv,
+            python=args.python,
+            environment=args.environment,
+            cache_dir=args.cache_dir,
+            mode=args.mode,
+            binding_path=args.binding,
+            allow_network=args.allow_network,
+            offline_frozen=args.offline_frozen,
             timeout=args.timeout,
         )
     elif args.command == "supply-chain":

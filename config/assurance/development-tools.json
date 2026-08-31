@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "tool": {
+    "id": "uv",
+    "version": "0.12.7",
+    "platform": {"system": "Darwin", "machine": "arm64"},
+    "source_url": "https://github.com/astral-sh/uv",
+    "source_commit": "61291a8ca5477a9ca653f14d2ac5665587c263fa",
+    "license_expression": "MIT OR Apache-2.0",
+    "archive": {
+      "url": "https://github.com/astral-sh/uv/releases/download/0.12.7/uv-aarch64-apple-darwin.tar.gz",
+      "sha256": "127ebdda7ad953cdf198e964b570ea5771b85467ea93eb7cb6d6f8e6f55408f3"
+    },
+    "executable_sha256": "55936a60bff5de7ac04facb72f9e6fd0ffd9661063480224c3ab321c3f10caff",
+    "provenance": {
+      "method": "github-artifact-attestation",
+      "repository": "astral-sh/uv",
+      "evidence_ref": "artifacts/locking/admission/uv-attestation.json"
+    },
+    "assessment_ref": "config/assurance/project-environment.md"
+  }
+}

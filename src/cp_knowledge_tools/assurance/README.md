@@ -5,15 +5,17 @@ no authority, accepts no dependency, mutates no Vault object and creates no
 commit or remote effect. The existing `cpks` entry point retains its earlier
 commands and default JSON behavior.
 
-Use the verified tools-repository interpreter with explicit absolute roots:
+Use the verified project interpreter with explicit absolute roots. For reproducible
+verification, `<project-python>` is the `bin/python` in the freshly reconstructed
+locked environment, not an implicit fallback to the old `.venv`:
 
 ```sh
-<repo>/.venv/bin/python -m cp_knowledge_tools.cli.cpks assurance preflight --repo-root <repo>
-<repo>/.venv/bin/python -m cp_knowledge_tools.cli.cpks assurance verify --repo-root <repo> --profile fast --path src/cp_knowledge_tools/assurance --test tests/assurance
-<repo>/.venv/bin/python -m cp_knowledge_tools.cli.cpks assurance verify --repo-root <repo> --profile regression --path src/cp_knowledge_tools/assurance
-<repo>/.venv/bin/python -m cp_knowledge_tools.cli.cpks assurance supply-chain --repo-root <repo> --profile research
-<repo>/.venv/bin/python -m cp_knowledge_tools.cli.cpks assurance supply-chain --repo-root <repo> --profile delta --previous artifacts/assurance/<prior>.json
-<repo>/.venv/bin/python -m cp_knowledge_tools.cli.cpks drift audit --repo-root <repo> --vault-root <vault> --scope system --rule-id DEV-P05
+<project-python> -m cp_knowledge_tools.cli.cpks assurance preflight --repo-root <repo>
+<project-python> -m cp_knowledge_tools.cli.cpks assurance verify --repo-root <repo> --profile fast --path src/cp_knowledge_tools/assurance --test tests/assurance
+<project-python> -m cp_knowledge_tools.cli.cpks assurance verify --repo-root <repo> --profile regression --path src/cp_knowledge_tools/assurance
+<project-python> -m cp_knowledge_tools.cli.cpks assurance supply-chain --repo-root <repo> --profile research
+<project-python> -m cp_knowledge_tools.cli.cpks assurance supply-chain --repo-root <repo> --profile delta --previous artifacts/assurance/<prior>.json
+<project-python> -m cp_knowledge_tools.cli.cpks drift audit --repo-root <repo> --vault-root <vault> --scope system --rule-id DEV-P05
 ```
 
 `--path` and `--test` are repeatable repository-relative paths. Directory scopes
@@ -50,6 +52,44 @@ and does not impose an OS disk quota. Tests execute trusted repository code and
 can create files; the runner is not a sandbox. The host must enforce filesystem,
 network and privilege bounds. Changing inputs during a run makes evidence stale.
 
+## Locked project environment
+
+`assurance environment` wraps the admitted uv executable without interpreting
+`uv.lock`. The binding and operating conditions are documented in
+[`config/assurance/project-environment.md`](../../../config/assurance/project-environment.md).
+The sole project lock is `uv.lock`; `.python-version` pins the ordinary GIL
+CPython patch. No new runtime dependency or build backend is introduced.
+
+After resolving authority and verifying the existing bootstrap interpreter:
+
+```sh
+<verified-python> -m cp_knowledge_tools.cli.cpks assurance environment \
+  --repo-root <repo> --mode rebuild \
+  --uv <repo>/artifacts/locking/admission/uv-0.12.7/uv \
+  --python <absolute-existing-base-cpython> \
+  --environment <repo>/artifacts/locking/environments/<new-run> \
+  --cache-dir <repo>/artifacts/locking/cache --allow-network
+```
+
+The target must not exist. Use its `bin/python` for subsequent regression and
+scanners. For the separate offline/frozen rebuild, omit `--allow-network`, add
+`--offline-frozen`, and choose another new target. The wrapper always checks
+lock freshness first. All uv operations disable Python downloads and managed
+Python discovery, sanitize inherited configuration, and verify input hashes.
+`--extra dev` selects the current optional development extra.
+
+With `--mode check` and an existing target, only official lock/environment
+consistency checks run. Fresh creation cannot be inferred from existing files:
+the report marks freshness `incomplete` and returns 2 even when consistency
+passes. It never accepts an arbitrary receipt as proof. Rebuild reports record
+the actual absent-to-created observation and interpreter/prefix/base/ABI identity.
+Generated reports are evidence, not an authority or a durable attestation.
+
+Isolated setuptools build dependencies and host Python are outside the complete
+project artifact-hash lock. A warm-cache offline run is not a hermetic-build
+claim. The generated dependencies-only `pylock.toml` export remains ignored,
+noncanonical evidence; it is not another committed project lock.
+
 ## Admitted local scanner stack
 
 Supply `research` inventories the current interpreter and pyproject without
@@ -80,7 +120,7 @@ Pass explicit absolute executables. Both Python tool IDs use the same admitted
 Venv interpreter; the wrapper adds `-I -B -m` and the fixed module name:
 
 ```sh
-<repo>/.venv/bin/python -m cp_knowledge_tools.cli.cpks assurance supply-chain \
+<project-python> -m cp_knowledge_tools.cli.cpks assurance supply-chain \
   --repo-root <repo> --profile admission \
   --admission-manifest <repo>/config/assurance/scanner-admission.json \
   --tool cyclonedx=<tool-root>/python/bin/python \
