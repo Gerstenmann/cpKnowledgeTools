@@ -1,0 +1,50 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 -I -S -c 'import hashlib, os, stat, subprocess\nexpected = \"8a6232a6bdda526eb7c6fa6cc24990e8c53b3b899e82c292d6202399efe2a714\"\nenv = {k:v for k,v in os.environ.items() if not k.startswith(\"GIT_\")}\nenv.update(GIT_OPTIONAL_LOCKS=\"0\", GIT_TERMINAL_PROMPT=\"0\")\nroot = subprocess.check_output([\"/usr/bin/git\", \"--no-optional-locks\", \"-c\", \"core.fsmonitor=false\", \"rev-parse\", \"--show-toplevel\"], env=env, timeout=2).decode().strip()\nroot = os.path.realpath(root)\nfd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)\ntry:\n    for part in (\".codex\", \"hooks\"):\n        child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)\n        os.close(fd)\n        fd = child\n    child = os.open(\"guard.py\", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)\n    with os.fdopen(child, \"rb\") as stream:\n        info = os.fstat(stream.fileno())\n        if not stat.S_ISREG(info.st_mode) or info.st_size > 131072:\n            raise RuntimeError(\"Hook script is not a bounded regular file\")\n        source = stream.read(131073)\nfinally:\n    os.close(fd)\nif hashlib.sha256(source).hexdigest() != expected:\n    raise RuntimeError(\"Hook script hash changed; review definition and native hook trust\")\nexec(compile(source, root + \"/.codex/hooks/guard.py\", \"exec\"), {\"__name__\":\"__main__\", \"__file__\":root + \"/.codex/hooks/guard.py\"})\n'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 -I -S -c 'import hashlib, os, stat, subprocess\nexpected = \"8a6232a6bdda526eb7c6fa6cc24990e8c53b3b899e82c292d6202399efe2a714\"\nenv = {k:v for k,v in os.environ.items() if not k.startswith(\"GIT_\")}\nenv.update(GIT_OPTIONAL_LOCKS=\"0\", GIT_TERMINAL_PROMPT=\"0\")\nroot = subprocess.check_output([\"/usr/bin/git\", \"--no-optional-locks\", \"-c\", \"core.fsmonitor=false\", \"rev-parse\", \"--show-toplevel\"], env=env, timeout=2).decode().strip()\nroot = os.path.realpath(root)\nfd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)\ntry:\n    for part in (\".codex\", \"hooks\"):\n        child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)\n        os.close(fd)\n        fd = child\n    child = os.open(\"guard.py\", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)\n    with os.fdopen(child, \"rb\") as stream:\n        info = os.fstat(stream.fileno())\n        if not stat.S_ISREG(info.st_mode) or info.st_size > 131072:\n            raise RuntimeError(\"Hook script is not a bounded regular file\")\n        source = stream.read(131073)\nfinally:\n    os.close(fd)\nif hashlib.sha256(source).hexdigest() != expected:\n    raise RuntimeError(\"Hook script hash changed; review definition and native hook trust\")\nexec(compile(source, root + \"/.codex/hooks/guard.py\", \"exec\"), {\"__name__\":\"__main__\", \"__file__\":root + \"/.codex/hooks/guard.py\"})\n'",
+            "timeout": 10
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 -I -S -c 'import hashlib, os, stat, subprocess\nexpected = \"8a6232a6bdda526eb7c6fa6cc24990e8c53b3b899e82c292d6202399efe2a714\"\nenv = {k:v for k,v in os.environ.items() if not k.startswith(\"GIT_\")}\nenv.update(GIT_OPTIONAL_LOCKS=\"0\", GIT_TERMINAL_PROMPT=\"0\")\nroot = subprocess.check_output([\"/usr/bin/git\", \"--no-optional-locks\", \"-c\", \"core.fsmonitor=false\", \"rev-parse\", \"--show-toplevel\"], env=env, timeout=2).decode().strip()\nroot = os.path.realpath(root)\nfd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)\ntry:\n    for part in (\".codex\", \"hooks\"):\n        child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)\n        os.close(fd)\n        fd = child\n    child = os.open(\"guard.py\", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)\n    with os.fdopen(child, \"rb\") as stream:\n        info = os.fstat(stream.fileno())\n        if not stat.S_ISREG(info.st_mode) or info.st_size > 131072:\n            raise RuntimeError(\"Hook script is not a bounded regular file\")\n        source = stream.read(131073)\nfinally:\n    os.close(fd)\nif hashlib.sha256(source).hexdigest() != expected:\n    raise RuntimeError(\"Hook script hash changed; review definition and native hook trust\")\nexec(compile(source, root + \"/.codex/hooks/guard.py\", \"exec\"), {\"__name__\":\"__main__\", \"__file__\":root + \"/.codex/hooks/guard.py\"})\n'",
+            "timeout": 10
+          }
+        ],
+        "matcher": "^(Bash|exec_command|shell|shell_command|apply_patch|Edit|Write)$"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 -I -S -c 'import hashlib, os, stat, subprocess\nexpected = \"8a6232a6bdda526eb7c6fa6cc24990e8c53b3b899e82c292d6202399efe2a714\"\nenv = {k:v for k,v in os.environ.items() if not k.startswith(\"GIT_\")}\nenv.update(GIT_OPTIONAL_LOCKS=\"0\", GIT_TERMINAL_PROMPT=\"0\")\nroot = subprocess.check_output([\"/usr/bin/git\", \"--no-optional-locks\", \"-c\", \"core.fsmonitor=false\", \"rev-parse\", \"--show-toplevel\"], env=env, timeout=2).decode().strip()\nroot = os.path.realpath(root)\nfd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)\ntry:\n    for part in (\".codex\", \"hooks\"):\n        child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)\n        os.close(fd)\n        fd = child\n    child = os.open(\"guard.py\", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)\n    with os.fdopen(child, \"rb\") as stream:\n        info = os.fstat(stream.fileno())\n        if not stat.S_ISREG(info.st_mode) or info.st_size > 131072:\n            raise RuntimeError(\"Hook script is not a bounded regular file\")\n        source = stream.read(131073)\nfinally:\n    os.close(fd)\nif hashlib.sha256(source).hexdigest() != expected:\n    raise RuntimeError(\"Hook script hash changed; review definition and native hook trust\")\nexec(compile(source, root + \"/.codex/hooks/guard.py\", \"exec\"), {\"__name__\":\"__main__\", \"__file__\":root + \"/.codex/hooks/guard.py\"})\n'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
