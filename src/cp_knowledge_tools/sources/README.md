@@ -1,8 +1,12 @@
 # Local Source engine
 
-This package implements the deterministic Local-HTML reference path through the
-Source/Semantic boundary. It follows the live `CPKS-SPEC-SRC` and
+This package implements deterministic Local-HTML and digital Local-PDF paths
+through the Source/Semantic boundary. It follows the live `CPKS-SPEC-SRC` and
 `CPKT-SPEC-ARCH`; this README explains the implementation, not governance.
+
+The PDF-specific extraction, selectors and limits are documented in
+[local_pdf/README.md](adapters/local_pdf/README.md). Both adapters use the same
+neutral contracts, immutable storage and consumer Policy gate.
 
 ## Interfaces and boundaries
 
@@ -148,9 +152,9 @@ replaced, without maintaining a second raw/normalized API.
 
 ## Reuse and limits
 
-The required DEV-P06 assessment chose WRAP/REFACTOR of the existing BeautifulSoup
+The initial HTML DEV-P06 assessment chose WRAP/REFACTOR of the existing BeautifulSoup
 integration and USE of internal hashing/serialization patterns. Building another
-HTML parser or adding a dependency would not improve this scope. No library was
+HTML parser or adding a dependency would not improve that slice. No library was
 added, updated, installed or copied. The installed parser dependencies are
 recorded in each transformation; no CVE or broad upstream maintenance audit is
 claimed. Technical parsing rationale follows the
@@ -163,6 +167,8 @@ operations and uses the existing reuse core directly, without expanding the kern
 
 Focused tests live in `tests/sources/test_source_engine_contract.py` and
 `test_source_engine_resolution.py`; existing Source, Semantic, Policy and Minecraft
-E2E regressions remain applicable. PDF, OCR, STT, Vision, Office/new mail adapters,
+E2E regressions remain applicable. WI-016 adds digital PDF after its separate
+candidate decision, recorded in `config/sources/pdf-dependency-admission.md`;
+its tests live in `tests/sources/test_local_pdf.py`. OCR, STT, Vision, Office/mail adapters,
 federation, LLM generation and new Knowledge/publication semantics are outside this
-checkpoint. A later PDF cycle requires its own candidate decision.
+checkpoint.

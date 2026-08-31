@@ -51,8 +51,23 @@ def _capture(tmp_path: Path, html: str) -> CapturedSource:
     )
 
 
-@pytest.fixture
-def source(tmp_path: Path):
+@pytest.fixture(params=("html", "pdf"))
+def source(tmp_path: Path, request):
+    if request.param == "pdf":
+        from cp_knowledge_tools.sources.adapters.local_pdf import LocalPdfAdapter
+        from tests.sources.pdf_fixture import digital_pdf
+
+        adapter = LocalPdfAdapter()
+        path = tmp_path / "resolution.pdf"
+        path.write_bytes(digital_pdf(("Public fixture passage.",)))
+        captured = adapter.capture(
+            "synthetic-resolution-source",
+            path,
+            captured_at=NOW,
+            policy_refs=(SOURCE_ANCHOR,),
+        )
+        address = adapter.evidence_address(captured, ["Public fixture passage."])
+        return adapter, captured, address
     adapter = LocalHtmlAdapter()
     captured = _capture(tmp_path, "<article><p>Public fixture passage.</p></article>")
     address = adapter.evidence_address(captured, ["Public fixture passage."])
@@ -260,9 +275,7 @@ def test_permit_for_different_subject_contract_cannot_resolve_source(
 ):
     adapter, captured, address = source
     subjects = list(_subjects(address))
-    subjects[subject_index] = replace(
-        subjects[subject_index], **{field: wrong_value}
-    )
+    subjects[subject_index] = replace(subjects[subject_index], **{field: wrong_value})
     subjects = tuple(subjects)
     evaluation = _evaluation(subjects)
     decision = PolicyEvaluator().evaluate(evaluation, _configuration(subjects))
@@ -358,8 +371,9 @@ def test_unimplemented_redaction_condition_does_not_grant_content(source):
 def test_duplicate_public_and_restricted_passages_keep_separate_authorization(tmp_path):
     adapter = LocalHtmlAdapter()
     captured = _capture(
-        tmp_path, "<p>Repeated passage.</p><aside class='internal-note'>"
-        "<p>Repeated passage.</p></aside>"
+        tmp_path,
+        "<p>Repeated passage.</p><aside class='internal-note'>"
+        "<p>Repeated passage.</p></aside>",
     )
     with pytest.raises(ValueError, match="ambiguous"):
         adapter.evidence_address(captured, ["Repeated passage."])
@@ -384,8 +398,9 @@ def test_duplicate_public_and_restricted_passages_keep_separate_authorization(tm
 def test_ancestor_inherits_restricted_descendant_before_content_resolution(tmp_path):
     adapter = LocalHtmlAdapter()
     captured = _capture(
-        tmp_path, "<article><p>Public context.</p><aside class='internal-note'>"
-        "<p>Confidential detail.</p></aside></article>"
+        tmp_path,
+        "<article><p>Public context.</p><aside class='internal-note'>"
+        "<p>Confidential detail.</p></aside></article>",
     )
     address = adapter.evidence_address(captured, ["Public context.", "Confidential"])
     assert address.restricted
@@ -436,7 +451,7 @@ def test_valid_policy_does_not_reinterpret_unknown_or_missing_selectors(
 
 @pytest.mark.parametrize(
     "json_value",
-    ['"passage"', '["passage"]', '[["nested"]]', '{"fragment":"passage"}', '7'],
+    ['"passage"', '["passage"]', '[["nested"]]', '{"fragment":"passage"}', "7"],
 )
 def test_selector_constructor_rejects_untyped_or_mutable_json_values(json_value):
     with pytest.raises((ValueError, TypeError)):
