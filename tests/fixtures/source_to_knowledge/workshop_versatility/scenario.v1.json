@@ -1,0 +1,27 @@
+{
+  "scenario_id": "workshop-versatility",
+  "scenario_version": "1",
+  "scenario_role": "frontier",
+  "synthetic": true,
+  "domain": "shared workshop equipment handover and calibration planning",
+  "sources": [
+    {"source_key": "handover-de", "path": "handover.de.html", "language": "de"},
+    {"source_key": "planning-en", "path": "planning.en.html", "language": "en"},
+    {"source_key": "clarification-de", "path": "clarification.de.html", "language": "de"}
+  ],
+  "bounds": {
+    "source_count": 3,
+    "evidence_fragments_max": 9,
+    "candidate_payloads_max": 24,
+    "identity_questions_max": 3,
+    "known_gaps_max": 4,
+    "planned_stochastic_repetitions_per_frozen_configuration": 5,
+    "external_requests": 0
+  },
+  "processing": {
+    "current": "local_synthetic_test_only",
+    "future_input_allowlist": ["normalized_records", "structured_segments", "resolvable_evidence", "source_provenance", "applicable_policy_context"],
+    "excluded_from_generator_input": ["golden", "expected", "oracle", "review", "completion_reports"],
+    "external_processing": "requires separately authorized implementation scope and an applicable, bound policy decision before any model call"
+  }
+}

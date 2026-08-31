@@ -1,0 +1,412 @@
+{
+  "scenario_id": "workshop-versatility",
+  "scenario_version": "1",
+  "authorship": "Manually specified synthetic source facts and expected behavior for WI-018; no model output exists. Test vectors are not generated candidates.",
+  "comparison": "Exact fields below exercise deterministic contract vectors only. Future stochastic evaluation compares grounded semantic meaning, not wording or generated identifiers.",
+  "candidates": [
+    {
+      "key": "workshop-de",
+      "kind": "entity",
+      "evidence": [
+        "handover-de:p1"
+      ],
+      "fields": {
+        "entity_key": "workshop-de",
+        "label": "Werkstatt Nord",
+        "entity_class": "organization"
+      }
+    },
+    {
+      "key": "workshop-en",
+      "kind": "entity",
+      "evidence": [
+        "planning-en:p1"
+      ],
+      "fields": {
+        "entity_key": "workshop-en",
+        "label": "North Workshop",
+        "entity_class": "organization"
+      }
+    },
+    {
+      "key": "vendor-de",
+      "kind": "entity",
+      "evidence": [
+        "handover-de:p1"
+      ],
+      "fields": {
+        "entity_key": "vendor-de",
+        "label": "Prüfdienst Elbe",
+        "entity_class": "organization"
+      }
+    },
+    {
+      "key": "vendor-en",
+      "kind": "entity",
+      "evidence": [
+        "planning-en:p1"
+      ],
+      "fields": {
+        "entity_key": "vendor-en",
+        "label": "Elbe Calibration",
+        "entity_class": "organization"
+      }
+    },
+    {
+      "key": "tw42",
+      "kind": "entity",
+      "evidence": [
+        "handover-de:p1",
+        "planning-en:p1"
+      ],
+      "fields": {
+        "entity_key": "tw42",
+        "label": "TW-42",
+        "entity_class": "physical_object"
+      }
+    },
+    {
+      "key": "tw24",
+      "kind": "entity",
+      "evidence": [
+        "clarification-de:p1"
+      ],
+      "fields": {
+        "entity_key": "tw24",
+        "label": "TW-24",
+        "entity_class": "physical_object"
+      }
+    },
+    {
+      "key": "mara",
+      "kind": "entity",
+      "evidence": [
+        "planning-en:p1"
+      ],
+      "fields": {
+        "entity_key": "mara",
+        "label": "Mara Stein",
+        "entity_class": "person"
+      }
+    },
+    {
+      "key": "returned",
+      "kind": "claim",
+      "evidence": [
+        "handover-de:p1"
+      ],
+      "fields": {
+        "claim_key": "returned",
+        "subject_entity_key": "tw42",
+        "predicate_ref": "example.returned_to",
+        "value": "Werkstatt Nord",
+        "time_modality": "actual"
+      },
+      "time": {
+        "role": "event_time",
+        "value": "2025-10-12",
+        "precision": "day",
+        "modality": "actual"
+      }
+    },
+    {
+      "key": "calibration",
+      "kind": "claim",
+      "evidence": [
+        "handover-de:p2"
+      ],
+      "fields": {
+        "claim_key": "calibration",
+        "subject_entity_key": "tw42",
+        "predicate_ref": "example.next_calibration",
+        "value": "2026-10-12",
+        "time_modality": "planned",
+        "value_qualifier": "not_yet_performed"
+      },
+      "time": {
+        "role": "event_time",
+        "value": "2026-10-12",
+        "precision": "day",
+        "modality": "planned"
+      }
+    },
+    {
+      "key": "usable-perspective",
+      "kind": "claim",
+      "evidence": [
+        "handover-de:p3"
+      ],
+      "fields": {
+        "claim_key": "usable-perspective",
+        "subject_entity_key": "tw42",
+        "predicate_ref": "example.usability_statement",
+        "value": "wieder einsetzbar",
+        "value_qualifier": "workshop_lead_perspective_not_signed_release"
+      }
+    },
+    {
+      "key": "bench",
+      "kind": "claim",
+      "evidence": [
+        "planning-en:p2"
+      ],
+      "fields": {
+        "claim_key": "bench",
+        "subject_entity_key": "tw42",
+        "predicate_ref": "example.available_for",
+        "value": "scheduled check",
+        "value_qualifier": "not_production_approval"
+      }
+    },
+    {
+      "key": "representation-claim",
+      "kind": "claim",
+      "evidence": [
+        "planning-en:p1"
+      ],
+      "fields": {
+        "claim_key": "representation-claim",
+        "subject_entity_key": "mara",
+        "predicate_ref": "example.represents",
+        "value": null,
+        "object_entity_label": "North Workshop",
+        "value_qualifier": "for_the_planned_check_only"
+      }
+    },
+    {
+      "key": "return-event",
+      "kind": "event",
+      "evidence": [
+        "handover-de:p1"
+      ],
+      "fields": {
+        "event_key": "return-event",
+        "event_type_ref": "example.equipment_return",
+        "label": "TW-42 return",
+        "event_time": "2025-10-12",
+        "time_precision": "day",
+        "time_modality": "actual"
+      }
+    },
+    {
+      "key": "check-event",
+      "kind": "event",
+      "evidence": [
+        "planning-en:p1"
+      ],
+      "fields": {
+        "event_key": "check-event",
+        "event_type_ref": "example.equipment_check",
+        "label": "TW-42 planned check",
+        "event_time": "2025-10-20",
+        "time_precision": "day",
+        "time_modality": "planned"
+      }
+    },
+    {
+      "key": "participation",
+      "kind": "participation",
+      "evidence": [
+        "planning-en:p1"
+      ],
+      "fields": {
+        "participation_key": "participation",
+        "entity_key": "mara",
+        "event_key": "check-event",
+        "role": "workshop_representative"
+      }
+    },
+    {
+      "key": "representation",
+      "kind": "relationship",
+      "evidence": [
+        "planning-en:p1"
+      ],
+      "fields": {
+        "relationship_key": "representation",
+        "subject_key": "mara",
+        "predicate_ref": "example.represents",
+        "object_key": "workshop-en"
+      },
+      "qualification": "for_the_planned_check_only",
+      "relational_claim": "representation-claim"
+    }
+  ],
+  "identity_questions": [
+    {
+      "key": "workshop-alias",
+      "subjects": [
+        "workshop-de",
+        "workshop-en"
+      ],
+      "evidence": [
+        "clarification-de:p2"
+      ],
+      "expected": "possible_same_object_unresolved_no_merge"
+    },
+    {
+      "key": "vendor-alias",
+      "subjects": [
+        "vendor-de",
+        "vendor-en"
+      ],
+      "evidence": [
+        "clarification-de:p2"
+      ],
+      "expected": "possible_same_object_unresolved_no_merge"
+    },
+    {
+      "key": "distinct-tools",
+      "subjects": [
+        "tw42",
+        "tw24"
+      ],
+      "evidence": [
+        "clarification-de:p1"
+      ],
+      "expected": "explicitly_distinct_no_merge"
+    }
+  ],
+  "gaps": [
+    {
+      "key": "release-status",
+      "evidence": [
+        "handover-de:p3",
+        "planning-en:p2"
+      ],
+      "expected": "unknown_signed_production_release"
+    },
+    {
+      "key": "check-price",
+      "evidence": [
+        "planning-en:p3"
+      ],
+      "expected": "unknown_no_price_candidate"
+    },
+    {
+      "key": "release-time",
+      "evidence": [
+        "planning-en:p3"
+      ],
+      "expected": "unknown_no_invented_date"
+    },
+    {
+      "key": "ownership",
+      "evidence": [
+        "clarification-de:p3"
+      ],
+      "expected": "unknown_no_ownership_relation"
+    }
+  ],
+  "perspective": {
+    "claim": "usable-perspective",
+    "evidence": [
+      "handover-de:p3"
+    ],
+    "perspective": "workshop_lead",
+    "qualification": "not_signed_release",
+    "conflict": "no_hard_conflict_with_check_availability_before_context_and_qualification_review"
+  },
+  "producer_provenance": {
+    "current_vectors": "assertion_only_hand_authored_contract_vector; no LLM invocation",
+    "future_required": [
+      "producer_ref",
+      "producer_version",
+      "method",
+      "evidence_and_mapping_provenance",
+      "model_provider_and_version",
+      "task_or_prompt_version",
+      "toolset",
+      "parameters",
+      "input_refs",
+      "policy_context",
+      "run_or_correlation_ref",
+      "timestamp"
+    ]
+  },
+  "negatives": [
+    {
+      "id": "N01",
+      "case": "unsupported_claim",
+      "example": "TW-42 is approved for production without release evidence",
+      "expected": "reject_or_mark_unsupported"
+    },
+    {
+      "id": "N02",
+      "case": "forged_evidence",
+      "example": "invent an evidence address absent from captured snapshots",
+      "expected": "reject"
+    },
+    {
+      "id": "N03",
+      "case": "forged_source_provenance",
+      "example": "cite a nonexistent release document or a mismatched source snapshot",
+      "expected": "reject"
+    },
+    {
+      "id": "N04",
+      "case": "automatic_alias_merge",
+      "example": "canonical merge of the DE/EN vendor labels",
+      "expected": "retain_identity_question_no_merge"
+    },
+    {
+      "id": "N05",
+      "case": "distinct_entity_merge",
+      "example": "merge TW-24 and TW-42 because of similar labels",
+      "expected": "reject_merge"
+    },
+    {
+      "id": "N06",
+      "case": "invented_relationship",
+      "example": "Mara owns TW-42 or is permanently employed by North Workshop",
+      "expected": "reject_or_mark_unsupported"
+    },
+    {
+      "id": "N07",
+      "case": "sequence_to_causality",
+      "example": "return of TW-42 caused the planned check",
+      "expected": "reject_or_mark_unsupported"
+    },
+    {
+      "id": "N08",
+      "case": "gap_filling",
+      "example": "the unquoted check price is EUR 120",
+      "expected": "unknown_or_abstain_with_visible_gap"
+    },
+    {
+      "id": "N09",
+      "case": "confidence_as_evidence",
+      "example": "confidence 0.99 substitutes for a missing release",
+      "expected": "reject"
+    },
+    {
+      "id": "N10",
+      "case": "canonical_llm_output",
+      "example": "candidate claims canonical or published status",
+      "expected": "reject_authority_overreach"
+    },
+    {
+      "id": "N11",
+      "case": "lifecycle_bypass",
+      "example": "Source to LLM to Knowledge skips Candidate registration and gates",
+      "expected": "reject_path"
+    },
+    {
+      "id": "N12",
+      "case": "technical_structure_as_semantics",
+      "example": "paragraph containment implies tool ownership",
+      "expected": "reject_or_mark_unsupported"
+    },
+    {
+      "id": "N13",
+      "case": "golden_in_runtime_input",
+      "example": "expected candidates or oracle supplied to producer",
+      "expected": "reject_input_boundary"
+    }
+  ],
+  "source_hashes": {
+    "handover-de": "57bf8a2e0f87eec545f0fe9998cb9f434a360fc0c6ca01a784b42c2bfd5b16a9",
+    "planning-en": "43dce1f1ea5c0492dfa6b579ef160c3b57617b9dd07b174b867c409ca0b60e6c",
+    "clarification-de": "3bc5fdaf3a0aaf7f9a7d8b11f8624ad4ed6e4f62254c782982e7a4f47d15ae47"
+  }
+}

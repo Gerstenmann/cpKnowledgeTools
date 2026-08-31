@@ -1,0 +1,8 @@
+{
+  "product_tree_sha256": "334d5c6116b8bd87a12b52038f3181dae8d1e61d05ce51e498488d41d5c6426d",
+  "inspection_basis": "WI-018 root code inspection and independent source_consumer_map read-only exploration, 2026-08-31; public semantics exports, all product Python files, pyproject entry points/dependencies",
+  "observed_producers": ["RuleBasedSemanticInterpreter", "SourceBackedSemanticInterpreter", "DeterministicEvidenceExtractor"],
+  "finding": "No executable generic LLM semantic candidate producer, model invocation path or untrusted model response decoder found in this bounded product surface.",
+  "not_proven": "Absence outside this repository/product surface; model effectiveness; full current normative conformance; any external processing permission",
+  "staleness": "Any product Python or pyproject byte change requires reinspection before reusing the missing-capability finding. Never update this hash solely to pass a test."
+}
