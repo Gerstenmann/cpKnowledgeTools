@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "role": "repository_ci_action_admission",
+  "assessment_ref": "config/assurance/ci.md",
+  "reviewed_on": "2026-08-31",
+  "use_context": "GitHub-hosted Ubuntu 24.04 x64 repository verification; no Owner data, secrets, write token, publication or persistent cache",
+  "disposition": "accepted_with_conditions",
+  "conditions": [
+    "Local materialization only; a separate Owner authority is required before any push or remote activation.",
+    "Use the exact three upstream commit pins and the explicit uv archive checksum; reassess changed releases, bytes, privileges or use context.",
+    "Only contents:read; no credential persistence, custom secrets, OIDC, artifact upload or cache restore/save.",
+    "Hosted runners have ambient Internet egress and passwordless sudo. This workflow is not an OS sandbox or network allowlist.",
+    "The first real run must verify Linux wheels, interpreter/ABI, action execution and actual editable-build backend versions before operational acceptance.",
+    "Retain upstream licenses if distributing action/tool copies; none are vendored or redistributed by this increment.",
+    "Inspect material upstream security, ownership and runtime changes on update; no exhaustive bundled-JavaScript or CVE audit is claimed."
+  ],
+  "uv": {
+    "version": "0.12.7",
+    "source_commit": "61291a8ca5477a9ca653f14d2ac5665587c263fa",
+    "license_expression": "MIT OR Apache-2.0",
+    "platform": "x86_64-unknown-linux-gnu",
+    "archive_url": "https://github.com/astral-sh/uv/releases/download/0.12.7/uv-x86_64-unknown-linux-gnu.tar.gz",
+    "archive_sha256": "788f18abea7c5f55d6216e4f5613fd89d4d59b631efeec117b2b07fe72f1da21",
+    "provenance_url": "https://api.github.com/repos/astral-sh/uv/releases/tags/0.12.7",
+    "conditions": "Checksum binds the downloaded archive, not an independently reproduced binary. setup-uv tool-cache hits bypass download verification; inspect the first fresh hosted run. Darwin binary admission remains separate."
+  },
+  "actions": {
+    "actions/checkout": {
+      "upstream": "https://github.com/actions/checkout",
+      "release": "v7.0.1",
+      "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "license_expression": "MIT",
+      "runtime": "node24",
+      "disposition": "accepted_with_conditions",
+      "provenance": "Official release and refs/tags/v7.0.1 resolve to this commit in actions/checkout, not a fork.",
+      "release_url": "https://github.com/actions/checkout/releases/tag/v7.0.1",
+      "license_url": "https://github.com/actions/checkout/blob/3d3c42e5aac5ba805825da76410c181273ba90b1/LICENSE",
+      "effects": "Runs bundled JavaScript/toolkit and Git; downloads one commit into workspace. Uses job contents-read token for checkout, does not persist it with persist-credentials:false. No LFS/submodules, cache or push.",
+      "maintenance_exit": "GitHub-maintained release; reassess major/runtime/security changes. Replace checkout boundary independently; no product API dependency."
+    },
+    "actions/setup-python": {
+      "upstream": "https://github.com/actions/setup-python",
+      "release": "v7.0.0",
+      "commit": "5fda3b95a4ea91299a34e894583c3862153e4b97",
+      "license_expression": "MIT",
+      "runtime": "node24",
+      "disposition": "accepted_with_conditions",
+      "provenance": "Official release and refs/tags/v7.0.0 resolve to this commit in actions/setup-python, not a fork.",
+      "release_url": "https://github.com/actions/setup-python/releases/tag/v7.0.0",
+      "license_url": "https://github.com/actions/setup-python/blob/5fda3b95a4ea91299a34e894583c3862153e4b97/LICENSE",
+      "effects": "Runs bundled JavaScript/toolkit; reads hosted tool cache or downloads actions/python-versions CPython, executes distribution setup and adjusts PATH. Default job token is available for release API reads. No dependency cache input, no custom token or secrets.",
+      "maintenance_exit": "GitHub-maintained release. Python distribution is separate from the action and local Homebrew; verify exact patch, ordinary GIL, x64 and ABI. Replace setup boundary independently."
+    },
+    "astral-sh/setup-uv": {
+      "upstream": "https://github.com/astral-sh/setup-uv",
+      "release": "v10.0.1",
+      "commit": "20cfd1bf945f4377ade1205e4dbc17946fc9a30d",
+      "license_expression": "MIT",
+      "runtime": "node24",
+      "disposition": "accepted_with_conditions",
+      "provenance": "Official release and refs/tags/v10.0.1 resolve to this commit in astral-sh/setup-uv, not a fork.",
+      "release_url": "https://github.com/astral-sh/setup-uv/releases/tag/v10.0.1",
+      "license_url": "https://github.com/astral-sh/setup-uv/blob/20cfd1bf945f4377ade1205e4dbc17946fc9a30d/LICENSE",
+      "effects": "Runs bundled JavaScript/toolkit; downloads and verifies the explicit uv archive SHA256 before extraction, adjusts PATH/tool cache. Job token may be accessed by actions; no explicit custom token. Cross-run dependency/Python cache, mirror and environment activation disabled. No Python installation or self-update requested.",
+      "maintenance_exit": "Astral-maintained release. Action identity and installed uv identity are separate. The embedded checksum table lacks uv0.12.7, so explicit checksum is mandatory. Replace setup with another separately admitted downloader if needed."
+    }
+  }
+}
