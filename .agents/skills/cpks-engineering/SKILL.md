@@ -39,7 +39,7 @@ content and relationships, including the current architecture dependencies:
 | Concern | Live rule homes / context |
 | --- | --- |
 | Business value and verified system state | `CPKS-FWK-BC`, `CPKS-BL`; distinguish intended architecture from implemented state |
-| Development-agent authority boundary | `CPKS-DEC-030`, with execution details in `DEV-P05` / `CPKS-SPEC-OPS` |
+| Development-agent execution / write boundary | `CPKS-SPEC-OPS`, with process semantics in `DEV-P05`, component materialization in `CPKT-SPEC-ARCH`, and project autonomy in `CPKS-SPEC-PRJ` / Project Home |
 | Verification and improvement | `CPKS-SPEC-TST`, `DEV-P04` when its triggers apply |
 | Required research or third-party changes | `DEV-P06`, `CPKS-POL-SW-SUPPLY`, relevant security and architecture relationships |
 | Security, privacy, processing, or privilege boundaries | `CPKS-SPEC-SEC` and its applicable rule homes |

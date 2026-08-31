@@ -18,7 +18,7 @@ Resolve live rule homes through the configured read-only cp-wiki MCP:
 active result and `integrity_ok: true` for each → `read_active_artifact`.
 Start with `CPKS-FWK-AIW`, `CPKS-FWK-ARCH`, `CPKS-FWK-BC`, `CPKS-BL`,
 `CPKT-SPEC-ARCH`, `DEV-P05`, `DEV-P06`, `CPKS-POL-SW-SUPPLY`, `CPKS-SPEC-SEC`,
-`CPKS-SPEC-OPS`, `CPKS-DEC-030`, `CPKS-DEC-042`; resolve materially relevant
+`CPKS-SPEC-OPS`, `CPKS-DEC-042`; resolve materially relevant
 architecture relationships and any named Work Package. For implementation and
 verification include `CPKS-SPEC-TST` and `DEV-P04`. Stop affected work on
 ambiguous, inactive or integrity-invalid required authority. This skill is
