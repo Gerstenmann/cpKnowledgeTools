@@ -1,0 +1,126 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Renovate reads repository config from the GitHub default branch. Update
+  // branches and pull requests target only the shared development line.
+  "baseBranchPatterns": ["codex/source-to-knowledge-mvp"],
+  "useBaseBranchConfig": "none",
+
+  // The first increment manages only PEP 621 runtime and optional dependencies.
+  "enabledManagers": ["pep621"],
+  "customManagers": [],
+  "configMigration": false,
+
+  // These are artifact-execution constraints. The Python and uv toolchains are
+  // not dependency-update targets in this increment.
+  "constraints": {
+    "python": "3.14.6",
+    "uv": "0.12.7"
+  },
+
+  "timezone": "Europe/Berlin",
+  "schedule": ["after 7am and before 11am every weekday"],
+  "prConcurrentLimit": 2,
+  "prHourlyLimit": 1,
+  "prCreation": "immediate",
+
+  "dependencyDashboard": true,
+  "automerge": false,
+
+  // Vulnerability remediation remains with the existing controlled scanner and
+  // supply-chain path until a separate increment authorizes bot remediation.
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+  "osvVulnerabilityAlerts": false,
+
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["after 7am and before 11am on monday"],
+    "automerge": false
+  },
+
+  "packageRules": [
+    {
+      "description": "Default-deny all PEP 621 dependency types",
+      "matchManagers": ["pep621"],
+      "enabled": false
+    },
+    {
+      "description": "Enable direct runtime and optional dependencies",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": [
+        "project.dependencies",
+        "project.optional-dependencies"
+      ],
+      "enabled": true
+    },
+    {
+      "description": "Keep Python runtime updates outside Renovate",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["requires-python"],
+      "enabled": false
+    },
+    {
+      "description": "Keep build backend updates outside Renovate",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["build-system.requires"],
+      "enabled": false
+    },
+    {
+      "description": "Require Dependency Dashboard approval for major updates",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": [
+        "project.dependencies",
+        "project.optional-dependencies"
+      ],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Require three-day PyPI minimum release age",
+      "matchManagers": ["pep621"],
+      "matchDatasources": ["pypi"],
+      "matchDepTypes": [
+        "project.dependencies",
+        "project.optional-dependencies"
+      ],
+      "minimumReleaseAge": "3 days",
+      "internalChecksFilter": "strict"
+    },
+    {
+      "description": "Lock file maintenance requires approval and cannot validate release age",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "enabled": true,
+      "dependencyDashboardApproval": true,
+      "automerge": false,
+      "minimumReleaseAge": null,
+      "prBodyNotes": [
+        "⚠️ Lock file maintenance delegates selection to uv; Renovate does not validate Minimum Release Age for the resulting transitive package selection."
+      ]
+    },
+    {
+      "description": "Package replacements cannot validate release age",
+      "matchManagers": ["pep621"],
+      "matchDatasources": ["pypi"],
+      "matchUpdateTypes": ["replacement"],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "Package pins cannot validate release age",
+      "matchManagers": ["pep621"],
+      "matchDatasources": ["pypi"],
+      "matchUpdateTypes": ["pin"],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "Bump, lockfile, and rollback updates cannot validate release age",
+      "matchManagers": ["pep621"],
+      "matchDatasources": ["pypi"],
+      "matchUpdateTypes": ["bump", "lockfileUpdate", "rollback"],
+      "minimumReleaseAge": null
+    }
+  ]
+}
